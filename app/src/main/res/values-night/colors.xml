@@ -8,4 +8,5 @@
     <color name="background_main">#1A1B22</color>
     <color name="background_color">#1A1B22</color>
     <color name="settings_activity_icon_fill_color">#FFFFFFFF</color>
+    <color name="subtext">@color/white</color>
 </resources>

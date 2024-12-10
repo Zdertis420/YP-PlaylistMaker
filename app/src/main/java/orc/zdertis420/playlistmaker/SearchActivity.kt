@@ -1,10 +1,10 @@
 package orc.zdertis420.playlistmaker
 
-import android.content.Context
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
@@ -13,7 +13,18 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.gson.Gson
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.create
+import retrofit2.http.GET
+import retrofit2.http.Query
 
 class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -22,6 +33,11 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var cancel: ImageView
 
     private lateinit var text: String
+
+    private val retrofit = Retrofit.Builder()
+        .baseUrl("https://itunes.apple.com/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +71,41 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
             override fun afterTextChanged(s: Editable?) {
                 text = searchLine.text.toString()
+
+                browseTracks(text)
+            }
+        })
+
+        val recycler = findViewById<RecyclerView>(R.id.tracks)
+
+        recycler.layoutManager = LinearLayoutManager(this)
+//        recycler.adapter = TrackAdapter(tracks = tracks)
+    }
+
+    @GET("/search?entity=song")
+    private fun browseTracks(@Query("term") text: String) {
+        val pmApiService = retrofit.create<PMApiService>()
+
+        pmApiService.browseTracks(text).enqueue(object : Callback<TrackResponse> {
+            override fun onResponse(call: Call<TrackResponse>, response: Response<TrackResponse>) {
+
+                Log.i("SUCCESS", "there is a response")
+
+                if (response.isSuccessful) {
+                    val gson = Gson()
+
+                    val tracksJson = response.body().toString()
+
+                    val tracks = gson.fromJson(tracksJson, TrackResponse::class.java)
+
+                    Log.w("Response type", "$tracks")
+
+//                    val tracksResponse = gson.fromJson<>(tracksJson, TrackResponse::class.java)
+                }
+            }
+
+            override fun onFailure(call: Call<TrackResponse>, t: Throwable) {
+                Log.e("FAIL", "there's no response")
             }
         })
     }
@@ -69,11 +120,13 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.back_to_main -> finish()
+            R.id.back_to_main -> {
+                finishAffinity()
+            }
 
             R.id.clear_text -> {
                 searchLine.text.clear()
-                (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+                (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
                     .hideSoftInputFromWindow(v.windowToken, 0)
             }
         }

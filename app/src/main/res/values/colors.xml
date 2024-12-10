@@ -15,4 +15,6 @@
     <color name="switch_thumb_active_color">#3772E7</color>
     <color name="settings_activity_icon_fill_color">#AEAFB4</color>
     <color name="cursor_blue">#3772E7</color>
+    <color name="subtext">#AEAFB4</color>
+
 </resources>
