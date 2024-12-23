@@ -6,9 +6,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingStart="@dimen/even_smaller_padding"
+    android:paddingStart="@dimen/small_padding"
     android:paddingTop="10dp"
-    android:paddingEnd="@dimen/even_smaller_padding"
+    android:paddingEnd="@dimen/small_padding"
     android:paddingBottom="6dp">
 
     <com.google.android.material.appbar.MaterialToolbar
@@ -19,17 +19,17 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="36dp"
+        android:layout_marginStart="@dimen/small_padding"
+        android:layout_marginEnd="@dimen/small_padding"
         android:background="@drawable/rounded_search_edittext"
-        android:orientation="horizontal"
-        android:layout_marginStart="@dimen/even_smaller_padding"
-        android:layout_marginEnd="@dimen/even_smaller_padding">
+        android:orientation="horizontal">
 
         <ImageView
             android:id="@+id/search"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/small_padding"
             android:layout_weight="1"
-            android:layout_marginStart="@dimen/even_smaller_padding"
             android:src="@drawable/search"
             tools:ignore="ContentDescription" />
 
@@ -38,26 +38,100 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="20"
-            android:paddingEnd="@dimen/even_smaller_padding"
-            android:paddingStart="@dimen/even_smaller_padding"
             android:background="@color/transparent"
-            android:textCursorDrawable="@drawable/cursor"
-            android:hint="@string/search"
             android:fontFamily="@font/ys_display_medium"
-            android:textSize="@dimen/standard_text_size"
-            android:textColorHint="@color/unchangeable_standard_text_color"
+            android:hint="@string/search"
+            android:imeOptions="actionDone"
             android:maxLines="1"
+            android:paddingStart="@dimen/small_padding"
+            android:paddingEnd="@dimen/small_padding"
+            android:singleLine="true"
+            android:textColor="@color/unchangeable_standard_text_color"
+            android:textColorHint="@color/unchangeable_standard_text_color"
+            android:textCursorDrawable="@drawable/cursor"
+            android:textSize="@dimen/standard_text_size"
             tools:ignore="Autofill,TextFields" />
 
         <ImageView
             android:id="@+id/clear_text"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/small_padding"
             android:layout_weight="1"
-            android:layout_marginEnd="@dimen/even_smaller_padding"
             android:alpha="0.0"
             android:src="@drawable/clear"
             tools:ignore="ContentDescription" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/tracks"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+    <LinearLayout
+        android:id="@+id/empty_result"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="108dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:ignore="UseCompoundDrawables">
+<!--        ya know what?? fuck you and your warnings-->
+
+        <ImageView
+            android:id="@+id/empty_result_image"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:ignore="ContentDescription" />
+<!--        ya know what?? fuck you and your warnings-->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/ys_display_medium"
+            android:gravity="center_horizontal"
+            android:text="@string/empty_result"
+            android:textColor="@color/standard_text_color"
+            android:textSize="@dimen/standard_title_size" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/no_connection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="108dp"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/no_connection_image"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:src="@drawable/no_connection_light"
+            tools:ignore="ContentDescription" />
+<!--        ya know what?? fuck you and your warnings-->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/ys_display_medium"
+            android:gravity="center_horizontal"
+            android:text="@string/no_connection"
+            android:textColor="@color/standard_text_color"
+            android:textSize="@dimen/standard_title_size" />
+
+        <Button
+            android:id="@+id/update_connection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:backgroundTint="@color/standard_text_color"
+            android:text="@string/update"
+            android:textColor="@color/background_color" />
+
     </LinearLayout>
 
 </LinearLayout>

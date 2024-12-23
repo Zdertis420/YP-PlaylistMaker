@@ -40,5 +40,5 @@
         android:id="@+id/eula"
         style="@style/settings_activity_button_style"
         android:text="@string/user_agreement"
-        app:drawableRightCompat="@drawable/eula" />
+        app:drawableRightCompat="@drawable/arrow_right" />
 </LinearLayout>

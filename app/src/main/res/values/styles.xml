@@ -39,4 +39,19 @@
         <item name="android:textSize">22sp</item>
         <item name="android:textFontWeight">500</item>
     </style>
+    
+    <style name="rounded_image">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">2dp</item>
+    </style>
+
+    <style name="track_artist_name_and_time_style">
+        <item name="android:textSize">@dimen/small_text_size</item>
+        <item name="fontFamily">@font/ys_display_regular</item>
+        <item name="fontWeight">400</item>
+        <item name="android:textColor">@color/subtext</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">1</item>
+    </style>
 </resources>

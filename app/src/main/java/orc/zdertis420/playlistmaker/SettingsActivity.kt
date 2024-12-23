@@ -77,8 +77,6 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
             R.id.eula -> startActivity(
                 Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.offer)))
             )
-
-//            R.id.swith_theme -> application.setTheme()
         }
     }
 }
