@@ -3,6 +3,7 @@ package orc.zdertis420.playlistmaker
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -10,10 +11,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.switchmaterial.SwitchMaterial
 
 class SettingsActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var backToMain: MaterialToolbar
+    private lateinit var switchTheme: SwitchMaterial
     private lateinit var share: TextView
     private lateinit var support: TextView
     private lateinit var eula: TextView
@@ -28,20 +31,42 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
             insets
         }
 
+
+//        (applicationContext as App).switchTheme(isDarkModePreferred())
+
+
         bind()
     }
 
     private fun bind() {
+        val preferences = getSharedPreferences("THEME_SETTING", MODE_PRIVATE)
+
         backToMain = findViewById(R.id.back_to_main)
+        switchTheme = findViewById(R.id.switch_theme)
         share = findViewById(R.id.share)
         support = findViewById(R.id.support)
         eula = findViewById(R.id.eula)
 
+        switchTheme.isChecked = preferences.getBoolean("THEME", false)
+
         backToMain.setOnClickListener(this@SettingsActivity)
+
+        switchTheme.setOnCheckedChangeListener { switch, state ->
+            Log.i("THEME", state.toString())
+            (applicationContext as App).switchTheme(state)
+            preferences.edit()
+                .putBoolean("THEME", state)
+                .apply()
+        }
+
         share.setOnClickListener(this@SettingsActivity)
         support.setOnClickListener(this@SettingsActivity)
         eula.setOnClickListener(this@SettingsActivity)
     }
+
+//    private fun isDarkModePreferred(): Boolean {
+//        return (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+//    }
 
     override fun onClick(v: View?) {
         when (v?.id) {
