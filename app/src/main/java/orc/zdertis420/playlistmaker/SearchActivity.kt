@@ -43,7 +43,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var searchQuery: String
 
-    private lateinit var recycler: RecyclerView
+    private lateinit var tracksRecycler: RecyclerView
 
     private lateinit var emptyResult: LinearLayout
     private lateinit var emptyResultImage: ImageView
@@ -110,7 +110,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                showCancelButton()
+                showClearButton()
             }
 
             override fun afterTextChanged(s: Editable?) {
@@ -125,10 +125,10 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             false
         }
 
-        recycler = findViewById(R.id.tracks)
+        tracksRecycler = findViewById(R.id.tracks)
 
-        recycler.layoutManager = LinearLayoutManager(this)
-        recycler.adapter = TrackAdapter(tracks = tracks)
+        tracksRecycler.layoutManager = LinearLayoutManager(this)
+        tracksRecycler.adapter = TrackAdapter(tracks = tracks)
     }
 
     private fun checkNetworkAvailability(context: Context) {
@@ -193,7 +193,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
                     changeContent()
 
-                    (recycler.adapter as TrackAdapter).updateTracks(tracks)
+                    (tracksRecycler.adapter as TrackAdapter).updateTracks(tracks)
                 }
             }
 
@@ -205,7 +205,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         })
     }
 
-    private fun showCancelButton() {
+    private fun showClearButton() {
         if (searchLine.text.isNotEmpty()) {
             cancel.alpha = 1.0F
         } else {
@@ -221,7 +221,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                 166 -> {
                     Log.d("SWITCH", "HIDE TRACKS, SHOW EMPTY RESULT ERROR")
 
-                    recycler.visibility = View.GONE
+                    tracksRecycler.visibility = View.GONE
                     emptyResult.visibility = View.VISIBLE
                     noConnection.visibility = View.GONE
                 }
@@ -229,7 +229,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                 194 -> {
                     Log.d("SWITCH", "HIDE ERRORS, SHOW TRACKS")
 
-                    recycler.visibility = View.VISIBLE
+                    tracksRecycler.visibility = View.VISIBLE
                     emptyResult.visibility = View.GONE
                     noConnection.visibility = View.GONE
                 }
@@ -237,7 +237,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                 203 -> {
                     Log.d("SWITCH", "HIDE TRACKS, SHOW NO CONNECTION ERROR")
 
-                    recycler.visibility = View.GONE
+                    tracksRecycler.visibility = View.GONE
                     emptyResult.visibility = View.GONE
                     noConnection.visibility = View.VISIBLE
                 }
@@ -246,7 +246,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                     if (stackTrace[3].toString() == "orc.zdertis420.playlistmaker.SearchActivity.onClick(SearchActivity.kt:267)") {
                         Log.d("SWITCH", "HIDE EVERYTHING, QUERY CLEARED")
 
-                        recycler.visibility = View.GONE
+                        tracksRecycler.visibility = View.GONE
                         emptyResult.visibility = View.GONE
                         noConnection.visibility = View.GONE
                     }

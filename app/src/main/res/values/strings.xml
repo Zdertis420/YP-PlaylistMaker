@@ -16,4 +16,6 @@
     <string name="empty_result">Nothing found</string>
     <string name="no_connection">Connection issues\n\nCan\'t load. Check your internet connection</string>
     <string name="update">Update</string>
+    <string name="you_have_searched">You have searched</string>
+    <string name="clear_history">Clear history</string>
 </resources>
