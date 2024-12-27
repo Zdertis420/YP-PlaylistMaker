@@ -10,6 +10,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
+
+    private lateinit var search: Button
+    private lateinit var mediaLibrary: Button
+    private lateinit var settings: Button
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -20,13 +25,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             insets
         }
 
-        val search = findViewById<Button>(R.id.search)
-        val mediaLibrary = findViewById<Button>(R.id.media_library)
-        val settings = findViewById<Button>(R.id.settings)
+        search = findViewById(R.id.search)
+        mediaLibrary = findViewById(R.id.media_library)
+        settings = findViewById(R.id.settings)
 
-        search.setOnClickListener(this@MainActivity)
-        mediaLibrary.setOnClickListener(this@MainActivity)
-        settings.setOnClickListener(this@MainActivity)
+        search.setOnClickListener(this)
+        mediaLibrary.setOnClickListener(this)
+        settings.setOnClickListener(this)
     }
 
     override fun onClick(v: View?) {

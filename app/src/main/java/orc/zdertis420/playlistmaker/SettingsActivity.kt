@@ -31,14 +31,6 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
             insets
         }
 
-
-//        (applicationContext as App).switchTheme(isDarkModePreferred())
-
-
-        bind()
-    }
-
-    private fun bind() {
         val preferences = getSharedPreferences("THEME_SETTING", MODE_PRIVATE)
 
         backToMain = findViewById(R.id.back_to_main)
@@ -49,7 +41,7 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
 
         switchTheme.isChecked = preferences.getBoolean("THEME", false)
 
-        backToMain.setOnClickListener(this@SettingsActivity)
+        backToMain.setOnClickListener(this)
 
         switchTheme.setOnCheckedChangeListener { switch, state ->
             Log.i("THEME", state.toString())
@@ -59,14 +51,10 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
                 .apply()
         }
 
-        share.setOnClickListener(this@SettingsActivity)
-        support.setOnClickListener(this@SettingsActivity)
-        eula.setOnClickListener(this@SettingsActivity)
+        share.setOnClickListener(this)
+        support.setOnClickListener(this)
+        eula.setOnClickListener(this)
     }
-
-//    private fun isDarkModePreferred(): Boolean {
-//        return (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-//    }
 
     override fun onClick(v: View?) {
         when (v?.id) {

@@ -9,7 +9,11 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class TrackViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+class TrackViewHolder(
+    itemView: View,
+    private val onItemClickListener: ((position: Int) -> Unit)?
+) :
+    RecyclerView.ViewHolder(itemView) {
 
     private var trackNameView: TextView = itemView.findViewById(R.id.track_name)
     private val artistNameView: TextView = itemView.findViewById(R.id.author)
@@ -32,5 +36,14 @@ class TrackViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             .diskCacheStrategy(DiskCacheStrategy.NONE)
             .skipMemoryCache(true)
             .into(trackImageView)
+    }
+
+    init {
+        itemView.setOnClickListener {
+            val position = adapterPosition
+            if (position != RecyclerView.NO_POSITION) {
+                onItemClickListener?.invoke(position)
+            }
+        }
     }
 }
