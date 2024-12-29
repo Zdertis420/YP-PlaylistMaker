@@ -3,6 +3,7 @@ package orc.zdertis420.playlistmaker
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -10,10 +11,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.switchmaterial.SwitchMaterial
 
 class SettingsActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var backToMain: MaterialToolbar
+    private lateinit var switchTheme: SwitchMaterial
     private lateinit var share: TextView
     private lateinit var support: TextView
     private lateinit var eula: TextView
@@ -28,19 +31,29 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
             insets
         }
 
-        bind()
-    }
+        val preferences = getSharedPreferences("THEME_SETTING", MODE_PRIVATE)
 
-    private fun bind() {
         backToMain = findViewById(R.id.back_to_main)
+        switchTheme = findViewById(R.id.switch_theme)
         share = findViewById(R.id.share)
         support = findViewById(R.id.support)
         eula = findViewById(R.id.eula)
 
-        backToMain.setOnClickListener(this@SettingsActivity)
-        share.setOnClickListener(this@SettingsActivity)
-        support.setOnClickListener(this@SettingsActivity)
-        eula.setOnClickListener(this@SettingsActivity)
+        switchTheme.isChecked = preferences.getBoolean("THEME", false)
+
+        backToMain.setOnClickListener(this)
+
+        switchTheme.setOnCheckedChangeListener { switch, state ->
+            Log.i("THEME", state.toString())
+            (applicationContext as App).switchTheme(state)
+            preferences.edit()
+                .putBoolean("THEME", state)
+                .apply()
+        }
+
+        share.setOnClickListener(this)
+        support.setOnClickListener(this)
+        eula.setOnClickListener(this)
     }
 
     override fun onClick(v: View?) {
