@@ -50,8 +50,6 @@
         <item name="fontFamily">@font/ys_display_regular</item>
         <item name="fontWeight">400</item>
         <item name="android:textColor">@color/subtext</item>
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">wrap_content</item>
         <item name="android:maxLines">1</item>
     </style>
 </resources>
