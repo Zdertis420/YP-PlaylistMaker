@@ -12,6 +12,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.imageview.ShapeableImageView
 import java.text.SimpleDateFormat
@@ -73,12 +74,14 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         if (track != null) {
             Glide.with(this)
                 .load(track.artworkUrl100.replaceAfterLast("/", "512x512bb.jpg"))
+                .transform(RoundedCorners(8))
                 .timeout(2500)
                 .placeholder(R.drawable.placeholder)
                 .error(R.drawable.placeholder)
                 .diskCacheStrategy(DiskCacheStrategy.NONE)
                 .skipMemoryCache(true)
                 .into(trackImage)
+
 
             trackName.text = track.trackName
             trackAuthor.text = track.artistName
