@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/player_activity"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_color">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/back"
+            style="@style/toolbar_style"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/track_image"
+            style="@style/rounded_image"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginStart="@dimen/big_padding"
+            android:layout_marginTop="26dp"
+            android:layout_marginEnd="@dimen/big_padding"
+            android:scaleType="centerCrop"
+            android:src="@drawable/placeholder"
+            app:layout_constraintDimensionRatio="h,1:1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/back" />
+
+        <TextView
+            android:id="@+id/track_name"
+            android:layout_width="match_parent"
+            android:layout_height="26dp"
+            android:layout_marginStart="@dimen/big_padding"
+            android:layout_marginTop="@dimen/big_padding"
+            android:layout_marginEnd="@dimen/big_padding"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:fontFamily="@font/ys_display_medium"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textColor="@color/standard_text_color"
+            android:textSize="@dimen/standard_title_size"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/track_image" />
+
+        <TextView
+            android:id="@+id/track_author"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/medium_padding"
+            android:layout_marginStart="@dimen/big_padding"
+            android:layout_marginTop="12dp"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:fontFamily="@font/ys_display_medium"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textColor="@color/standard_text_color"
+            android:textSize="@dimen/medium_text_size"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/track_name" />
+
+        <ImageView
+            android:id="@+id/save_to_library"
+            android:layout_width="51dp"
+            android:layout_height="51dp"
+            android:layout_marginStart="@dimen/big_padding"
+            android:layout_marginTop="54dp"
+            android:background="@drawable/circle"
+            android:scaleType="centerInside"
+            android:src="@drawable/save_to_library"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/track_author"
+            tools:ignore="ContentDescription" />
+        <!--        ya know what?? fuck you and your warnings-->
+
+        <ImageView
+            android:id="@+id/play_button"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="30dp"
+            android:src="@drawable/play_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/track_author"
+            tools:ignore="ContentDescription" />
+        <!--        ya know what?? fuck you and your warnings-->
+
+        <ImageView
+            android:id="@+id/like_button"
+            android:layout_width="51dp"
+            android:layout_height="51dp"
+            android:layout_marginTop="54dp"
+            android:layout_marginEnd="@dimen/big_padding"
+            android:background="@drawable/circle"
+            android:scaleType="centerInside"
+            android:src="@drawable/like_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/track_author"
+            tools:ignore="ContentDescription" />
+        <!--        ya know what?? fuck you and your warnings-->
+
+        <TextView
+            android:id="@+id/time_playing"
+            android:layout_width="100dp"
+            android:layout_height="@dimen/medium_padding"
+            android:layout_marginTop="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/play_button" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/medium_padding"
+            android:paddingEnd="@dimen/medium_padding"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="30dp"
+            app:layout_constraintTop_toBottomOf="@id/time_playing">
+
+            <TextView
+                android:id="@+id/duration_placeholder"
+                style="@style/additional_track_info"
+                android:layout_marginTop="9dp"
+                android:text="@string/duration"
+                android:textColor="@color/unchangeable_subtext"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/duration"
+                style="@style/additional_track_info"
+                android:layout_marginTop="9dp"
+                android:textColor="@color/subtext"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/album_placeholder"
+                style="@style/additional_track_info"
+                android:layout_marginTop="18dp"
+                android:text="@string/album"
+                android:textColor="@color/unchangeable_subtext"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/duration_placeholder" />
+
+            <TextView
+                android:id="@+id/album"
+                style="@style/additional_track_info"
+                android:layout_marginTop="18dp"
+                android:textColor="@color/subtext"
+                android:ellipsize="marquee"
+                android:singleLine="true"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:scrollHorizontally="true"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/duration" />
+
+            <TextView
+                android:id="@+id/year_placeholder"
+                style="@style/additional_track_info"
+                android:layout_marginTop="18dp"
+                android:text="@string/release_year"
+                android:textColor="@color/unchangeable_subtext"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/album_placeholder" />
+
+            <TextView
+                android:id="@+id/year"
+                style="@style/additional_track_info"
+                android:layout_marginTop="18dp"
+                android:textColor="@color/subtext"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/album" />
+
+            <TextView
+                android:id="@+id/genre_placeholder"
+                style="@style/additional_track_info"
+                android:layout_marginTop="18dp"
+                android:text="@string/genre"
+                android:textColor="@color/unchangeable_subtext"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/year_placeholder" />
+
+            <TextView
+                android:id="@+id/genre"
+                style="@style/additional_track_info"
+                android:layout_marginTop="18dp"
+                android:textColor="@color/subtext"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/year" />
+
+            <TextView
+                android:id="@+id/country_placeholder"
+                style="@style/additional_track_info"
+                android:layout_marginTop="18dp"
+                android:text="@string/country"
+                android:textColor="@color/unchangeable_subtext"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/genre_placeholder" />
+
+            <TextView
+                android:id="@+id/country"
+                style="@style/additional_track_info"
+                android:layout_marginTop="18dp"
+                android:textColor="@color/subtext"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/genre" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>
