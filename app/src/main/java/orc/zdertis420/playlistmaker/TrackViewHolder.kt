@@ -36,6 +36,9 @@ class TrackViewHolder(
             .diskCacheStrategy(DiskCacheStrategy.NONE)
             .skipMemoryCache(true)
             .into(trackImageView)
+
+        trackNameView.isSelected = true
+        artistNameView.isSelected = true
     }
 
     init {

@@ -1,6 +1,7 @@
 package orc.zdertis420.playlistmaker
 
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.os.PersistableBundle
@@ -57,7 +58,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var updateConnection: TextView
 
     private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(1000, TimeUnit.MILLISECONDS)
+        .connectTimeout(2500, TimeUnit.MILLISECONDS)
         .build()
 
     private val retrofit = Retrofit.Builder()
@@ -183,28 +184,36 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         (tracksList.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
-            Log.d("TRACK CLICKED", "TRACK ${tracks[position].trackName} CLICKED")
-
-            if (tracksHistory.contains(tracks[position])) {
-                tracksHistory.remove(tracks[position])
-            }
-
             addToHistory(tracks[position])
 
-            Log.d(
-                "ADDED TO HISTORY",
-                "${tracks[position].trackName} is ${tracksHistory.indexOf(tracks[position])}"
-            )
+            val startPlayerActivity = Intent(this, PlayerActivity::class.java)
+            startPlayerActivity.putExtra("track", tracks[position])
+            startActivity(startPlayerActivity)
 
-            (tracksHistoryView.adapter as TrackAdapter).updateTracks(tracksHistory.reversed())
+        }
+
+        (tracksHistoryView.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
+            val startPlayerActivity = Intent(this, PlayerActivity::class.java)
+            startPlayerActivity.putExtra("track", tracksHistory.reversed()[position])
+            startActivity(startPlayerActivity)
+
+            addToHistory(tracksHistory.reversed()[position])
+
         }
     }
 
     private fun addToHistory(track: Track) {
+        if (tracksHistory.contains(track)) {
+            tracksHistory.remove(track)
+        }
+
         if (tracksHistory.size == 10) {
             tracksHistory.removeAt(0)
         }
         tracksHistory.add(track)
+
+        (tracksHistoryView.adapter as TrackAdapter).updateTracks(tracksHistory.reversed())
+
     }
 
     @GET("/search?q=term")
@@ -218,8 +227,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
                 if (response.isSuccessful) {
                     val tracksJson = response.body()
-
-                    Log.i("RESPONSE", tracksJson.toString())
 
                     if (tracksJson!!.resultCount == 0 && text != "") {
                         Log.d("EMPTY RESULT", "EMPTY RESULT FOR $text")
@@ -242,22 +249,20 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                                     tracksJson.results[i].trackName,
                                     tracksJson.results[i].artistName,
                                     tracksJson.results[i].trackTimeMillis,
-                                    tracksJson.results[i].artworkUrl100
+                                    tracksJson.results[i].artworkUrl100,
+                                    tracksJson.results[i].collectionName,
+                                    tracksJson.results[i].releaseDate,
+                                    tracksJson.results[i].primaryGenreName,
+                                    tracksJson.results[i].country
                                 )
                             )
                         } catch (npe: NullPointerException) {
                             Log.d("NULL", "SKIP THAT MF")
                             continue
                         }
-
-                        Log.i(
-                            "MEGA SUCCESS",
-                            "TRACK ${tracksJson.results[i].trackName} - ${tracksJson.results[i].artistName} ADDED"
-                        )
                     }
 
                     Log.i("CRITICAL SUCCESS", "ALL TRACKS ADDED")
-                    Log.i("TRACKS", "List of all added tracks: $tracks")
 
                     Log.d("SWITCH", "HIDE ERRORS, SHOW TRACKS")
 
