@@ -13,4 +13,11 @@
     <string name="empty_result">Ничего не нашлось</string>
     <string name="no_connection">Проблемы со связью\n\nЗагрузка не удалась. Проверьте подключение к интернету</string>
     <string name="update">Обновить</string>
+    <string name="you_have_searched">Вы искали</string>
+    <string name="clear_history">Очистить историю</string>
+    <string name="country">Страна</string>
+    <string name="genre">Жанр</string>
+    <string name="release_year">Год</string>
+    <string name="album">Альбом</string>
+    <string name="duration">Продолжительность</string>
 </resources>

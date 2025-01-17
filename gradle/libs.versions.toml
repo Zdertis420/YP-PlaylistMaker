@@ -2,6 +2,8 @@
 agp = "8.7.1"
 converterGson = "2.5.0"
 glide = "4.16.0"
+googleApiClientAndroid = "1.30.9"
+googleApiServicesYoutube = "v3-rev20210812-1.32.1"
 gson = "2.10"
 kotlin = "1.9.24"
 coreKtx = "1.13.1"

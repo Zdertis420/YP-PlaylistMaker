@@ -9,24 +9,44 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class TrackViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+class TrackViewHolder(
+    itemView: View,
+    private val onItemClickListener: ((position: Int) -> Unit)?
+) :
+    RecyclerView.ViewHolder(itemView) {
 
-    private val trackNameView: TextView = itemView.findViewById(R.id.track_name)
+    private var trackNameView: TextView = itemView.findViewById(R.id.track_name)
     private val artistNameView: TextView = itemView.findViewById(R.id.author)
     private val trackTimeView: TextView = itemView.findViewById(R.id.track_time)
     private val trackImageView: ShapeableImageView = itemView.findViewById(R.id.track_image)
 
+
     fun bind(model: Track) {
         trackNameView.text = model.trackName
         artistNameView.text = model.artistName
-        trackTimeView.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(model.trackTimeMillis)
+        artistNameView.requestLayout()
+        trackTimeView.text = SimpleDateFormat("mm:ss", Locale.getDefault())
+            .format(model.trackTimeMillis)
+        trackTimeView.requestLayout()
         Glide.with(itemView.context)
             .load(model.artworkUrl100)
-            .timeout(5000)
+            .timeout(2500)
             .placeholder(R.drawable.placeholder)
             .error(R.drawable.placeholder)
             .diskCacheStrategy(DiskCacheStrategy.NONE)
             .skipMemoryCache(true)
             .into(trackImageView)
+
+        trackNameView.isSelected = true
+        artistNameView.isSelected = true
+    }
+
+    init {
+        itemView.setOnClickListener {
+            val position = adapterPosition
+            if (position != RecyclerView.NO_POSITION) {
+                onItemClickListener?.invoke(position)
+            }
+        }
     }
 }

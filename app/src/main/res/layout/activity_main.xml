@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="@dimen/medium_padding"
-        android:paddingTop="@dimen/small_padding"
+        android:paddingTop="@dimen/smaller_padding"
         android:paddingBottom="@dimen/medium_padding"
         android:text="@string/app_name"
         android:textColor="@color/white"

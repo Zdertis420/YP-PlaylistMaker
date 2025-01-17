@@ -5,6 +5,6 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface PMApiService {
-    @GET("/search?entity=song")
+    @GET("/search?q=song")
     fun browseTracks(@Query("term") text: String): Call<TrackResponse>
 }
