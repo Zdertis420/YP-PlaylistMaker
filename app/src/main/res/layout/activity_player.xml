@@ -116,6 +116,7 @@
             android:layout_height="@dimen/medium_padding"
             android:layout_marginTop="4dp"
             app:layout_constraintEnd_toEndOf="parent"
+            android:gravity="center"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/play_button" />
 

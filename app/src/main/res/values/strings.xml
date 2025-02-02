@@ -23,6 +23,7 @@
     <string name="release_year">Year</string>
     <string name="album">Album</string>
     <string name="duration">Duration</string>
+    <string name="no_preview">There\'s no preview for this track</string>
 
     <string name="lorem_ipsum" translatable="false">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris

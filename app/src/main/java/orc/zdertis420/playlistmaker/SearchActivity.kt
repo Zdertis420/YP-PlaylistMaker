@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.PersistableBundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -14,6 +16,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -38,6 +41,15 @@ import java.util.concurrent.TimeUnit
 
 class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
+    companion object {
+        private const val CLICK_DELAY = 1000L
+        private const val SEARCH_DELAY = 2000L // как=то дофига, как по мне
+    }
+
+    private var isClickAllowed = true
+    private val handler = Handler(Looper.getMainLooper())
+    private val searchRunnable = Runnable { browseTracks(searchQuery) }
+
     private lateinit var backToMain: MaterialToolbar
     private lateinit var searchLine: EditText
     private lateinit var cancel: ImageView
@@ -56,6 +68,8 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var noConnection: LinearLayout
     private lateinit var noConnectionImage: ImageView
     private lateinit var updateConnection: TextView
+
+    private lateinit var progressBar: ProgressBar
 
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(2500, TimeUnit.MILLISECONDS)
@@ -100,6 +114,8 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         updateConnection = findViewById(R.id.update_connection)
 
         updateConnection.setOnClickListener(this)
+
+        progressBar = findViewById(R.id.progress_bar)
 
         searchHistory = findViewById(R.id.search_history)
         tracksHistoryView = findViewById(R.id.tracks_history)
@@ -161,6 +177,10 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                 showClearButton()
                 searchHistory.visibility =
                     if (searchLine.hasFocus() && s?.isEmpty() == true && tracksHistory.isNotEmpty()) View.VISIBLE else View.GONE
+
+                if (s?.isNotEmpty() == true) {
+                    searchDebounce()
+                }
             }
 
             override fun afterTextChanged(s: Editable?) {
@@ -187,14 +207,18 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             addToHistory(tracks[position])
 
             val startPlayerActivity = Intent(this, PlayerActivity::class.java)
-            startPlayerActivity.putExtra("track", tracks[position])
+            startPlayerActivity.putExtra("tracks", Gson().toJson(tracks))
+            startPlayerActivity.putExtra("current track", position)
+            startPlayerActivity.putExtra("single track player", false) // я просто скоприровал это с ветки experimental, наверное оно пригодится позже
             startActivity(startPlayerActivity)
 
         }
 
         (tracksHistoryView.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
             val startPlayerActivity = Intent(this, PlayerActivity::class.java)
-            startPlayerActivity.putExtra("track", tracksHistory.reversed()[position])
+            startPlayerActivity.putExtra("tracks", Gson().toJson(tracksHistory.reversed()))
+            startPlayerActivity.putExtra("current track", position)
+            startPlayerActivity.putExtra("single track player", true) // я просто скоприровал это с ветки experimental, наверное оно пригодится позже
             startActivity(startPlayerActivity)
 
             addToHistory(tracksHistory.reversed()[position])
@@ -218,7 +242,12 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     @GET("/search?q=term")
     private fun browseTracks(@Query("term") text: String) {
+        progressBar.visibility = View.VISIBLE
+        tracksList.visibility = View.GONE
+        emptyResult.visibility = View.GONE
+        noConnection.visibility = View.GONE
         val pmApiService = retrofit.create<PMApiService>()
+
 
         pmApiService.browseTracks(text).enqueue(object : Callback<TrackResponse> {
             override fun onResponse(call: Call<TrackResponse>, response: Response<TrackResponse>) {
@@ -236,6 +265,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                         tracksList.visibility = View.GONE
                         emptyResult.visibility = View.VISIBLE
                         noConnection.visibility = View.GONE
+                        progressBar.visibility = View.GONE
 
                         return
                     }
@@ -253,7 +283,8 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                                     tracksJson.results[i].collectionName,
                                     tracksJson.results[i].releaseDate,
                                     tracksJson.results[i].primaryGenreName,
-                                    tracksJson.results[i].country
+                                    tracksJson.results[i].country,
+                                    tracksJson.results[i].previewUrl
                                 )
                             )
                         } catch (npe: NullPointerException) {
@@ -269,6 +300,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                     tracksList.visibility = View.VISIBLE
                     emptyResult.visibility = View.GONE
                     noConnection.visibility = View.GONE
+                    progressBar.visibility = View.GONE
 
                     (tracksList.adapter as TrackAdapter).updateTracks(tracks)
                 }
@@ -279,11 +311,18 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
                 Log.d("SWITCH", "HIDE TRACKS, SHOW NO CONNECTION ERROR")
 
+                progressBar.visibility = View.GONE
+
                 tracksList.visibility = View.GONE
                 emptyResult.visibility = View.GONE
                 noConnection.visibility = View.VISIBLE
             }
         })
+    }
+
+    private fun searchDebounce() {
+        handler.removeCallbacks(searchRunnable)
+        handler.postDelayed(searchRunnable, SEARCH_DELAY)
     }
 
     private fun showClearButton() {
@@ -294,38 +333,52 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private fun clickDebounce(): Boolean {
+        val current = isClickAllowed
+
+        if (isClickAllowed) {
+            isClickAllowed = false
+            handler.postDelayed({ isClickAllowed = true }, CLICK_DELAY)
+        }
+        return current
+    }
+
     override fun onClick(v: View?) {
-        when (v?.id) {
-            R.id.back_to_main -> finish()
+        if (isClickAllowed) {
+            clickDebounce()
 
-            R.id.clear_text -> {
-                searchLine.text.clear()
-                searchQuery = ""
-                (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
-                    .hideSoftInputFromWindow(v.windowToken, 0)
+            when (v?.id) {
+                R.id.back_to_main -> finish()
 
-                Log.d("SWITCH", "HIDE EVERYTHING, QUERY CLEARED")
+                R.id.clear_text -> {
+                    searchLine.text.clear()
+                    searchQuery = ""
+                    (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
+                        .hideSoftInputFromWindow(v.windowToken, 0)
 
-                tracksList.visibility = View.GONE
-                emptyResult.visibility = View.GONE
-                noConnection.visibility = View.GONE
-            }
+                    Log.d("SWITCH", "HIDE EVERYTHING, QUERY CLEARED")
 
-            R.id.update_connection -> {
-                browseTracks(searchQuery)
+                    tracksList.visibility = View.GONE
+                    emptyResult.visibility = View.GONE
+                    noConnection.visibility = View.GONE
+                }
 
-                Log.d("NO CONNECTION", "RETRY")
-            }
+                R.id.update_connection -> {
+                    browseTracks(searchQuery)
 
-            R.id.clear_history -> {
-                tracksHistory.clear()
-                history.edit()
-                    .clear()
-                    .apply()
+                    Log.d("NO CONNECTION", "RETRY")
+                }
 
-                (tracksHistoryView.adapter as TrackAdapter).updateTracks(tracksHistory)
+                R.id.clear_history -> {
+                    tracksHistory.clear()
+                    history.edit()
+                        .clear()
+                        .apply()
 
-                searchHistory.visibility = View.GONE
+                    (tracksHistoryView.adapter as TrackAdapter).updateTracks(tracksHistory)
+
+                    searchHistory.visibility = View.GONE
+                }
             }
         }
     }
