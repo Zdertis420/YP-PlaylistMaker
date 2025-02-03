@@ -48,7 +48,7 @@
             android:paddingEnd="@dimen/small_padding"
             android:singleLine="true"
             android:textColor="@color/unchangeable_standard_text_color"
-            android:textColorHint="@color/unchangeable_subtext"
+            android:textColorHint="@color/why"
             android:textCursorDrawable="@drawable/cursor"
             android:textSize="@dimen/standard_text_size"
             tools:ignore="Autofill,TextFields" />
@@ -59,7 +59,7 @@
             android:layout_height="match_parent"
             android:layout_marginEnd="@dimen/small_padding"
             android:layout_weight="1"
-            android:alpha="1.0"
+            android:alpha="0.0"
             android:src="@drawable/clear"
             tools:ignore="ContentDescription" />
     </LinearLayout>
