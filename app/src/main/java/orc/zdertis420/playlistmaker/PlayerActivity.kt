@@ -1,11 +1,14 @@
 package orc.zdertis420.playlistmaker
 
-import android.os.Build
+import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -15,10 +18,22 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.imageview.ShapeableImageView
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlin.properties.Delegates
 
 class PlayerActivity : AppCompatActivity(), View.OnClickListener {
+
+    companion object {
+        private const val STATE_DEFAULT = 0
+        private const val STATE_PREPARED = 1
+        private const val STATE_PLAYING = 2
+        private const val STATE_PAUSED = 3
+
+        private const val DELAY = 1000L
+    }
 
     private lateinit var back: MaterialToolbar
 
@@ -34,7 +49,17 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var year: TextView
     private lateinit var album: TextView
     private lateinit var duration: TextView
+    private var previewUrl: String = ""
 
+    private lateinit var tracks: List<Track>
+    private var current by Delegates.notNull<Int>()
+
+    private var mediaPlayer = MediaPlayer()
+    private var state = STATE_DEFAULT
+
+    private var mainThreadHandler: Handler = Handler(Looper.getMainLooper())
+    private lateinit var updateTimePLaying: Runnable
+    private val simpleDate by lazy { SimpleDateFormat("mm:ss", Locale.getDefault()) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,46 +88,148 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
         back.setOnClickListener(this)
 
-        val track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra("track", Track::class.java)
-        } else {
-            intent.getParcelableExtra("track") as? Track
+        playButton.setOnClickListener(this)
+
+        timePlaying.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(0L)
+
+        val extras = intent.extras
+
+        tracks = Gson().fromJson(
+            extras!!.getString("tracks"),
+            object : TypeToken<MutableList<Track>>() {}.type
+        )
+
+        current = extras.getInt("current track")
+
+        updateTrack(current)
+
+        preparePlayer()
+
+        updateTimePLaying = object : Runnable {
+            override fun run() {
+                timePlaying.text = simpleDate.format(mediaPlayer.currentPosition)
+
+                mainThreadHandler.postDelayed(this, DELAY)
+            }
+        }
+    }
+
+    private fun preparePlayer() {
+        try {
+            mediaPlayer.setDataSource(previewUrl)
+        } catch (npe: NullPointerException) {
+            Toast.makeText(this, getString(R.string.no_preview), Toast.LENGTH_SHORT).show()
+
+            Log.e("APPLE", "OFFICE OF FAGGOTS")
+
+            return
         }
 
-        Log.d("TRACK", track.toString())
-
-        if (track != null) {
-            Glide.with(this)
-                .load(track.artworkUrl100.replaceAfterLast("/", "512x512bb.jpg"))
-                .transform(RoundedCorners(8))
-                .timeout(2500)
-                .placeholder(R.drawable.placeholder)
-                .error(R.drawable.placeholder)
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                .skipMemoryCache(true)
-                .into(trackImage)
-
-
-            trackName.text = track.trackName
-            trackAuthor.text = track.artistName
-            country.text = track.country
-            genre.text = track.primaryGenreName
-            year.text = track.releaseDate.substring(0, 4)
-            album.text = track.collectionName
-            duration.text = SimpleDateFormat("mm:ss", Locale.getDefault())
-                .format(track.trackTimeMillis)
-
-            trackName.isSelected = true
-            trackAuthor.isSelected = true
-            country.isSelected = true
-            genre.isSelected = true
-            album.isSelected = true
+        mediaPlayer.setOnPreparedListener {
+            state = STATE_PREPARED
         }
+
+        mediaPlayer.setOnCompletionListener {
+            stopPlayer()
+        }
+
+        mediaPlayer.prepareAsync()
+    }
+
+    private fun startPlayer() {
+        mediaPlayer.start()
+
+        playButton.setImageResource(R.drawable.pause_button)
+
+        state = STATE_PLAYING
+
+        mainThreadHandler.post { updateTimePLaying.run() }
+    }
+
+    private fun pausePlayer() {
+        mediaPlayer.pause()
+
+        playButton.setImageResource(R.drawable.play_button)
+
+        state = STATE_PAUSED
+
+        mainThreadHandler.post { updateTimePLaying.run() }
+    }
+
+    private fun stopPlayer() {
+        mediaPlayer.stop()
+
+        playButton.setImageResource(R.drawable.play_button)
+        timePlaying.text = "0:00"
+
+        state = STATE_PREPARED
+
+        mainThreadHandler.removeCallbacks(updateTimePLaying)
+    }
+
+    private fun playbackControl() {
+        mainThreadHandler.post { updateTimePLaying.run() }
+
+        when (state) {
+            STATE_PLAYING -> pausePlayer()
+            STATE_PREPARED, STATE_PAUSED -> startPlayer()
+        }
+    }
+
+    private fun updateTrack(current: Int) {
+        val track = tracks[current]
+
+        Log.d("current", track.toString())
+
+        Glide.with(this)
+            .load(track.artworkUrl100.replaceAfterLast("/", "512x512bb.jpg"))
+            .transform(RoundedCorners(8))
+            .timeout(2500)
+            .placeholder(R.drawable.placeholder)
+            .error(R.drawable.placeholder)
+            .diskCacheStrategy(DiskCacheStrategy.NONE)
+            .skipMemoryCache(true)
+            .into(trackImage)
+
+
+        trackName.text = track.trackName
+        trackAuthor.text = track.artistName
+        country.text = track.country
+        genre.text = track.primaryGenreName
+        year.text = track.releaseDate.substring(0, 4)
+        album.text = track.collectionName
+        duration.text = SimpleDateFormat("mm:ss", Locale.getDefault())
+            .format(track.trackTimeMillis)
+        previewUrl = track.previewUrl
+
+
+
+        trackName.isSelected = true
+        trackAuthor.isSelected = true
+        country.isSelected = true
+        genre.isSelected = true
+        album.isSelected = true
     }
 
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.back -> finish()
+
+            R.id.play_button -> {
+                playbackControl()
+
+
+            }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopPlayer()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mediaPlayer.release()
     }
 }
