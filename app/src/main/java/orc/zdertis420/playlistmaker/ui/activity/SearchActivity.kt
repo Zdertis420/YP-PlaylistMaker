@@ -1,8 +1,10 @@
-package orc.zdertis420.playlistmaker
+package orc.zdertis420.playlistmaker.ui.activity
 
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -27,16 +29,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import okhttp3.OkHttpClient
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
-import retrofit2.http.GET
-import retrofit2.http.Query
-import java.util.concurrent.TimeUnit
+import orc.zdertis420.playlistmaker.Creator
+import orc.zdertis420.playlistmaker.PlayerActivity
+import orc.zdertis420.playlistmaker.R
+import orc.zdertis420.playlistmaker.ui.track.TrackAdapter
+import orc.zdertis420.playlistmaker.domain.entities.Track
 
 
 class SearchActivity : AppCompatActivity(), View.OnClickListener {
@@ -70,16 +67,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var updateConnection: TextView
 
     private lateinit var progressBar: ProgressBar
-
-    private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(2500, TimeUnit.MILLISECONDS)
-        .build()
-
-    private val retrofit = Retrofit.Builder()
-        .baseUrl("https://itunes.apple.com")
-        .addConverterFactory(GsonConverterFactory.create())
-        .client(okHttpClient)
-        .build()
 
     private var tracks = mutableListOf<Track>()
 
@@ -192,13 +179,14 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                     tracksList.visibility = View.GONE
                     emptyResult.visibility = View.GONE
                     noConnection.visibility = View.GONE
+                    progressBar.visibility = View.GONE
                 }
             }
         })
 
         searchLine.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE && searchQuery.isNotEmpty()) {
-                browseTracks(searchQuery)
+                searchDebounce()
             }
             false
         }
@@ -209,7 +197,10 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             val startPlayerActivity = Intent(this, PlayerActivity::class.java)
             startPlayerActivity.putExtra("tracks", Gson().toJson(tracks))
             startPlayerActivity.putExtra("current track", position)
-            startPlayerActivity.putExtra("single track player", false) // я просто скоприровал это с ветки experimental, наверное оно пригодится позже
+            startPlayerActivity.putExtra(
+                "single track player",
+                false
+            ) // я просто скоприровал это с ветки experimental, наверное оно пригодится позже
             startActivity(startPlayerActivity)
 
         }
@@ -218,7 +209,10 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             val startPlayerActivity = Intent(this, PlayerActivity::class.java)
             startPlayerActivity.putExtra("tracks", Gson().toJson(tracksHistory.reversed()))
             startPlayerActivity.putExtra("current track", position)
-            startPlayerActivity.putExtra("single track player", true) // я просто скоприровал это с ветки experimental, наверное оно пригодится позже
+            startPlayerActivity.putExtra(
+                "single track player",
+                true
+            ) // я просто скоприровал это с ветки experimental, наверное оно пригодится позже
             startActivity(startPlayerActivity)
 
             addToHistory(tracksHistory.reversed()[position])
@@ -240,89 +234,75 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     }
 
-    @GET("/search?q=term")
-    private fun browseTracks(@Query("term") text: String) {
+    private fun browseTracks(text: String) {
+        if (!networkAvailable()) {
+            showNoConnectionError()
+
+            return
+        }
+
+        showLoading()
+
+        val trackInteractor = Creator.provideTrackInteractor()
+
+        trackInteractor.browseTracks(text) { result ->
+            runOnUiThread {
+                progressBar.visibility = View.GONE
+
+                result.onSuccess { foundTracks ->
+                    Log.d("TRACKS", foundTracks.toString())
+
+                    if (foundTracks.isEmpty()) {
+                        showEmptyResultError()
+                    } else {
+                        showTracks(foundTracks)
+                    }
+                }
+                    .onFailure { error ->
+                        Log.e("ERROR", error.toString())
+                    }
+            }
+        }
+    }
+
+    private fun showTracks(tracks: List<Track>) {
+        (tracksList.adapter as TrackAdapter).updateTracks(tracks)
+
+        progressBar.visibility = View.GONE
+        tracksList.visibility = View.VISIBLE
+        emptyResult.visibility = View.GONE
+        noConnection.visibility = View.GONE
+    }
+
+    private fun showEmptyResultError() {
+        progressBar.visibility = View.GONE
+        tracksList.visibility = View.GONE
+        emptyResult.visibility = View.VISIBLE
+        noConnection.visibility = View.GONE
+    }
+
+    private fun showNoConnectionError() {
+        Log.d("SWITCH", "HIDE TRACKS, SHOW NO CONNECTION ERROR")
+
+        progressBar.visibility = View.GONE
+        tracksList.visibility = View.GONE
+        emptyResult.visibility = View.GONE
+        noConnection.visibility = View.VISIBLE
+    }
+
+    private fun showLoading() {
         progressBar.visibility = View.VISIBLE
         tracksList.visibility = View.GONE
         emptyResult.visibility = View.GONE
         noConnection.visibility = View.GONE
-        val pmApiService = retrofit.create<PMApiService>()
-
-
-        pmApiService.browseTracks(text).enqueue(object : Callback<TrackResponse> {
-            override fun onResponse(call: Call<TrackResponse>, response: Response<TrackResponse>) {
-
-                Log.i("SUCCESS", "there is a response for $text")
-
-                if (response.isSuccessful) {
-                    val tracksJson = response.body()
-
-                    if (tracksJson!!.resultCount == 0 && text != "") {
-                        Log.d("EMPTY RESULT", "EMPTY RESULT FOR $text")
-
-                        Log.d("SWITCH", "HIDE TRACKS, SHOW EMPTY RESULT ERROR")
-
-                        tracksList.visibility = View.GONE
-                        emptyResult.visibility = View.VISIBLE
-                        noConnection.visibility = View.GONE
-                        progressBar.visibility = View.GONE
-
-                        return
-                    }
-
-                    tracks.clear()
-
-                    for (i in 0..<tracksJson.resultCount) {
-                        try {
-                            tracks.add(
-                                Track(
-                                    tracksJson.results[i].trackName,
-                                    tracksJson.results[i].artistName,
-                                    tracksJson.results[i].trackTimeMillis,
-                                    tracksJson.results[i].artworkUrl100,
-                                    tracksJson.results[i].collectionName,
-                                    tracksJson.results[i].releaseDate,
-                                    tracksJson.results[i].primaryGenreName,
-                                    tracksJson.results[i].country,
-                                    tracksJson.results[i].previewUrl
-                                )
-                            )
-                        } catch (npe: NullPointerException) {
-                            Log.d("NULL", "SKIP THAT MF")
-                            continue
-                        }
-                    }
-
-                    Log.i("CRITICAL SUCCESS", "ALL TRACKS ADDED")
-
-                    Log.d("SWITCH", "HIDE ERRORS, SHOW TRACKS")
-
-                    tracksList.visibility = View.VISIBLE
-                    emptyResult.visibility = View.GONE
-                    noConnection.visibility = View.GONE
-                    progressBar.visibility = View.GONE
-
-                    (tracksList.adapter as TrackAdapter).updateTracks(tracks)
-                }
-            }
-
-            override fun onFailure(call: Call<TrackResponse>, t: Throwable) {
-                Log.e("FAIL", "there's no response")
-
-                Log.d("SWITCH", "HIDE TRACKS, SHOW NO CONNECTION ERROR")
-
-                progressBar.visibility = View.GONE
-
-                tracksList.visibility = View.GONE
-                emptyResult.visibility = View.GONE
-                noConnection.visibility = View.VISIBLE
-            }
-        })
     }
 
-    private fun searchDebounce() {
-        handler.removeCallbacks(searchRunnable)
-        handler.postDelayed(searchRunnable, SEARCH_DELAY)
+    private fun networkAvailable(): Boolean {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
     private fun showClearButton() {
@@ -331,6 +311,11 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         } else {
             cancel.alpha = 0.0F
         }
+    }
+
+    private fun searchDebounce() {
+        handler.removeCallbacks(searchRunnable)
+        handler.postDelayed(searchRunnable, SEARCH_DELAY)
     }
 
     private fun clickDebounce(): Boolean {

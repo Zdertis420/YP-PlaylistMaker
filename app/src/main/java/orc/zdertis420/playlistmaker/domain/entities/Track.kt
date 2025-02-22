@@ -1,4 +1,4 @@
-package orc.zdertis420.playlistmaker
+package orc.zdertis420.playlistmaker.domain.entities
 
 import com.google.gson.annotations.SerializedName
 

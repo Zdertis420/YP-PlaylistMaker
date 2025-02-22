@@ -27,7 +27,7 @@
             android:name=".MediaLibraryActivity"
             android:exported="false" />
         <activity
-            android:name=".SearchActivity"
+            android:name=".ui.activity.SearchActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

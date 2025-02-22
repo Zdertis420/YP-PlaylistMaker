@@ -1,9 +1,11 @@
-package orc.zdertis420.playlistmaker
+package orc.zdertis420.playlistmaker.ui.track
 
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import orc.zdertis420.playlistmaker.R
+import orc.zdertis420.playlistmaker.domain.entities.Track
 
 class TrackAdapter(private var tracks: List<Track>) : RecyclerView.Adapter<TrackViewHolder>() {
 
