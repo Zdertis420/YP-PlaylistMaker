@@ -27,8 +27,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.PlayerActivity
 import orc.zdertis420.playlistmaker.R
@@ -123,10 +121,8 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     override fun onStart() {
         super.onStart()
 
-        tracksHistory = Gson().fromJson(
-            history.getString("HISTORY", ""),
-            object : TypeToken<MutableList<Track>>() {}.type
-        ) ?: mutableListOf()
+        val trackHistoryInteractor = Creator.provideTrackHistoryInteractor(application)
+        tracksHistory = trackHistoryInteractor.getTrackHistory()
 
         (tracksHistoryView.adapter as TrackAdapter).updateTracks(tracksHistory.reversed())
     }
@@ -194,30 +190,24 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         (tracksList.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
             addToHistory(tracks[position])
 
-            val startPlayerActivity = Intent(this, PlayerActivity::class.java)
-            startPlayerActivity.putExtra("tracks", Gson().toJson(tracks))
-            startPlayerActivity.putExtra("current track", position)
-            startPlayerActivity.putExtra(
-                "single track player",
-                false
-            ) // я просто скоприровал это с ветки experimental, наверное оно пригодится позже
-            startActivity(startPlayerActivity)
+            startPlayerActivity(tracks[position])
 
         }
 
         (tracksHistoryView.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
-            val startPlayerActivity = Intent(this, PlayerActivity::class.java)
-            startPlayerActivity.putExtra("tracks", Gson().toJson(tracksHistory.reversed()))
-            startPlayerActivity.putExtra("current track", position)
-            startPlayerActivity.putExtra(
-                "single track player",
-                true
-            ) // я просто скоприровал это с ветки experimental, наверное оно пригодится позже
-            startActivity(startPlayerActivity)
+            startPlayerActivity(tracksHistory[position])
 
             addToHistory(tracksHistory.reversed()[position])
 
         }
+    }
+
+    private fun startPlayerActivity(track: Track) {
+        val startPlayerActivity = Intent(this, PlayerActivity::class.java)
+
+        startPlayerActivity.putExtra("track", track)
+
+        startActivity(startPlayerActivity)
     }
 
     private fun addToHistory(track: Track) {
@@ -250,11 +240,12 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                 progressBar.visibility = View.GONE
 
                 result.onSuccess { foundTracks ->
-                    Log.d("TRACKS", foundTracks.toString())
+//                    Log.d("TRACKS", foundTracks.toString())
 
                     if (foundTracks.isEmpty()) {
                         showEmptyResultError()
                     } else {
+                        tracks = foundTracks.toMutableList()
                         showTracks(foundTracks)
                     }
                 }
@@ -378,8 +369,9 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onStop() {
         super.onStop()
-        history.edit()
-            .putString("HISTORY", Gson().toJson(tracksHistory).toString())
-            .apply()
+
+        val trackHistoryInteractor = Creator.provideTrackHistoryInteractor(application)
+
+        trackHistoryInteractor.saveTrackHistory(tracksHistory)
     }
 }
