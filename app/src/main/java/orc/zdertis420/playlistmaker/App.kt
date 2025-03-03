@@ -5,15 +5,12 @@ import android.app.Application
 class App : Application() {
 
     var isDarkTheme = false
-    private val themeInteractor = Creator.provideThemeInteractor()
+    private val themeInteractor = Creator.provideThemeInteractor(this)
 
     override fun onCreate() {
         super.onCreate()
 
-
-        val preferences = getSharedPreferences("THEME_SETTING", MODE_PRIVATE)
-
-        switchTheme(preferences.getBoolean("THEME", false))
+        switchTheme(themeInteractor.getTheme())
     }
 
     fun switchTheme(isDarkThemeEnabled: Boolean) {

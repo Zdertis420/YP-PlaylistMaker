@@ -7,4 +7,12 @@ class ThemeInteractorImplementation(private val themeRepository: ThemeRepository
     override fun switchTheme(isDarkModeEnabled: Boolean) {
         themeRepository.switchTheme(isDarkModeEnabled)
     }
+
+    override fun saveTheme(theme: Boolean) {
+        themeRepository.saveTheme(theme)
+    }
+
+    override fun getTheme(): Boolean {
+        return themeRepository.getTheme()
+    }
 }

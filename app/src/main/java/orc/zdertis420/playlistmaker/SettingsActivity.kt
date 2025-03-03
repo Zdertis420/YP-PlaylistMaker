@@ -46,9 +46,8 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
         switchTheme.setOnCheckedChangeListener { switch, state ->
             Log.i("THEME", state.toString())
             (applicationContext as App).switchTheme(state)
-            preferences.edit()
-                .putBoolean("THEME", state)
-                .apply()
+            val themeInteractor = Creator.provideThemeInteractor(applicationContext)
+            themeInteractor.saveTheme(state)
         }
 
         share.setOnClickListener(this)

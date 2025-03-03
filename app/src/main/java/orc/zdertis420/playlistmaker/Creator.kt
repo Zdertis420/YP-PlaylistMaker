@@ -44,11 +44,12 @@ object Creator {
         return PlayerRepositoryImplementation()
     }
 
-    fun provideThemeInteractor(): ThemeInteractor {
-        return ThemeInteractorImplementation(getThemeRepository())
+    fun provideThemeInteractor(context: Context): ThemeInteractor {
+        return ThemeInteractorImplementation(getThemeRepository(context))
     }
 
-    private fun getThemeRepository(): ThemeRepository {
-        return ThemeRepositoryImplementation()
+    private fun getThemeRepository(context: Context): ThemeRepository {
+        return ThemeRepositoryImplementation(context)
     }
+
 }
