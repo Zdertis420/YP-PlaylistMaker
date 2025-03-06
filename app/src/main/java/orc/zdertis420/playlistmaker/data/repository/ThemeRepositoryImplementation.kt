@@ -3,7 +3,8 @@ package orc.zdertis420.playlistmaker.data.repository
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import androidx.appcompat.app.AppCompatDelegate
-import orc.zdertis420.playlistmaker.domain.api.ThemeRepository
+import orc.zdertis420.playlistmaker.domain.repository.ThemeRepository
+import androidx.core.content.edit
 
 class ThemeRepositoryImplementation(private val context: Context) : ThemeRepository {
 
@@ -22,9 +23,9 @@ class ThemeRepositoryImplementation(private val context: Context) : ThemeReposit
     }
 
     override fun saveTheme(theme: Boolean) {
-        themePreference.edit()
-            .putBoolean("THEME", theme)
-            .apply()
+        themePreference.edit {
+            putBoolean("THEME", theme)
+        }
     }
 
     override fun getTheme(): Boolean {

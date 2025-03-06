@@ -4,7 +4,7 @@ import android.util.Log
 import orc.zdertis420.playlistmaker.data.NetworkClient
 import orc.zdertis420.playlistmaker.data.dto.TrackResponse
 import orc.zdertis420.playlistmaker.data.dto.TrackSearchRequest
-import orc.zdertis420.playlistmaker.domain.api.TrackRepository
+import orc.zdertis420.playlistmaker.domain.repository.TrackRepository
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import kotlin.concurrent.thread
 
@@ -38,7 +38,7 @@ class TrackRepositoryImplementation(private val networkClient: NetworkClient) : 
                                         previewUrl = trackDto.previewUrl
                                     )
                                 )
-                            } catch (npe: NullPointerException) {
+                            } catch (_: NullPointerException) {
                                 Log.d("NULL FOUND", "SKIP THAT MF")
                                 continue
                             }

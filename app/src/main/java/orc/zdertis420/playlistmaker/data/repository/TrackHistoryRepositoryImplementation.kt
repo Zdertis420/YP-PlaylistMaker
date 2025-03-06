@@ -3,8 +3,9 @@ package orc.zdertis420.playlistmaker.data.repository
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import orc.zdertis420.playlistmaker.domain.api.TrackHistoryRepository
+import orc.zdertis420.playlistmaker.domain.repository.TrackHistoryRepository
 import orc.zdertis420.playlistmaker.domain.entities.Track
+import androidx.core.content.edit
 
 class TrackHistoryRepositoryImplementation(private val context: Context) : TrackHistoryRepository {
 
@@ -20,8 +21,14 @@ class TrackHistoryRepositoryImplementation(private val context: Context) : Track
     }
 
     override fun saveTrackHistory(trackHistory: MutableList<Track>) {
-        history.edit()
-            .putString("HISTORY", Gson().toJson(trackHistory).toString())
-            .apply()
+        history.edit {
+            putString("HISTORY", Gson().toJson(trackHistory).toString())
+        }
+    }
+
+    override fun clearHistory() {
+        history.edit {
+            clear()
+        }
     }
 }

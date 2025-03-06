@@ -1,7 +1,7 @@
-package orc.zdertis420.playlistmaker.domain.implementations
+package orc.zdertis420.playlistmaker.domain.implementations.interactor
 
-import orc.zdertis420.playlistmaker.domain.api.ThemeInteractor
-import orc.zdertis420.playlistmaker.domain.api.ThemeRepository
+import orc.zdertis420.playlistmaker.domain.interactor.ThemeInteractor
+import orc.zdertis420.playlistmaker.domain.repository.ThemeRepository
 
 class ThemeInteractorImplementation(private val themeRepository: ThemeRepository) : ThemeInteractor {
     override fun switchTheme(isDarkModeEnabled: Boolean) {

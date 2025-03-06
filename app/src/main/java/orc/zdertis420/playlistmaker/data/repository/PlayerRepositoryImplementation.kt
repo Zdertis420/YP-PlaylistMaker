@@ -2,39 +2,71 @@ package orc.zdertis420.playlistmaker.data.repository
 
 import android.media.MediaPlayer
 import android.util.Log
-import orc.zdertis420.playlistmaker.domain.api.PlayerRepository
+import orc.zdertis420.playlistmaker.domain.repository.PlayerRepository
 
 class PlayerRepositoryImplementation : PlayerRepository {
 
-    private val mediaPlayer = MediaPlayer()
+    enum class PlayerState {
+        IDLE, PREPARING, PREPARED, STARTED, PAUSED, COMPLETED, ERROR, RELEASED
+    }
+
+    private var mediaPlayer: MediaPlayer? = null
+    private var playerState = PlayerState.IDLE
 
     override fun preparePlayer(url: String, onPrepared: () -> Unit, onCompleted: () -> Unit) {
-        try {
-            mediaPlayer.setDataSource(url)
-        } catch (npe: NullPointerException) {
-            Log.e("APPLE", "OFFICE OF FAGGOTS")
+        playerState = PlayerState.PREPARING
 
-            return
+        mediaPlayer = MediaPlayer().apply {
+            try {
+                setDataSource(url)
+                prepareAsync()
+
+                setOnPreparedListener {
+                    playerState = PlayerState.PREPARED
+                }
+
+                setOnErrorListener { _, error, extras ->
+                    playerState = PlayerState.ERROR
+                    Log.e("ERROR", "MediaPlayer error: $error\nExtra info: $extras")
+
+                    true
+                }
+
+                setOnCompletionListener {
+                    playerState = PlayerState.COMPLETED
+                }
+            } catch (e: Exception) {
+                playerState = PlayerState.ERROR
+                Log.e("ERROR", "Error while preparing MediaPlayer: $e")
+            }
         }
     }
 
     override fun startPlayer() {
-        mediaPlayer.start()
+        if (playerState == PlayerState.PREPARED || playerState == PlayerState.PAUSED) {
+            mediaPlayer?.start()
+            playerState = PlayerState.STARTED
+        }
     }
 
     override fun pausePlayer() {
-        mediaPlayer.pause()
+        if (playerState == PlayerState.STARTED) {
+            mediaPlayer?.pause()
+            playerState = PlayerState.PAUSED
+        }
     }
 
     override fun releasePlayer() {
-        mediaPlayer.release()
+        mediaPlayer?.release()
+        mediaPlayer = null
+        playerState = PlayerState.RELEASED
     }
 
     override fun isPlaying(): Boolean {
-        return mediaPlayer.isPlaying
+        return mediaPlayer?.isPlaying ?: false
     }
 
     override fun getCurrentPosition(): Int {
-        return mediaPlayer.currentPosition
+        return mediaPlayer?.currentPosition ?: 0
     }
 }

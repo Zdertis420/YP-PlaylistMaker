@@ -1,7 +1,7 @@
-package orc.zdertis420.playlistmaker.domain.implementations
+package orc.zdertis420.playlistmaker.domain.implementations.interactor
 
-import orc.zdertis420.playlistmaker.domain.api.TrackInteractor
-import orc.zdertis420.playlistmaker.domain.api.TrackRepository
+import orc.zdertis420.playlistmaker.domain.interactor.TrackInteractor
+import orc.zdertis420.playlistmaker.domain.repository.TrackRepository
 import orc.zdertis420.playlistmaker.domain.entities.Track
 
 class TrackInteractorImplementation(private val trackRepository: TrackRepository) : TrackInteractor {

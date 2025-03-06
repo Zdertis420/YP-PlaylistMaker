@@ -1,6 +1,6 @@
-package orc.zdertis420.playlistmaker.domain.api
+package orc.zdertis420.playlistmaker.domain.repository
 
-interface ThemeInteractor {
+interface ThemeRepository {
     fun switchTheme(isDarkModeEnabled: Boolean)
 
     fun saveTheme(theme: Boolean)

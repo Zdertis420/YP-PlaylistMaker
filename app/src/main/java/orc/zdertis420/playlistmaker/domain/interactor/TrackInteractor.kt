@@ -1,7 +1,7 @@
-package orc.zdertis420.playlistmaker.domain.api
+package orc.zdertis420.playlistmaker.domain.interactor
 
 import orc.zdertis420.playlistmaker.domain.entities.Track
 
-interface TrackRepository {
+interface TrackInteractor {
     fun browseTracks(expression: String, callback: (Result<List<Track>>) -> Unit)
 }

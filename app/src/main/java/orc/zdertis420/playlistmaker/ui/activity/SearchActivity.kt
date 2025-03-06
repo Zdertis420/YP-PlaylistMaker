@@ -1,6 +1,5 @@
 package orc.zdertis420.playlistmaker.ui.activity
 
-import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.ConnectivityManager
@@ -28,7 +27,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import orc.zdertis420.playlistmaker.Creator
-import orc.zdertis420.playlistmaker.PlayerActivity
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.ui.track.TrackAdapter
 import orc.zdertis420.playlistmaker.domain.entities.Track
@@ -70,9 +68,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     private var tracksHistory = mutableListOf<Track>()
 
-    private val history by lazy {
-        application.getSharedPreferences("HISTORY", Context.MODE_PRIVATE)
-    }
+    private val trackHistoryInteractor = Creator.provideTrackHistoryInteractor(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -121,7 +117,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     override fun onStart() {
         super.onStart()
 
-        val trackHistoryInteractor = Creator.provideTrackHistoryInteractor(application)
         tracksHistory = trackHistoryInteractor.getTrackHistory()
 
         (tracksHistoryView.adapter as TrackAdapter).updateTracks(tracksHistory.reversed())
@@ -195,7 +190,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         (tracksHistoryView.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
-            startPlayerActivity(tracksHistory[position])
+            startPlayerActivity(tracksHistory.reversed()[position])
 
             addToHistory(tracksHistory.reversed()[position])
 
@@ -290,7 +285,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun networkAvailable(): Boolean {
         val connectivityManager =
-            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
@@ -347,9 +342,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
                 R.id.clear_history -> {
                     tracksHistory.clear()
-                    history.edit()
-                        .clear()
-                        .apply()
+                    trackHistoryInteractor.clearTrackHistory()
 
                     (tracksHistoryView.adapter as TrackAdapter).updateTracks(tracksHistory)
 

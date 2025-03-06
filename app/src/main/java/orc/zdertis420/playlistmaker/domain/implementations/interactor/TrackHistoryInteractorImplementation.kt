@@ -1,7 +1,7 @@
-package orc.zdertis420.playlistmaker.domain.implementations
+package orc.zdertis420.playlistmaker.domain.implementations.interactor
 
-import orc.zdertis420.playlistmaker.domain.api.TrackHistoryInteractor
-import orc.zdertis420.playlistmaker.domain.api.TrackHistoryRepository
+import orc.zdertis420.playlistmaker.domain.interactor.TrackHistoryInteractor
+import orc.zdertis420.playlistmaker.domain.repository.TrackHistoryRepository
 import orc.zdertis420.playlistmaker.domain.entities.Track
 
 class TrackHistoryInteractorImplementation(
@@ -13,5 +13,9 @@ class TrackHistoryInteractorImplementation(
 
     override fun saveTrackHistory(trackHistory: MutableList<Track>) {
         trackHistoryRepository.saveTrackHistory(trackHistory)
+    }
+
+    override fun clearTrackHistory() {
+        trackHistoryRepository.clearHistory()
     }
 }

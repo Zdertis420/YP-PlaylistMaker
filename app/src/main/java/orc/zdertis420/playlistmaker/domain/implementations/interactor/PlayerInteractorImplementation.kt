@@ -1,7 +1,7 @@
-package orc.zdertis420.playlistmaker.domain.implementations
+package orc.zdertis420.playlistmaker.domain.implementations.interactor
 
-import orc.zdertis420.playlistmaker.domain.api.PlayerInteractor
-import orc.zdertis420.playlistmaker.domain.api.PlayerRepository
+import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
+import orc.zdertis420.playlistmaker.domain.repository.PlayerRepository
 
 class PlayerInteractorImplementation(
     private val playerRepository: PlayerRepository

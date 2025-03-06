@@ -1,4 +1,4 @@
-package orc.zdertis420.playlistmaker
+package orc.zdertis420.playlistmaker.ui.activity
 
 import android.os.Build
 import android.os.Bundle
@@ -17,6 +17,8 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.imageview.ShapeableImageView
+import orc.zdertis420.playlistmaker.Creator
+import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import java.text.SimpleDateFormat
 import java.util.Locale
