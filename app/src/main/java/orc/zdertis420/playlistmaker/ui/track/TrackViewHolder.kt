@@ -1,4 +1,4 @@
-package orc.zdertis420.playlistmaker
+package orc.zdertis420.playlistmaker.ui.track
 
 import android.view.View
 import android.widget.TextView
@@ -6,6 +6,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.imageview.ShapeableImageView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import orc.zdertis420.playlistmaker.R
+import orc.zdertis420.playlistmaker.domain.entities.Track
 import java.text.SimpleDateFormat
 import java.util.Locale
 

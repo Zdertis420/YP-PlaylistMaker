@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "orc.zdertis420.playlistmaker"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "orc.zdertis420.playlistmaker"

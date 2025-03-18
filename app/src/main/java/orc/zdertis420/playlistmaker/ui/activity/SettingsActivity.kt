@@ -1,7 +1,5 @@
-package orc.zdertis420.playlistmaker
+package orc.zdertis420.playlistmaker.ui.activity
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -12,6 +10,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.switchmaterial.SwitchMaterial
+import orc.zdertis420.playlistmaker.App
+import orc.zdertis420.playlistmaker.Creator
+import orc.zdertis420.playlistmaker.R
 
 class SettingsActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -20,6 +21,10 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var share: TextView
     private lateinit var support: TextView
     private lateinit var eula: TextView
+
+    private val shareAppUseCase = Creator.provideShareAppUseCase(this)
+    private val contactSupportUseCase = Creator.provideContactSupportUSeCase(this)
+    private val seeEulaUseCase = Creator.provideSeeEulaUseCase(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,7 +36,8 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
             insets
         }
 
-        val preferences = getSharedPreferences("THEME_SETTING", MODE_PRIVATE)
+        val themeInteractor = Creator.provideThemeInteractor(applicationContext)
+
 
         backToMain = findViewById(R.id.back_to_main)
         switchTheme = findViewById(R.id.switch_theme)
@@ -39,16 +45,14 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
         support = findViewById(R.id.support)
         eula = findViewById(R.id.eula)
 
-        switchTheme.isChecked = preferences.getBoolean("THEME", false)
+        switchTheme.isChecked = themeInteractor.getTheme()
 
         backToMain.setOnClickListener(this)
 
         switchTheme.setOnCheckedChangeListener { switch, state ->
             Log.i("THEME", state.toString())
             (applicationContext as App).switchTheme(state)
-            preferences.edit()
-                .putBoolean("THEME", state)
-                .apply()
+            themeInteractor.saveTheme(state)
         }
 
         share.setOnClickListener(this)
@@ -60,36 +64,11 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
         when (v?.id) {
             R.id.back_to_main -> finish()
 
-            R.id.share -> startActivity(Intent.createChooser(Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(
-                    Intent.EXTRA_TEXT,
-                    getString(R.string.course)
-                )
-                type = "text/plain"
-            }, null))
+            R.id.share -> shareAppUseCase.shareApp()
 
-            R.id.support -> startActivity(Intent.createChooser(Intent().apply {
-                action = Intent.ACTION_SENDTO
-                data = Uri.parse("mailto:")
+            R.id.support -> contactSupportUseCase.contactSupport()
 
-                putExtra(
-                    Intent.EXTRA_EMAIL,
-                    arrayOf(getString(R.string.email))
-                )
-                putExtra(
-                    Intent.EXTRA_SUBJECT,
-                    getString(R.string.subject)
-                )
-                putExtra(
-                    Intent.EXTRA_TEXT,
-                    getString(R.string.text)
-                )
-            }, null))
-
-            R.id.eula -> startActivity(
-                Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.offer)))
-            )
+            R.id.eula -> seeEulaUseCase.seeEula()
         }
     }
 }

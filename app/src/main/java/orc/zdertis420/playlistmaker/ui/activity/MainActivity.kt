@@ -1,4 +1,4 @@
-package orc.zdertis420.playlistmaker
+package orc.zdertis420.playlistmaker.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import orc.zdertis420.playlistmaker.R
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
