@@ -6,6 +6,8 @@ import orc.zdertis420.playlistmaker.data.repository.PlayerRepositoryImplementati
 import orc.zdertis420.playlistmaker.data.repository.ThemeRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackHistoryRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackRepositoryImplementation
+import orc.zdertis420.playlistmaker.data.utils.KeyboardUtilImplementation
+import orc.zdertis420.playlistmaker.data.utils.NetworkUtilImplementation
 import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
 import orc.zdertis420.playlistmaker.domain.repository.PlayerRepository
 import orc.zdertis420.playlistmaker.domain.interactor.ThemeInteractor
@@ -24,6 +26,8 @@ import orc.zdertis420.playlistmaker.domain.implementations.usecase.ShareAppUseCa
 import orc.zdertis420.playlistmaker.domain.usecase.ContactSupportUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.SeeEulaUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.ShareAppUseCase
+import orc.zdertis420.playlistmaker.domain.utils.KeyboardUtil
+import orc.zdertis420.playlistmaker.domain.utils.NetworkUtil
 
 object Creator {
     fun provideTrackInteractor(): TrackInteractor {
@@ -70,4 +74,11 @@ object Creator {
         return SeeEulaUseCaseImplementation(context)
     }
 
+    fun provideKeyboardUtil(context: Context): KeyboardUtil {
+        return KeyboardUtilImplementation(context)
+    }
+
+    fun provideNetworkUtil(context: Context): NetworkUtil {
+        return NetworkUtilImplementation(context)
+    }
 }

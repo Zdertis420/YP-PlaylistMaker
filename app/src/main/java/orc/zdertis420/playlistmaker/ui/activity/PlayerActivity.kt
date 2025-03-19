@@ -49,8 +49,6 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         views = ActivityPlayerBinding.inflate(layoutInflater)
         setContentView(views.root)
 
-        views.back = findViewById(R.id.back)
-
         views.back.setOnClickListener(this)
 
         views.playButton.setOnClickListener(this)
