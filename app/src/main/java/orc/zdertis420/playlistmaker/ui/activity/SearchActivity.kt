@@ -2,8 +2,6 @@ package orc.zdertis420.playlistmaker.ui.activity
 
 import android.content.Intent
 import android.content.res.Configuration
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -13,39 +11,44 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.databinding.ActivitySearchBinding
 import orc.zdertis420.playlistmaker.ui.track.TrackAdapter
 import orc.zdertis420.playlistmaker.domain.entities.Track
+import orc.zdertis420.playlistmaker.ui.viewmodel.states.SearchState
+import orc.zdertis420.playlistmaker.ui.viewmodel.SearchViewModel
+import orc.zdertis420.playlistmaker.ui.viewmodel.states.HistoryState
 
 
 class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     companion object {
         private const val CLICK_DELAY = 1000L
-        private const val SEARCH_DELAY = 2000L // как-то дофига, как по мне
     }
 
     private lateinit var views: ActivitySearchBinding
 
+    private lateinit var viewModel: SearchViewModel
+
     private var isClickAllowed = true
     private val handler = Handler(Looper.getMainLooper())
-    private val searchRunnable = Runnable { browseTracks(searchQuery) }
 
     private var searchQuery = ""
 
-    private var tracks = mutableListOf<Track>()
+    private var tracksHistoryList = mutableListOf<Track>()
 
-    private var tracksHistory = mutableListOf<Track>()
-
+    private val trackInteractor = Creator.provideTrackInteractor()
     private val trackHistoryInteractor = Creator.provideTrackHistoryInteractor(this)
+    private val keyboardUtil = Creator.provideKeyboardUtil(this)
+    private val networkUtil = Creator.provideNetworkUtil(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,20 +63,44 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         views = ActivitySearchBinding.inflate(layoutInflater)
         setContentView(views.root)
 
+        viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return SearchViewModel(trackInteractor, trackHistoryInteractor) as T
+            }
+        })[SearchViewModel::class.java]
 
-        views.backToMain.setOnClickListener(this)
-        views.clearText.setOnClickListener(this)
+        viewModel.searchStateLiveData.observe(this) { state ->
+            render(state)
+        }
 
-        views.updateConnection.setOnClickListener(this)
+        viewModel.historyLiveData.observe(this) { state ->
+            renderHistory(state)
+        }
 
-        views.clearHistory.setOnClickListener(this)
+        setupTheme()
 
-        views.trackList.layoutManager = LinearLayoutManager(this)
-        views.trackList.adapter = TrackAdapter(tracks)
+        setupRecyclers()
 
-        views.tracksHistory.layoutManager = LinearLayoutManager(this)
-        views.tracksHistory.adapter = TrackAdapter(tracksHistory.reversed())
+        setupListeners()
+    }
 
+    override fun onStart() {
+        super.onStart()
+
+        tracksHistoryList = trackHistoryInteractor.getTrackHistory()
+
+        (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistoryList.reversed())
+    }
+
+    override fun onRestoreInstanceState(
+        savedInstanceState: Bundle?,
+        persistentState: PersistableBundle?
+    ) {
+        super.onRestoreInstanceState(savedInstanceState, persistentState)
+        views.searchLine.setText(savedInstanceState?.getString("User input") ?: "")
+    }
+
+    private fun setupTheme() {
         val currentNightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
 
         if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
@@ -83,10 +110,33 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             views.emptyResultImage.setImageResource(R.drawable.empty_result_light)
             views.noConnectionImage.setImageResource(R.drawable.no_connection_light)
         }
+    }
+
+    private fun setupRecyclers() {
+        with(views) {
+            trackList.apply {
+                layoutManager = LinearLayoutManager(this@SearchActivity)
+                adapter = TrackAdapter(emptyList())
+            }
+
+            tracksHistory.apply {
+                layoutManager = LinearLayoutManager(this@SearchActivity)
+                adapter = TrackAdapter(tracksHistoryList.reversed())
+            }
+        }
+    }
+
+    private fun setupListeners() {
+        views.backToMain.setOnClickListener(this)
+        views.clearText.setOnClickListener(this)
+
+        views.updateConnection.setOnClickListener(this)
+
+        views.clearHistory.setOnClickListener(this)
 
         views.searchLine.setOnFocusChangeListener { view, hasFocus ->
             views.searchHistory.visibility =
-                if (hasFocus && views.searchLine.text.isEmpty() && tracksHistory.isNotEmpty()) View.VISIBLE else View.GONE
+                if (hasFocus && views.searchLine.text.isEmpty() && tracksHistoryList.isNotEmpty()) View.VISIBLE else View.GONE
         }
 
         views.searchLine.addTextChangedListener(object : TextWatcher {
@@ -97,10 +147,15 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 showClearButton()
                 views.searchHistory.visibility =
-                    if (views.searchLine.hasFocus() && s?.isEmpty() == true && tracksHistory.isNotEmpty()) View.VISIBLE else View.GONE
+                    if (views.searchLine.hasFocus() && s?.isEmpty() == true && tracksHistoryList.isNotEmpty()) View.VISIBLE else View.GONE
+
+                if (!networkUtil.isNetworkAvailable()) {
+                    showNoConnectionError()
+                    return
+                }
 
                 if (s?.isNotEmpty() == true) {
-                    searchDebounce()
+                    viewModel.searchDebounce(s.toString())
                 }
             }
 
@@ -110,50 +165,58 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                 if (s?.isEmpty() == true) {
                     Log.d("SWITCH", "HIDE EVERYTHING, QUERY CLEARED")
 
-                    views.trackList.visibility = View.GONE
-                    views.emptyResult.visibility = View.GONE
-                    views.noConnection.visibility = View.GONE
-                    views.progressBar.visibility = View.GONE
+                    showNothing()
                 }
             }
         })
 
-        views.searchLine.setOnEditorActionListener { _, actionId, _ ->
+        views.searchLine.setOnEditorActionListener { view, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE && searchQuery.isNotEmpty()) {
-                searchDebounce()
+                keyboardUtil.hideKeyboard(view)
+
+                if (!networkUtil.isNetworkAvailable()) {
+                    showNoConnectionError()
+                    return@setOnEditorActionListener false
+                }
+
+                viewModel.searchTracks(searchQuery)
             }
             false
         }
 
         (views.trackList.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
-            addToHistory(tracks[position])
+            val track = (viewModel.searchStateLiveData.value as SearchState.Success).tracks[position]
 
-            startPlayerActivity(tracks[position])
+            addToHistory(track)
+
+            startPlayerActivity(track)
 
         }
 
         (views.tracksHistory.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
-            startPlayerActivity(tracksHistory.reversed()[position])
+            startPlayerActivity(tracksHistoryList.reversed()[position])
 
-            addToHistory(tracksHistory.reversed()[position])
+            addToHistory(tracksHistoryList.reversed()[position])
 
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-
-        tracksHistory = trackHistoryInteractor.getTrackHistory()
-
-        (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistory.reversed())
+    private fun render(state: SearchState) {
+        when (state) {
+            is SearchState.Loading -> showLoading()
+            is SearchState.Empty -> showEmptyResultError()
+            is SearchState.Error -> showNoConnectionError()
+            is SearchState.Success -> showTracks(state.tracks)
+        }
     }
 
-    override fun onRestoreInstanceState(
-        savedInstanceState: Bundle?,
-        persistentState: PersistableBundle?
-    ) {
-        super.onRestoreInstanceState(savedInstanceState, persistentState)
-        views.searchLine.setText(savedInstanceState?.getString("User input"))
+    private fun renderHistory(state: HistoryState) {
+        when (state) {
+            is HistoryState.Empty -> showNothing()
+            is HistoryState.Success -> {
+                (views.tracksHistory.adapter as TrackAdapter).updateTracks(state.tracksHistory.reversed())
+            }
+        }
     }
 
     private fun startPlayerActivity(track: Track) {
@@ -165,49 +228,16 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun addToHistory(track: Track) {
-        if (tracksHistory.contains(track)) {
-            tracksHistory.remove(track)
+        if (tracksHistoryList.contains(track)) {
+            tracksHistoryList.remove(track)
         }
 
-        if (tracksHistory.size == 10) {
-            tracksHistory.removeAt(0)
+        if (tracksHistoryList.size == 10) {
+            tracksHistoryList.removeAt(0)
         }
-        tracksHistory.add(track)
+        tracksHistoryList.add(track)
 
-        (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistory.reversed())
-
-    }
-
-    private fun browseTracks(text: String) {
-        if (!networkAvailable()) {
-            showNoConnectionError()
-
-            return
-        }
-
-        showLoading()
-
-        val trackInteractor = Creator.provideTrackInteractor()
-
-        trackInteractor.browseTracks(text) { result ->
-            runOnUiThread {
-                views.progressBar.visibility = View.GONE
-
-                result.onSuccess { foundTracks ->
-//                    Log.d("TRACKS", foundTracks.toString())
-
-                    if (foundTracks.isEmpty()) {
-                        showEmptyResultError()
-                    } else {
-                        tracks = foundTracks.toMutableList()
-                        showTracks(foundTracks)
-                    }
-                }
-                    .onFailure { error ->
-                        Log.e("ERROR", error.toString())
-                    }
-            }
-        }
+        (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistoryList.reversed())
     }
 
     private fun showTracks(tracks: List<Track>) {
@@ -242,12 +272,11 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         views.noConnection.visibility = View.GONE
     }
 
-    private fun networkAvailable(): Boolean {
-        val connectivityManager =
-            getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork ?: return false
-        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    private fun showNothing() {
+        views.progressBar.visibility = View.GONE
+        views.trackList.visibility = View.GONE
+        views.emptyResult.visibility = View.GONE
+        views.noConnection.visibility = View.GONE
     }
 
     private fun showClearButton() {
@@ -256,11 +285,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         } else {
             views.clearText.alpha = 0.0F
         }
-    }
-
-    private fun searchDebounce() {
-        handler.removeCallbacks(searchRunnable)
-        handler.postDelayed(searchRunnable, SEARCH_DELAY)
     }
 
     private fun clickDebounce(): Boolean {
@@ -283,27 +307,30 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                 R.id.clear_text -> {
                     views.searchLine.text.clear()
                     searchQuery = ""
-                    (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
-                        .hideSoftInputFromWindow(v.windowToken, 0)
+
+                    keyboardUtil.hideKeyboard(v)
 
                     Log.d("SWITCH", "HIDE EVERYTHING, QUERY CLEARED")
 
-                    views.trackList.visibility = View.GONE
-                    views.emptyResult.visibility = View.GONE
-                    views.noConnection.visibility = View.GONE
+                    showNothing()
                 }
 
                 R.id.update_connection -> {
-                    browseTracks(searchQuery)
-
                     Log.d("NO CONNECTION", "RETRY")
+
+                    if (!networkUtil.isNetworkAvailable()) {
+                        showNoConnectionError()
+                        return
+                    }
+
+                    viewModel.searchTracks(searchQuery)
                 }
 
                 R.id.clear_history -> {
-                    tracksHistory.clear()
+                    tracksHistoryList.clear()
                     trackHistoryInteractor.clearTrackHistory()
 
-                    (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistory)
+                    (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistoryList)
 
                     views.searchHistory.visibility = View.GONE
                 }
@@ -315,8 +342,8 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         outState: Bundle,
         outPersistentState: PersistableBundle
     ) {
-        super.onSaveInstanceState(outState, outPersistentState)
         outState.putString("User input", searchQuery)
+        super.onSaveInstanceState(outState, outPersistentState)
     }
 
     override fun onStop() {
@@ -324,6 +351,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
         val trackHistoryInteractor = Creator.provideTrackHistoryInteractor(application)
 
-        trackHistoryInteractor.saveTrackHistory(tracksHistory)
+        trackHistoryInteractor.saveTrackHistory(tracksHistoryList)
     }
 }

@@ -7,6 +7,6 @@ import orc.zdertis420.playlistmaker.domain.entities.Track
 class TrackInteractorImplementation(private val trackRepository: TrackRepository) : TrackInteractor {
 
     override fun browseTracks(expression: String, callback: (Result<List<Track>>) -> Unit) {
-            trackRepository.browseTracks(expression, callback)
+        trackRepository.browseTracks(expression, callback)
     }
 }

@@ -13,11 +13,11 @@ class TrackRepositoryImplementation(private val networkClient: NetworkClient) : 
         thread {
 
             val response = networkClient.doRequest(TrackSearchRequest(expression))
-            
+
             try {
                 if (response.resultCode == 200) {
                     val trackResponse = response as TrackResponse
-                    
+
                     if (trackResponse.results.isNotEmpty()) {
                         val nullSafeTracks = mutableListOf<Track>()
 
