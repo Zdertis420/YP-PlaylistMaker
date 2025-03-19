@@ -14,20 +14,14 @@ import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.appbar.MaterialToolbar
 import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.R
+import orc.zdertis420.playlistmaker.databinding.ActivitySearchBinding
 import orc.zdertis420.playlistmaker.ui.track.TrackAdapter
 import orc.zdertis420.playlistmaker.domain.entities.Track
 
@@ -36,33 +30,16 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     companion object {
         private const val CLICK_DELAY = 1000L
-        private const val SEARCH_DELAY = 2000L // как=то дофига, как по мне
+        private const val SEARCH_DELAY = 2000L // как-то дофига, как по мне
     }
+
+    private lateinit var views: ActivitySearchBinding
 
     private var isClickAllowed = true
     private val handler = Handler(Looper.getMainLooper())
     private val searchRunnable = Runnable { browseTracks(searchQuery) }
 
-    private lateinit var backToMain: MaterialToolbar
-    private lateinit var searchLine: EditText
-    private lateinit var cancel: ImageView
-
     private var searchQuery = ""
-
-    private lateinit var tracksList: RecyclerView
-
-    private lateinit var searchHistory: LinearLayout
-    private lateinit var tracksHistoryView: RecyclerView
-    private lateinit var clearHistory: TextView
-
-    private lateinit var emptyResult: LinearLayout
-    private lateinit var emptyResultImage: ImageView
-
-    private lateinit var noConnection: LinearLayout
-    private lateinit var noConnectionImage: ImageView
-    private lateinit var updateConnection: TextView
-
-    private lateinit var progressBar: ProgressBar
 
     private var tracks = mutableListOf<Track>()
 
@@ -80,81 +57,47 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             insets
         }
 
-        backToMain = findViewById(R.id.back_to_main)
-        searchLine = findViewById(R.id.search_line)
-        cancel = findViewById(R.id.clear_text)
+        views = ActivitySearchBinding.inflate(layoutInflater)
+        setContentView(views.root)
 
-        backToMain.setOnClickListener(this)
-        cancel.setOnClickListener(this)
 
-        emptyResult = findViewById(R.id.empty_result)
-        emptyResultImage = findViewById(R.id.empty_result_image)
+        views.backToMain.setOnClickListener(this)
+        views.clearText.setOnClickListener(this)
 
-        noConnection = findViewById(R.id.no_connection)
-        noConnectionImage = findViewById(R.id.no_connection_image)
-        updateConnection = findViewById(R.id.update_connection)
+        views.updateConnection.setOnClickListener(this)
 
-        updateConnection.setOnClickListener(this)
+        views.clearHistory.setOnClickListener(this)
 
-        progressBar = findViewById(R.id.progress_bar)
+        views.trackList.layoutManager = LinearLayoutManager(this)
+        views.trackList.adapter = TrackAdapter(tracks)
 
-        searchHistory = findViewById(R.id.search_history)
-        tracksHistoryView = findViewById(R.id.tracks_history)
-        clearHistory = findViewById(R.id.clear_history)
+        views.tracksHistory.layoutManager = LinearLayoutManager(this)
+        views.tracksHistory.adapter = TrackAdapter(tracksHistory.reversed())
 
-        clearHistory.setOnClickListener(this)
-
-        tracksHistoryView.layoutManager = LinearLayoutManager(this)
-        tracksHistoryView.adapter = TrackAdapter(tracksHistory.reversed())
-        tracksList = findViewById(R.id.tracks)
-
-        tracksList.layoutManager = LinearLayoutManager(this)
-        tracksList.adapter = TrackAdapter(tracks)
-
-        bind()
-    }
-
-    override fun onStart() {
-        super.onStart()
-
-        tracksHistory = trackHistoryInteractor.getTrackHistory()
-
-        (tracksHistoryView.adapter as TrackAdapter).updateTracks(tracksHistory.reversed())
-    }
-
-    override fun onRestoreInstanceState(
-        savedInstanceState: Bundle?,
-        persistentState: PersistableBundle?
-    ) {
-        super.onRestoreInstanceState(savedInstanceState, persistentState)
-        searchLine.setText(savedInstanceState?.getString("User input"))
-    }
-
-    private fun bind() {
         val currentNightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
 
         if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
-            emptyResultImage.setImageResource(R.drawable.empty_result_dark)
-            noConnectionImage.setImageResource(R.drawable.no_connection_dark)
+            views.emptyResultImage.setImageResource(R.drawable.empty_result_dark)
+            views.noConnectionImage.setImageResource(R.drawable.no_connection_dark)
         } else {
-            emptyResultImage.setImageResource(R.drawable.empty_result_light)
-            noConnectionImage.setImageResource(R.drawable.no_connection_light)
+            views.emptyResultImage.setImageResource(R.drawable.empty_result_light)
+            views.noConnectionImage.setImageResource(R.drawable.no_connection_light)
         }
 
-        searchLine.setOnFocusChangeListener { view, hasFocus ->
-            searchHistory.visibility =
-                if (hasFocus && searchLine.text.isEmpty() && tracksHistory.isNotEmpty()) View.VISIBLE else View.GONE
+        views.searchLine.setOnFocusChangeListener { view, hasFocus ->
+            views.searchHistory.visibility =
+                if (hasFocus && views.searchLine.text.isEmpty() && tracksHistory.isNotEmpty()) View.VISIBLE else View.GONE
         }
 
-        searchLine.addTextChangedListener(object : TextWatcher {
+        views.searchLine.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
 
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 showClearButton()
-                searchHistory.visibility =
-                    if (searchLine.hasFocus() && s?.isEmpty() == true && tracksHistory.isNotEmpty()) View.VISIBLE else View.GONE
+                views.searchHistory.visibility =
+                    if (views.searchLine.hasFocus() && s?.isEmpty() == true && tracksHistory.isNotEmpty()) View.VISIBLE else View.GONE
 
                 if (s?.isNotEmpty() == true) {
                     searchDebounce()
@@ -162,39 +105,55 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             }
 
             override fun afterTextChanged(s: Editable?) {
-                searchQuery = searchLine.text.toString()
+                searchQuery = views.searchLine.text.toString()
 
                 if (s?.isEmpty() == true) {
                     Log.d("SWITCH", "HIDE EVERYTHING, QUERY CLEARED")
 
-                    tracksList.visibility = View.GONE
-                    emptyResult.visibility = View.GONE
-                    noConnection.visibility = View.GONE
-                    progressBar.visibility = View.GONE
+                    views.trackList.visibility = View.GONE
+                    views.emptyResult.visibility = View.GONE
+                    views.noConnection.visibility = View.GONE
+                    views.progressBar.visibility = View.GONE
                 }
             }
         })
 
-        searchLine.setOnEditorActionListener { _, actionId, _ ->
+        views.searchLine.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE && searchQuery.isNotEmpty()) {
                 searchDebounce()
             }
             false
         }
 
-        (tracksList.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
+        (views.trackList.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
             addToHistory(tracks[position])
 
             startPlayerActivity(tracks[position])
 
         }
 
-        (tracksHistoryView.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
+        (views.tracksHistory.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
             startPlayerActivity(tracksHistory.reversed()[position])
 
             addToHistory(tracksHistory.reversed()[position])
 
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        tracksHistory = trackHistoryInteractor.getTrackHistory()
+
+        (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistory.reversed())
+    }
+
+    override fun onRestoreInstanceState(
+        savedInstanceState: Bundle?,
+        persistentState: PersistableBundle?
+    ) {
+        super.onRestoreInstanceState(savedInstanceState, persistentState)
+        views.searchLine.setText(savedInstanceState?.getString("User input"))
     }
 
     private fun startPlayerActivity(track: Track) {
@@ -215,7 +174,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         }
         tracksHistory.add(track)
 
-        (tracksHistoryView.adapter as TrackAdapter).updateTracks(tracksHistory.reversed())
+        (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistory.reversed())
 
     }
 
@@ -232,7 +191,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
         trackInteractor.browseTracks(text) { result ->
             runOnUiThread {
-                progressBar.visibility = View.GONE
+                views.progressBar.visibility = View.GONE
 
                 result.onSuccess { foundTracks ->
 //                    Log.d("TRACKS", foundTracks.toString())
@@ -252,35 +211,35 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun showTracks(tracks: List<Track>) {
-        (tracksList.adapter as TrackAdapter).updateTracks(tracks)
+        (views.trackList.adapter as TrackAdapter).updateTracks(tracks)
 
-        progressBar.visibility = View.GONE
-        tracksList.visibility = View.VISIBLE
-        emptyResult.visibility = View.GONE
-        noConnection.visibility = View.GONE
+        views.progressBar.visibility = View.GONE
+        views.trackList.visibility = View.VISIBLE
+        views.emptyResult.visibility = View.GONE
+        views.noConnection.visibility = View.GONE
     }
 
     private fun showEmptyResultError() {
-        progressBar.visibility = View.GONE
-        tracksList.visibility = View.GONE
-        emptyResult.visibility = View.VISIBLE
-        noConnection.visibility = View.GONE
+        views.progressBar.visibility = View.GONE
+        views.trackList.visibility = View.GONE
+        views.emptyResult.visibility = View.VISIBLE
+        views.noConnection.visibility = View.GONE
     }
 
     private fun showNoConnectionError() {
         Log.d("SWITCH", "HIDE TRACKS, SHOW NO CONNECTION ERROR")
 
-        progressBar.visibility = View.GONE
-        tracksList.visibility = View.GONE
-        emptyResult.visibility = View.GONE
-        noConnection.visibility = View.VISIBLE
+        views.progressBar.visibility = View.GONE
+        views.trackList.visibility = View.GONE
+        views.emptyResult.visibility = View.GONE
+        views.noConnection.visibility = View.VISIBLE
     }
 
     private fun showLoading() {
-        progressBar.visibility = View.VISIBLE
-        tracksList.visibility = View.GONE
-        emptyResult.visibility = View.GONE
-        noConnection.visibility = View.GONE
+        views.progressBar.visibility = View.VISIBLE
+        views.trackList.visibility = View.GONE
+        views.emptyResult.visibility = View.GONE
+        views.noConnection.visibility = View.GONE
     }
 
     private fun networkAvailable(): Boolean {
@@ -292,10 +251,10 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun showClearButton() {
-        if (searchLine.text.isNotEmpty()) {
-            cancel.alpha = 1.0F
+        if (views.searchLine.text.isNotEmpty()) {
+            views.clearText.alpha = 1.0F
         } else {
-            cancel.alpha = 0.0F
+            views.clearText.alpha = 0.0F
         }
     }
 
@@ -322,16 +281,16 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                 R.id.back_to_main -> finish()
 
                 R.id.clear_text -> {
-                    searchLine.text.clear()
+                    views.searchLine.text.clear()
                     searchQuery = ""
                     (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
                         .hideSoftInputFromWindow(v.windowToken, 0)
 
                     Log.d("SWITCH", "HIDE EVERYTHING, QUERY CLEARED")
 
-                    tracksList.visibility = View.GONE
-                    emptyResult.visibility = View.GONE
-                    noConnection.visibility = View.GONE
+                    views.trackList.visibility = View.GONE
+                    views.emptyResult.visibility = View.GONE
+                    views.noConnection.visibility = View.GONE
                 }
 
                 R.id.update_connection -> {
@@ -344,9 +303,9 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                     tracksHistory.clear()
                     trackHistoryInteractor.clearTrackHistory()
 
-                    (tracksHistoryView.adapter as TrackAdapter).updateTracks(tracksHistory)
+                    (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistory)
 
-                    searchHistory.visibility = View.GONE
+                    views.searchHistory.visibility = View.GONE
                 }
             }
         }

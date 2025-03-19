@@ -3,24 +3,18 @@ package orc.zdertis420.playlistmaker.ui.activity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.switchmaterial.SwitchMaterial
 import orc.zdertis420.playlistmaker.App
 import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.R
+import orc.zdertis420.playlistmaker.databinding.ActivitySettingsBinding
 
 class SettingsActivity : AppCompatActivity(), View.OnClickListener {
 
-    private lateinit var backToMain: MaterialToolbar
-    private lateinit var switchTheme: SwitchMaterial
-    private lateinit var share: TextView
-    private lateinit var support: TextView
-    private lateinit var eula: TextView
+    private lateinit var views: ActivitySettingsBinding
 
     private val shareAppUseCase = Creator.provideShareAppUseCase(this)
     private val contactSupportUseCase = Creator.provideContactSupportUSeCase(this)
@@ -36,28 +30,24 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
             insets
         }
 
+        views = ActivitySettingsBinding.inflate(layoutInflater)
+        setContentView(views.root)
+
         val themeInteractor = Creator.provideThemeInteractor(applicationContext)
 
+        views.switchTheme.isChecked = themeInteractor.getTheme()
 
-        backToMain = findViewById(R.id.back_to_main)
-        switchTheme = findViewById(R.id.switch_theme)
-        share = findViewById(R.id.share)
-        support = findViewById(R.id.support)
-        eula = findViewById(R.id.eula)
+        views.backToMain.setOnClickListener(this)
 
-        switchTheme.isChecked = themeInteractor.getTheme()
-
-        backToMain.setOnClickListener(this)
-
-        switchTheme.setOnCheckedChangeListener { switch, state ->
+        views.switchTheme.setOnCheckedChangeListener { switch, state ->
             Log.i("THEME", state.toString())
             (applicationContext as App).switchTheme(state)
             themeInteractor.saveTheme(state)
         }
 
-        share.setOnClickListener(this)
-        support.setOnClickListener(this)
-        eula.setOnClickListener(this)
+        views.share.setOnClickListener(this)
+        views.support.setOnClickListener(this)
+        views.eula.setOnClickListener(this)
     }
 
     override fun onClick(v: View?) {
