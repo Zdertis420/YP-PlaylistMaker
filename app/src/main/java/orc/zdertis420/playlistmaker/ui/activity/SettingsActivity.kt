@@ -7,18 +7,25 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import orc.zdertis420.playlistmaker.App
 import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.databinding.ActivitySettingsBinding
+import orc.zdertis420.playlistmaker.ui.viewmodel.SettingsViewModel
 
 class SettingsActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var views: ActivitySettingsBinding
 
+    private lateinit var viewModel: SettingsViewModel
+
     private val shareAppUseCase = Creator.provideShareAppUseCase(this)
     private val contactSupportUseCase = Creator.provideContactSupportUSeCase(this)
     private val seeEulaUseCase = Creator.provideSeeEulaUseCase(this)
+    private val themeInteractor = Creator.provideThemeInteractor(applicationContext)
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,7 +40,11 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
         views = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(views.root)
 
-        val themeInteractor = Creator.provideThemeInteractor(applicationContext)
+        viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return SettingsViewModel(themeInteractor, shareAppUseCase, contactSupportUseCase, seeEulaUseCase) as T
+            }
+        })[SettingsViewModel::class.java]
 
         views.switchTheme.isChecked = themeInteractor.getTheme()
 
@@ -54,11 +65,11 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
         when (v?.id) {
             R.id.back_to_main -> finish()
 
-            R.id.share -> shareAppUseCase.shareApp()
+            R.id.share -> viewModel.shareApp()
 
-            R.id.support -> contactSupportUseCase.contactSupport()
+            R.id.support -> viewModel.contactSupport()
 
-            R.id.eula -> seeEulaUseCase.seeEula()
+            R.id.eula -> viewModel.seeEula()
         }
     }
 }
