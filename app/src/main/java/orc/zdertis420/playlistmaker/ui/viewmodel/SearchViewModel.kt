@@ -72,6 +72,10 @@ class SearchViewModel(
         }
     }
 
+    fun saveTracksHistory() {
+
+    }
+
     fun clearHistory() {
         trackHistoryInteractor.clearTrackHistory()
         _historyStateLiveData.postValue(HistoryState.Empty)

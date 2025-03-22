@@ -328,11 +328,10 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
                 R.id.clear_history -> {
                     tracksHistoryList.clear()
-                    trackHistoryInteractor.clearTrackHistory()
+                    viewModel.clearHistory()
 
                     (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistoryList)
-
-                    views.searchHistory.visibility = View.GONE
+                    showNothing()
                 }
             }
         }
