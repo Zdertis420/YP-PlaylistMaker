@@ -9,7 +9,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import orc.zdertis420.playlistmaker.App
 import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.databinding.ActivitySettingsBinding
@@ -24,7 +23,7 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
     private val shareAppUseCase = Creator.provideShareAppUseCase(this)
     private val contactSupportUseCase = Creator.provideContactSupportUSeCase(this)
     private val seeEulaUseCase = Creator.provideSeeEulaUseCase(this)
-    private val themeInteractor = Creator.provideThemeInteractor(applicationContext)
+    private val themeInteractor = Creator.provideThemeInteractor(this)
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,6 +35,8 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        Log.v("ACTIVITY", "CREATED")
 
         views = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(views.root)
@@ -52,8 +53,7 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
 
         views.switchTheme.setOnCheckedChangeListener { switch, state ->
             Log.i("THEME", state.toString())
-            (applicationContext as App).switchTheme(state)
-            themeInteractor.saveTheme(state)
+            viewModel.toggleTheme()
         }
 
         views.share.setOnClickListener(this)

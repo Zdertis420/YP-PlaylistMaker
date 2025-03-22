@@ -1,5 +1,6 @@
 package orc.zdertis420.playlistmaker.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import orc.zdertis420.playlistmaker.domain.interactor.ThemeInteractor
@@ -14,18 +15,16 @@ class SettingsViewModel(
     private val seeEulaUseCase: SeeEulaUseCase
 ) : ViewModel() {
 
-    private val _isDarkThemeEnabled = MutableLiveData<Boolean>()
-    val isDarkThemeEnabled get() = _isDarkThemeEnabled
-
     init {
-        _isDarkThemeEnabled.postValue(themeInteractor.getTheme())
+
+        Log.v("VIEW MODEL", "CREATED, INIT")
     }
 
     fun toggleTheme() {
         val newTheme = !themeInteractor.getTheme()
 
         themeInteractor.switchTheme(newTheme)
-        _isDarkThemeEnabled.postValue(newTheme)
+        themeInteractor.saveTheme(newTheme)
     }
 
     fun shareApp() {
