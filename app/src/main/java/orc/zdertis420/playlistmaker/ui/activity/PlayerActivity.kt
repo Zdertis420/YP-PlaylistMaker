@@ -10,6 +10,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
@@ -17,6 +19,8 @@ import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.databinding.ActivityPlayerBinding
 import orc.zdertis420.playlistmaker.domain.entities.Track
+import orc.zdertis420.playlistmaker.ui.viewmodel.PlayerViewModel
+import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -27,6 +31,7 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private lateinit var views: ActivityPlayerBinding
+    private lateinit var viewModel: PlayerViewModel
 
     private var previewUrl = ""
 
@@ -49,6 +54,7 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         views = ActivityPlayerBinding.inflate(layoutInflater)
         setContentView(views.root)
 
+
         views.back.setOnClickListener(this)
 
         views.playButton.setOnClickListener(this)
@@ -61,12 +67,19 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
             intent.getParcelableExtra("track")
         }
 
+        viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return PlayerViewModel(playerInteractor, track!!) as T
+            }
+        })[PlayerViewModel::class.java]
+
+        viewModel.playerStateLiveData.observe(this) { state ->
+            render(state)
+        }
+
         loadTrack(track!!)
 
-        playerInteractor.prepare(track.previewUrl,
-            onPrepared = { views.playButton.isEnabled = true },
-            onCompleted = { resetPlayer() }
-        )
+        viewModel.prepare()
 
         updateTimePLaying = object : Runnable {
             override fun run() {
@@ -74,6 +87,15 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
                 mainThreadHandler.postDelayed(this, DELAY)
             }
+        }
+    }
+
+    private fun render(state: PlayerState) {
+        when (state) {
+            is PlayerState.Prepared -> startPlayer()
+            is PlayerState.Play -> {}
+            is PlayerState.Pause -> pausePlayer()
+            is PlayerState.Error -> TODO()
         }
     }
 
@@ -88,7 +110,7 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun startPlayer() {
-        playerInteractor.start()
+        viewModel.start()
 
         views.playButton.setImageResource(R.drawable.pause_button)
 
