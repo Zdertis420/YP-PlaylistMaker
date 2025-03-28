@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -58,6 +59,7 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         views.back.setOnClickListener(this)
 
         views.playButton.setOnClickListener(this)
+//        views.playButton.isEnabled = false
 
         views.timePlaying.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(0L)
 
@@ -79,6 +81,8 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
         loadTrack(track!!)
 
+        Log.d("THREAD", Thread.currentThread().toString())
+
         viewModel.prepare()
 
         updateTimePLaying = object : Runnable {
@@ -91,43 +95,29 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun render(state: PlayerState) {
+        Log.d("STATE", state.toString())
+
         when (state) {
-            is PlayerState.Prepared -> startPlayer()
-            is PlayerState.Play -> {}
-            is PlayerState.Pause -> pausePlayer()
-            is PlayerState.Error -> TODO()
+            is PlayerState.Prepared -> showPrepared()
+            is PlayerState.Play -> showPlaying()
+            is PlayerState.Pause -> showPause()
+            is PlayerState.Error -> {
+                Log.e("ERROR", state.msg)
+                Toast.makeText(this, state.msg, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    private fun playbackControl() {
-        if (playerInteractor.isPlaying()) {
-            pausePlayer()
-        } else {
-            startPlayer()
-        }
-
-        mainThreadHandler.post { updateTimePLaying.run() }
+    private fun showPrepared() {
+        views.playButton.isEnabled = true
     }
 
-    private fun startPlayer() {
-        viewModel.start()
-
+    private fun showPlaying() {
         views.playButton.setImageResource(R.drawable.pause_button)
-
-        mainThreadHandler.post { updateTimePLaying.run() }
     }
 
-    private fun pausePlayer() {
-        playerInteractor.pause()
-
+    private fun showPause() {
         views.playButton.setImageResource(R.drawable.play_button)
-
-        mainThreadHandler.post { updateTimePLaying.run() }
-    }
-
-    private fun resetPlayer() {
-        views.timePlaying.text = "0:00"
-        mainThreadHandler.removeCallbacks(updateTimePLaying)
     }
 
     private fun loadTrack(track: Track) {
@@ -168,17 +158,17 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         when (v?.id) {
             R.id.back -> finish()
 
-            R.id.play_button -> playbackControl()
+            R.id.play_button -> viewModel.playbackControl()
         }
     }
 
     override fun onPause() {
         super.onPause()
-        pausePlayer()
+        viewModel.pause()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        playerInteractor.release()
+        viewModel.onActivityDestroyed()
     }
 }

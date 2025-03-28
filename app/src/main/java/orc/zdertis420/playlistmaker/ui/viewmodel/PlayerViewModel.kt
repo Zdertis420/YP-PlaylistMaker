@@ -1,5 +1,6 @@
 package orc.zdertis420.playlistmaker.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -18,28 +19,45 @@ class PlayerViewModel(
     val playerStateLiveData: LiveData<PlayerState> get() = _playerStateLiveData
 
     fun prepare() {
+        Log.d("THREAD", Thread.currentThread().toString())
+
         if (track.previewUrl == "") {
-            _playerStateLiveData.postValue(PlayerState.Error("No preview provided"))
+            _playerStateLiveData.value = PlayerState.Error("No preview provided")
+            Log.e("ERROR", "no preview")
             return
         }
 
         playerInteractor.prepare(
             track.previewUrl,
-            onPrepared = { _playerStateLiveData.postValue(PlayerState.Prepared) },
-            onCompleted = { _playerStateLiveData.postValue(PlayerState.Prepared) }
+            onPrepared = { _playerStateLiveData.value = PlayerState.Prepared },
+            onCompleted = { _playerStateLiveData.value = PlayerState.Prepared }
         )
+
+        Log.d("PLAYER", playerStateLiveData.value.toString())
+    }
+
+    fun playbackControl() {
+        if (playerStateLiveData.value == PlayerState.Play) {
+            pause()
+        } else {
+            start()
+        }
     }
 
     fun start() {
         if (playerStateLiveData.value == PlayerState.Prepared || playerStateLiveData.value == PlayerState.Pause) {
             playerInteractor.start()
-            _playerStateLiveData.postValue(PlayerState.Play)
+            _playerStateLiveData.value = PlayerState.Play
         }
+
+        Log.d("PLAYER", playerStateLiveData.value.toString())
     }
 
     fun pause() {
         playerInteractor.pause()
-        _playerStateLiveData.postValue(PlayerState.Pause)
+        _playerStateLiveData.value = PlayerState.Pause
+
+        Log.d("PLAYER", playerStateLiveData.value.toString())
     }
 
     fun getCurrentPosition(): String {
@@ -49,14 +67,7 @@ class PlayerViewModel(
         ).format(playerInteractor.getCurrentPosition())
     }
 
-    fun onActivityPaused() {
-        if (playerStateLiveData.value == PlayerState.Play) {
-            pause()
-        }
-    }
-
     fun onActivityDestroyed() {
         playerInteractor.release()
     }
-
 }
