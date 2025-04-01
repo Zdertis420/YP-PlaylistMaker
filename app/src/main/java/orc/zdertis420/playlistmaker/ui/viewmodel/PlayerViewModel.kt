@@ -7,8 +7,6 @@ import androidx.lifecycle.ViewModel
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 class PlayerViewModel(
     private val playerInteractor: PlayerInteractor,
@@ -60,11 +58,8 @@ class PlayerViewModel(
         Log.d("PLAYER", playerStateLiveData.value.toString())
     }
 
-    fun getCurrentPosition(): String {
-        return SimpleDateFormat(
-            "mm:ss",
-            Locale.getDefault()
-        ).format(playerInteractor.getCurrentPosition())
+    fun getCurrentPosition(): Int {
+        return playerInteractor.getCurrentPosition()
     }
 
     fun onActivityDestroyed() {

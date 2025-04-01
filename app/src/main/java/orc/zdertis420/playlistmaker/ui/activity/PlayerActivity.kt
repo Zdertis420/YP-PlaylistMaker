@@ -87,7 +87,7 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
         updateTimePLaying = object : Runnable {
             override fun run() {
-                views.timePlaying.text = simpleDate.format(playerInteractor.getCurrentPosition())
+                views.timePlaying.text = simpleDate.format(viewModel.getCurrentPosition())
 
                 mainThreadHandler.postDelayed(this, DELAY)
             }
@@ -110,6 +110,8 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun showPrepared() {
         views.playButton.isEnabled = true
+        views.timePlaying.text = "00:00"
+        mainThreadHandler.removeCallbacks(updateTimePLaying)
     }
 
     private fun showPlaying() {
@@ -158,7 +160,10 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         when (v?.id) {
             R.id.back -> finish()
 
-            R.id.play_button -> viewModel.playbackControl()
+            R.id.play_button -> {
+                viewModel.playbackControl()
+                mainThreadHandler.postDelayed(updateTimePLaying, DELAY)
+            }
         }
     }
 

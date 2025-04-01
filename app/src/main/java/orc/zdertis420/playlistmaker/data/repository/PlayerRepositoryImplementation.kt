@@ -3,7 +3,6 @@ package orc.zdertis420.playlistmaker.data.repository
 import android.media.MediaPlayer
 import android.util.Log
 import orc.zdertis420.playlistmaker.domain.repository.PlayerRepository
-import kotlin.toString
 
 class PlayerRepositoryImplementation : PlayerRepository {
 
@@ -15,8 +14,6 @@ class PlayerRepositoryImplementation : PlayerRepository {
     private var playerState = PlayerState.IDLE
 
     override fun preparePlayer(url: String, onPrepared: () -> Unit, onCompleted: () -> Unit) {
-        Log.d("THREAD", "preparePlayer start: ${Thread.currentThread().name}")
-        Log.d("PLAYER", "preparePlayer start")
 
         playerState = PlayerState.PREPARING
         Log.d("STATE", playerState.toString())
@@ -24,40 +21,25 @@ class PlayerRepositoryImplementation : PlayerRepository {
         Log.d("PLAYER", "MediaPlayer created")
         mediaPlayer = MediaPlayer()
 
-        Log.d("PLAYER", "MediaPlayer started apply")
         mediaPlayer?.apply {
             try {
-                Log.d("PLAYER", "setDataSource")
                 setDataSource(url)
-                Log.d("PLAYER", "prepareAsync")
                 prepareAsync()
 
-                Log.d("PLAYER", "setOnPreparedListener")
                 setOnPreparedListener {
-                    Log.d("THREAD", "setOnPreparedListener start: ${Thread.currentThread().name}")
-                    Log.d("PLAYER", "setOnPreparedListener start")
-                    //onPrepared()
-                    Log.d("PLAYER", "setOnPreparedListener end")
-                    Log.d("THREAD", "setOnPreparedListener end: ${Thread.currentThread().name}")
+                    playerState = PlayerState.PREPARED
+                    onPrepared.invoke()
                 }
 
-                Log.d("PLAYER", "setOnErrorListener")
                 setOnErrorListener { _, error, extras ->
-                    Log.d("THREAD", "setOnErrorListener start: ${Thread.currentThread().name}")
-                    Log.d("PLAYER", "setOnErrorListener start")
-                    // ...
-                    Log.d("PLAYER", "setOnErrorListener end")
-                    Log.d("THREAD", "setOnErrorListener end: ${Thread.currentThread().name}")
+                    playerState = PlayerState.ERROR
+                    Log.e("ERROR", "MediaPlayer error: $error\nExtra info: $extras")
+
                     true
                 }
 
-                Log.d("PLAYER", "setOnCompletionListener")
                 setOnCompletionListener {
-                    Log.d("THREAD", "setOnCompletionListener start: ${Thread.currentThread().name}")
-                    Log.d("PLAYER", "setOnCompletionListener start")
-                    // ...
-                    Log.d("PLAYER", "setOnCompletionListener end")
-                    Log.d("THREAD", "setOnCompletionListener end: ${Thread.currentThread().name}")
+                    playerState = PlayerState.COMPLETED
                 }
             } catch (e: Exception) {
                 playerState = PlayerState.ERROR
@@ -66,7 +48,6 @@ class PlayerRepositoryImplementation : PlayerRepository {
             }
         }
 
-        Log.d("THREAD", "preparePlayer end: ${Thread.currentThread().name}")
         Log.d("PLAYER", playerState.toString())
 
     }
