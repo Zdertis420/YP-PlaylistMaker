@@ -81,10 +81,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         setupListeners()
     }
 
-    override fun onStart() {
-        super.onStart()
-    }
-
     override fun onRestoreInstanceState(
         savedInstanceState: Bundle?,
         persistentState: PersistableBundle?
@@ -185,7 +181,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         (views.tracksHistory.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
-            val track = (viewModel.searchStateLiveData.value as SearchState.History).tracksHistory[position]
+            val track = tracksHistoryList[position]
 
             addToHistory(track)
 
@@ -214,15 +210,13 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     private fun addToHistory(track: Track) {
         Log.d("HISTORY BEFORE", tracksHistoryList.toString())
 
-        if (tracksHistoryList.contains(track)) {
-            tracksHistoryList.remove(track)
-        }
-
-        if (tracksHistoryList.size == 10) {
-            tracksHistoryList.removeAt(9)
-        }
+        tracksHistoryList.removeAll { it.trackName == track.trackName && it.artistName == track.artistName }
 
         tracksHistoryList.add(0, track)
+
+        if (tracksHistoryList.size == 10) {
+            tracksHistoryList.removeAt(tracksHistoryList.size - 1)
+        }
 
         Log.d("HISTORY AFTER", tracksHistoryList.toString())
 

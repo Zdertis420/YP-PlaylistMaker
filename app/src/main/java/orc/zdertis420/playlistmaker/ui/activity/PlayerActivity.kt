@@ -2,8 +2,6 @@ package orc.zdertis420.playlistmaker.ui.activity
 
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -53,7 +51,6 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         views.back.setOnClickListener(this)
 
         views.playButton.setOnClickListener(this)
-//        views.playButton.isEnabled = false
 
         views.timePlaying.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(0L)
 
@@ -78,14 +75,6 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         Log.d("THREAD", Thread.currentThread().toString())
 
         viewModel.prepare()
-
-//        updateTimePLaying = object : Runnable {
-//            override fun run() {
-//                views.timePlaying.text = simpleDate.format(viewModel.getCurrentPosition())
-//
-//                mainThreadHandler.postDelayed(this, DELAY)
-//            }
-//        }
     }
 
     private fun render(state: PlayerState) {
@@ -93,7 +82,7 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
         when (state) {
             is PlayerState.Prepared -> showPrepared()
-            is PlayerState.Play -> showPlaying(state.elapsedMillis, state.remainingMillis)
+            is PlayerState.Play -> showPlaying(state.remainingMillis)
             is PlayerState.Pause -> showPause()
             is PlayerState.Error -> {
                 Log.e("ERROR", state.msg)
@@ -105,10 +94,9 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
     private fun showPrepared() {
         views.playButton.isEnabled = true
         views.timePlaying.text = "00:00"
-//        mainThreadHandler.removeCallbacks(updateTimePLaying)
     }
 
-    private fun showPlaying(elapsedMillis: Long, remainingMillis: Long) {
+    private fun showPlaying(remainingMillis: Long) {
         views.playButton.setImageResource(R.drawable.pause_button)
 
         views.timePlaying.text = simpleDate.format(remainingMillis)
@@ -156,10 +144,7 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         when (v?.id) {
             R.id.back -> finish()
 
-            R.id.play_button -> {
-                viewModel.playbackControl()
-//                mainThreadHandler.postDelayed(updateTimePLaying, DELAY)
-            }
+            R.id.play_button -> viewModel.playbackControl()
         }
     }
 

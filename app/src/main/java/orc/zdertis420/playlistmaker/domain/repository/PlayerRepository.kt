@@ -4,8 +4,7 @@ interface PlayerRepository {
     fun preparePlayer(
         url: String,
         onPrepared: () -> Unit,
-        onCompleted: () -> Unit
-    )
+        onCompleted: () -> Unit)
 
     fun startPlayer()
 
