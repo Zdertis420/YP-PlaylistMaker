@@ -16,6 +16,8 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.R
+import orc.zdertis420.playlistmaker.data.dto.TrackDto
+import orc.zdertis420.playlistmaker.data.mapper.toTrack
 import orc.zdertis420.playlistmaker.databinding.ActivityPlayerBinding
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlayerViewModel
@@ -55,10 +57,10 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         views.timePlaying.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(0L)
 
         val track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra("track", Track::class.java)
+            intent.getParcelableExtra("track", TrackDto::class.java)
         } else {
             intent.getParcelableExtra("track")
-        }
+        }?.toTrack()
 
         viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {

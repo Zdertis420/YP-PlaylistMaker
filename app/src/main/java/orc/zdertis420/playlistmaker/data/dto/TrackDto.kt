@@ -1,5 +1,7 @@
 package orc.zdertis420.playlistmaker.data.dto
 
+import java.io.Serializable
+
 data class TrackDto (
     val trackName: String,
     val artistName: String,
@@ -10,4 +12,4 @@ data class TrackDto (
     val primaryGenreName: String,
     val country: String,
     val previewUrl: String
-)
+) : Serializable

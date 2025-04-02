@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.R
+import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.databinding.ActivitySearchBinding
 import orc.zdertis420.playlistmaker.ui.track.TrackAdapter
 import orc.zdertis420.playlistmaker.domain.entities.Track
@@ -202,7 +203,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     private fun startPlayerActivity(track: Track) {
         val startPlayerActivity = Intent(this, PlayerActivity::class.java)
 
-        startPlayerActivity.putExtra("track", track)
+        startPlayerActivity.putExtra("track", track.toDto())
 
         startActivity(startPlayerActivity)
     }
@@ -317,7 +318,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
                     Log.d("SWITCH", "HIDE EVERYTHING, QUERY CLEARED")
 
-                    showNothing()
+                    viewModel.getTracksHistory()
                 }
 
                 R.id.update_connection -> {
