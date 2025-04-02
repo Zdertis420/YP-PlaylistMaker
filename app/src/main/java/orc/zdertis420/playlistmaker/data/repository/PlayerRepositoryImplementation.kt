@@ -76,7 +76,7 @@ class PlayerRepositoryImplementation : PlayerRepository {
         return mediaPlayer?.isPlaying ?: false
     }
 
-    override fun getCurrentPosition(): Int {
-        return mediaPlayer?.currentPosition ?: 0
+    override fun getCurrentPosition(): Long {
+        return mediaPlayer?.currentPosition?.toLong() ?: 0L
     }
 }

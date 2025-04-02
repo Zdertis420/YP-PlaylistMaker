@@ -25,7 +25,8 @@ import orc.zdertis420.playlistmaker.ui.track.TrackAdapter
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.SearchState
 import orc.zdertis420.playlistmaker.ui.viewmodel.SearchViewModel
-import orc.zdertis420.playlistmaker.ui.viewmodel.states.HistoryState
+import orc.zdertis420.playlistmaker.utils.KeyboardUtil
+import orc.zdertis420.playlistmaker.utils.NetworkUtil
 
 
 class SearchActivity : AppCompatActivity(), View.OnClickListener {
@@ -47,8 +48,8 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     private val trackInteractor = Creator.provideTrackInteractor()
     private val trackHistoryInteractor = Creator.provideTrackHistoryInteractor(this)
-    private val keyboardUtil = Creator.provideKeyboardUtil(this)
-    private val networkUtil = Creator.provideNetworkUtil(this)
+    private val keyboardUtil = KeyboardUtil(this)
+    private val networkUtil = NetworkUtil(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,10 +74,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             render(state)
         }
 
-        viewModel.historyLiveData.observe(this) { state ->
-            renderHistory(state)
-        }
-
         setupTheme()
 
         setupRecyclers()
@@ -86,10 +83,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onStart() {
         super.onStart()
-
-        tracksHistoryList = trackHistoryInteractor.getTrackHistory()
-
-        (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistoryList.reversed())
     }
 
     override fun onRestoreInstanceState(
@@ -121,7 +114,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
             tracksHistory.apply {
                 layoutManager = LinearLayoutManager(this@SearchActivity)
-                adapter = TrackAdapter(tracksHistoryList.reversed())
+                adapter = TrackAdapter(tracksHistoryList)
             }
         }
     }
@@ -135,8 +128,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         views.clearHistory.setOnClickListener(this)
 
         views.searchLine.setOnFocusChangeListener { view, hasFocus ->
-            views.searchHistory.visibility =
-                if (hasFocus && views.searchLine.text.isEmpty() && tracksHistoryList.isNotEmpty()) View.VISIBLE else View.GONE
+            viewModel.getTracksHistory()
         }
 
         views.searchLine.addTextChangedListener(object : TextWatcher {
@@ -190,14 +182,14 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             addToHistory(track)
 
             startPlayerActivity(track)
-
         }
 
         (views.tracksHistory.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
-            startPlayerActivity(tracksHistoryList.reversed()[position])
+            val track = (viewModel.searchStateLiveData.value as SearchState.History).tracksHistory[position]
 
-            addToHistory(tracksHistoryList.reversed()[position])
+            addToHistory(track)
 
+            startPlayerActivity(track)
         }
     }
 
@@ -207,15 +199,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             is SearchState.Empty -> showEmptyResultError()
             is SearchState.Error -> showNoConnectionError()
             is SearchState.Success -> showTracks(state.tracks)
-        }
-    }
-
-    private fun renderHistory(state: HistoryState) {
-        when (state) {
-            is HistoryState.Empty -> showNothing()
-            is HistoryState.Success -> {
-                (views.tracksHistory.adapter as TrackAdapter).updateTracks(state.tracksHistory.reversed())
-            }
+            is SearchState.History -> showHistory(state.tracksHistory)
         }
     }
 
@@ -228,16 +212,21 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun addToHistory(track: Track) {
+        Log.d("HISTORY BEFORE", tracksHistoryList.toString())
+
         if (tracksHistoryList.contains(track)) {
             tracksHistoryList.remove(track)
         }
 
         if (tracksHistoryList.size == 10) {
-            tracksHistoryList.removeAt(0)
+            tracksHistoryList.removeAt(9)
         }
-        tracksHistoryList.add(track)
 
-        (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistoryList.reversed())
+        tracksHistoryList.add(0, track)
+
+        Log.d("HISTORY AFTER", tracksHistoryList.toString())
+
+        (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistoryList)
     }
 
     private fun showTracks(tracks: List<Track>) {
@@ -247,6 +236,24 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         views.trackList.visibility = View.VISIBLE
         views.emptyResult.visibility = View.GONE
         views.noConnection.visibility = View.GONE
+        views.searchHistory.visibility = View.GONE
+    }
+
+    private fun showHistory(tracksHistory: List<Track>) {
+        if (tracksHistory.isEmpty()) {
+            showNothing()
+            return
+        }
+
+        tracksHistoryList = tracksHistory.toMutableList()
+
+        (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistoryList)
+
+        views.progressBar.visibility = View.GONE
+        views.trackList.visibility = View.GONE
+        views.emptyResult.visibility = View.GONE
+        views.noConnection.visibility = View.GONE
+        views.searchHistory.visibility = View.VISIBLE
     }
 
     private fun showEmptyResultError() {
@@ -254,6 +261,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         views.trackList.visibility = View.GONE
         views.emptyResult.visibility = View.VISIBLE
         views.noConnection.visibility = View.GONE
+        views.searchHistory.visibility = View.GONE
     }
 
     private fun showNoConnectionError() {
@@ -263,6 +271,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         views.trackList.visibility = View.GONE
         views.emptyResult.visibility = View.GONE
         views.noConnection.visibility = View.VISIBLE
+        views.searchHistory.visibility = View.GONE
     }
 
     private fun showLoading() {
@@ -270,11 +279,13 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         views.trackList.visibility = View.GONE
         views.emptyResult.visibility = View.GONE
         views.noConnection.visibility = View.GONE
+        views.searchHistory.visibility = View.GONE
     }
 
     private fun showNothing() {
         views.progressBar.visibility = View.GONE
         views.trackList.visibility = View.GONE
+        views.searchHistory.visibility = View.GONE
         views.emptyResult.visibility = View.GONE
         views.noConnection.visibility = View.GONE
     }
@@ -345,11 +356,9 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         super.onSaveInstanceState(outState, outPersistentState)
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onPause() {
+        super.onPause()
 
-        val trackHistoryInteractor = Creator.provideTrackHistoryInteractor(application)
-
-        trackHistoryInteractor.saveTrackHistory(tracksHistoryList)
+        viewModel.saveTracksHistory(tracksHistoryList)
     }
 }

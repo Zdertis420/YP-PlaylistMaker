@@ -7,9 +7,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.Runnable
+import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.interactor.TrackHistoryInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.TrackInteractor
-import orc.zdertis420.playlistmaker.ui.viewmodel.states.HistoryState
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.SearchState
 
 
@@ -24,9 +24,6 @@ class SearchViewModel(
 
     private val _searchStateLiveData = MutableLiveData<SearchState>()
     val searchStateLiveData: LiveData<SearchState> get() = _searchStateLiveData
-
-    private val _historyStateLiveData = MutableLiveData<HistoryState>()
-    val historyLiveData: LiveData<HistoryState> get() = _historyStateLiveData
 
     private var searchQuery = ""
 
@@ -63,21 +60,18 @@ class SearchViewModel(
     }
 
     fun getTracksHistory() {
+        Log.d("GET", "HISTORY")
         val history = trackHistoryInteractor.getTrackHistory()
 
-        if (history.isEmpty()) {
-            _historyStateLiveData.postValue(HistoryState.Empty)
-        } else {
-            _historyStateLiveData.postValue(HistoryState.Success(history))
-        }
+        _searchStateLiveData.postValue(SearchState.History(history))
     }
 
-    fun saveTracksHistory() {
-
+    fun saveTracksHistory(tracksHistory: MutableList<Track>) {
+        trackHistoryInteractor.saveTrackHistory(tracksHistory)
     }
 
     fun clearHistory() {
         trackHistoryInteractor.clearTrackHistory()
-        _historyStateLiveData.postValue(HistoryState.Empty)
+        _searchStateLiveData.postValue(SearchState.History(emptyList()))
     }
 }

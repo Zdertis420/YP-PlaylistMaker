@@ -15,5 +15,5 @@ interface PlayerInteractor {
 
     fun isPlaying(): Boolean
 
-    fun getCurrentPosition(): Int
+    fun getCurrentPosition(): Long
 }

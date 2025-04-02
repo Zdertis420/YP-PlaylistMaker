@@ -1,5 +1,7 @@
 package orc.zdertis420.playlistmaker.ui.viewmodel
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -16,9 +18,20 @@ class PlayerViewModel(
     private val _playerStateLiveData = MutableLiveData<PlayerState>()
     val playerStateLiveData: LiveData<PlayerState> get() = _playerStateLiveData
 
-    fun prepare() {
-        Log.d("THREAD", Thread.currentThread().toString())
+    private var mainThreadHandler: Handler = Handler(Looper.getMainLooper())
+    private val updateTimeRunnable = object : Runnable {
+        override fun run() {
+            updatePlaybackTime()
+            mainThreadHandler.postDelayed(this, 1000)
+        }
+    }
 
+    companion object {
+        private const val DELAY = 1000L
+        private const val MAX_DURATION = 30000L
+    }
+
+    fun prepare() {
         if (track.previewUrl == "") {
             _playerStateLiveData.value = PlayerState.Error("No preview provided")
             Log.e("ERROR", "no preview")
@@ -27,15 +40,21 @@ class PlayerViewModel(
 
         playerInteractor.prepare(
             track.previewUrl,
-            onPrepared = { _playerStateLiveData.value = PlayerState.Prepared },
-            onCompleted = { _playerStateLiveData.value = PlayerState.Prepared }
+            onPrepared = { _playerStateLiveData.postValue(PlayerState.Prepared) },
+            onCompleted = { _playerStateLiveData.postValue(PlayerState.Prepared) }
         )
 
-        Log.d("PLAYER", playerStateLiveData.value.toString())
+//        Log.d("PLAYER STATE", playerStateLiveData.value.toString())
+    }
+
+    private fun updatePlaybackTime() {
+        val elapsedTime = playerInteractor.getCurrentPosition()
+        val remainingTime = MAX_DURATION - elapsedTime
+        _playerStateLiveData.postValue(PlayerState.Play(elapsedTime, remainingTime))
     }
 
     fun playbackControl() {
-        if (playerStateLiveData.value == PlayerState.Play) {
+        if (playerInteractor.isPlaying()) {
             pause()
         } else {
             start()
@@ -45,24 +64,24 @@ class PlayerViewModel(
     fun start() {
         if (playerStateLiveData.value == PlayerState.Prepared || playerStateLiveData.value == PlayerState.Pause) {
             playerInteractor.start()
-            _playerStateLiveData.value = PlayerState.Play
+            _playerStateLiveData.postValue(PlayerState.Play(0, MAX_DURATION))
+            mainThreadHandler.postDelayed(updateTimeRunnable, DELAY)
         }
 
-        Log.d("PLAYER", playerStateLiveData.value.toString())
+        Log.d("PLAYER STATE (VM)", playerStateLiveData.value.toString())
     }
 
     fun pause() {
         playerInteractor.pause()
-        _playerStateLiveData.value = PlayerState.Pause
+        _playerStateLiveData.postValue(PlayerState.Pause)
 
-        Log.d("PLAYER", playerStateLiveData.value.toString())
-    }
+        mainThreadHandler.removeCallbacks(updateTimeRunnable)
 
-    fun getCurrentPosition(): Int {
-        return playerInteractor.getCurrentPosition()
+        Log.d("PLAYER STATE (VM)", playerStateLiveData.value.toString())
     }
 
     fun onActivityDestroyed() {
+        Log.d("PLAYER", playerStateLiveData.value.toString())
         playerInteractor.release()
     }
 }

@@ -15,5 +15,5 @@ interface PlayerRepository {
 
     fun isPlaying(): Boolean
 
-    fun getCurrentPosition(): Int
+    fun getCurrentPosition(): Long
 }

@@ -2,12 +2,13 @@ package orc.zdertis420.playlistmaker
 
 import android.content.Context
 import orc.zdertis420.playlistmaker.data.network.RetrofitNetworkClient
+import orc.zdertis420.playlistmaker.data.repository.ContactSupportRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.PlayerRepositoryImplementation
+import orc.zdertis420.playlistmaker.data.repository.SeeEulaRepositoryImplementation
+import orc.zdertis420.playlistmaker.data.repository.ShareAppRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.ThemeRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackHistoryRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackRepositoryImplementation
-import orc.zdertis420.playlistmaker.data.utils.KeyboardUtilImplementation
-import orc.zdertis420.playlistmaker.data.utils.NetworkUtilImplementation
 import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
 import orc.zdertis420.playlistmaker.domain.repository.PlayerRepository
 import orc.zdertis420.playlistmaker.domain.interactor.ThemeInteractor
@@ -23,11 +24,12 @@ import orc.zdertis420.playlistmaker.domain.implementations.interactor.TrackInter
 import orc.zdertis420.playlistmaker.domain.implementations.usecase.ContactSupportUseCaseImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.usecase.SeeEulaUseCaseImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.usecase.ShareAppUseCaseImplementation
+import orc.zdertis420.playlistmaker.domain.repository.ContactSupportRepository
+import orc.zdertis420.playlistmaker.domain.repository.SeeEulaRepository
+import orc.zdertis420.playlistmaker.domain.repository.ShareAppRepository
 import orc.zdertis420.playlistmaker.domain.usecase.ContactSupportUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.SeeEulaUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.ShareAppUseCase
-import orc.zdertis420.playlistmaker.domain.utils.KeyboardUtil
-import orc.zdertis420.playlistmaker.domain.utils.NetworkUtil
 
 object Creator {
     fun provideTrackInteractor(): TrackInteractor {
@@ -63,22 +65,26 @@ object Creator {
     }
 
     fun provideShareAppUseCase(context: Context): ShareAppUseCase {
-        return ShareAppUseCaseImplementation(context)
+        return ShareAppUseCaseImplementation(getShareAppRepository(context))
+    }
+
+    private fun getShareAppRepository(context: Context): ShareAppRepository {
+        return ShareAppRepositoryImplementation(context)
     }
 
     fun provideContactSupportUSeCase(context: Context): ContactSupportUseCase {
-        return ContactSupportUseCaseImplementation(context)
+        return ContactSupportUseCaseImplementation(getContactSupportRepository(context))
+    }
+
+    private fun getContactSupportRepository(context: Context): ContactSupportRepository {
+        return ContactSupportRepositoryImplementation(context)
     }
 
     fun provideSeeEulaUseCase(context: Context): SeeEulaUseCase {
-        return SeeEulaUseCaseImplementation(context)
+        return SeeEulaUseCaseImplementation(getSeeEulaRepository(context))
     }
 
-    fun provideKeyboardUtil(context: Context): KeyboardUtil {
-        return KeyboardUtilImplementation(context)
-    }
-
-    fun provideNetworkUtil(context: Context): NetworkUtil {
-        return NetworkUtilImplementation(context)
+    private fun getSeeEulaRepository(context: Context): SeeEulaRepository {
+        return SeeEulaRepositoryImplementation(context)
     }
 }

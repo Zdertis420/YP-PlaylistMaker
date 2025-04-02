@@ -27,10 +27,6 @@ import java.util.Locale
 
 class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
-    companion object {
-        private const val DELAY = 1000L
-    }
-
     private lateinit var views: ActivityPlayerBinding
     private lateinit var viewModel: PlayerViewModel
 
@@ -38,8 +34,6 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
     private val playerInteractor = Creator.providePlayerInteractor()
 
-    private var mainThreadHandler: Handler = Handler(Looper.getMainLooper())
-    private lateinit var updateTimePLaying: Runnable
     private val simpleDate by lazy { SimpleDateFormat("mm:ss", Locale.getDefault()) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,13 +79,13 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
         viewModel.prepare()
 
-        updateTimePLaying = object : Runnable {
-            override fun run() {
-                views.timePlaying.text = simpleDate.format(viewModel.getCurrentPosition())
-
-                mainThreadHandler.postDelayed(this, DELAY)
-            }
-        }
+//        updateTimePLaying = object : Runnable {
+//            override fun run() {
+//                views.timePlaying.text = simpleDate.format(viewModel.getCurrentPosition())
+//
+//                mainThreadHandler.postDelayed(this, DELAY)
+//            }
+//        }
     }
 
     private fun render(state: PlayerState) {
@@ -99,7 +93,7 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
         when (state) {
             is PlayerState.Prepared -> showPrepared()
-            is PlayerState.Play -> showPlaying()
+            is PlayerState.Play -> showPlaying(state.elapsedMillis, state.remainingMillis)
             is PlayerState.Pause -> showPause()
             is PlayerState.Error -> {
                 Log.e("ERROR", state.msg)
@@ -111,11 +105,13 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
     private fun showPrepared() {
         views.playButton.isEnabled = true
         views.timePlaying.text = "00:00"
-        mainThreadHandler.removeCallbacks(updateTimePLaying)
+//        mainThreadHandler.removeCallbacks(updateTimePLaying)
     }
 
-    private fun showPlaying() {
+    private fun showPlaying(elapsedMillis: Long, remainingMillis: Long) {
         views.playButton.setImageResource(R.drawable.pause_button)
+
+        views.timePlaying.text = simpleDate.format(remainingMillis)
     }
 
     private fun showPause() {
@@ -162,7 +158,7 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
             R.id.play_button -> {
                 viewModel.playbackControl()
-                mainThreadHandler.postDelayed(updateTimePLaying, DELAY)
+//                mainThreadHandler.postDelayed(updateTimePLaying, DELAY)
             }
         }
     }
