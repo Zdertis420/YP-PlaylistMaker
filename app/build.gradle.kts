@@ -41,8 +41,7 @@ android {
 }
 
 dependencies {
-    implementation(libs.dagger)
-    kapt(libs.dagger.compiler)
+    implementation(libs.koin.android)
     implementation(libs.retrofit)
     implementation(libs.gson)
     implementation(libs.converter.gson)

@@ -15,8 +15,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.R
@@ -28,6 +26,7 @@ import orc.zdertis420.playlistmaker.ui.viewmodel.states.SearchState
 import orc.zdertis420.playlistmaker.ui.viewmodel.SearchViewModel
 import orc.zdertis420.playlistmaker.utils.KeyboardUtil
 import orc.zdertis420.playlistmaker.utils.NetworkUtil
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
 class SearchActivity : AppCompatActivity(), View.OnClickListener {
@@ -38,7 +37,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var views: ActivitySearchBinding
 
-    private lateinit var viewModel: SearchViewModel
+    private val viewModel: SearchViewModel by viewModel()
 
     private var isClickAllowed = true
     private val handler = Handler(Looper.getMainLooper())
@@ -47,10 +46,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     private var tracksHistoryList = mutableListOf<Track>()
 
-    private val trackInteractor = Creator.provideTrackInteractor()
-    private val trackHistoryInteractor = Creator.provideTrackHistoryInteractor(this)
     private val keyboardUtil = KeyboardUtil(this)
-    private val networkUtil = NetworkUtil(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,12 +58,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
             WindowInsetsCompat.CONSUMED
         }
-
-        viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return SearchViewModel(trackInteractor, trackHistoryInteractor) as T
-            }
-        })[SearchViewModel::class.java]
 
         viewModel.searchStateLiveData.observe(this) { state ->
             render(state)
@@ -136,11 +126,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
                 views.searchHistory.visibility =
                     if (views.searchLine.hasFocus() && s?.isEmpty() == true && tracksHistoryList.isNotEmpty()) View.VISIBLE else View.GONE
 
-                if (!networkUtil.isNetworkAvailable()) {
-                    showNoConnectionError()
-                    return
-                }
-
                 if (s?.isNotEmpty() == true) {
                     viewModel.searchDebounce(s.toString())
                 }
@@ -160,11 +145,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         views.searchLine.setOnEditorActionListener { view, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE && searchQuery.isNotEmpty()) {
                 keyboardUtil.hideKeyboard(view)
-
-                if (!networkUtil.isNetworkAvailable()) {
-                    showNoConnectionError()
-                    return@setOnEditorActionListener false
-                }
 
                 viewModel.searchTracks(searchQuery)
             }
@@ -321,11 +301,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
                 R.id.update_connection -> {
                     Log.d("NO CONNECTION", "RETRY")
-
-                    if (!networkUtil.isNetworkAvailable()) {
-                        showNoConnectionError()
-                        return
-                    }
 
                     viewModel.searchTracks(searchQuery)
                 }

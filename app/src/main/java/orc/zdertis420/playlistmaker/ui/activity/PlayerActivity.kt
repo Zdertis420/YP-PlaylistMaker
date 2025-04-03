@@ -22,17 +22,16 @@ import orc.zdertis420.playlistmaker.databinding.ActivityPlayerBinding
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlayerViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var views: ActivityPlayerBinding
-    private lateinit var viewModel: PlayerViewModel
+    private val viewModel: PlayerViewModel by viewModel()
 
     private var previewUrl = ""
-
-    private val playerInteractor = Creator.providePlayerInteractor()
 
     private val simpleDate by lazy { SimpleDateFormat("mm:ss", Locale.getDefault()) }
 
@@ -59,12 +58,6 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         } else {
             intent.getParcelableExtra("track")
         }?.toTrack()
-
-        viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return PlayerViewModel(playerInteractor, track!!) as T
-            }
-        })[PlayerViewModel::class.java]
 
         viewModel.playerStateLiveData.observe(this) { state ->
             render(state)

@@ -11,11 +11,13 @@ import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.interactor.TrackHistoryInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.TrackInteractor
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.SearchState
+import orc.zdertis420.playlistmaker.utils.NetworkUtil
 
 
 class SearchViewModel(
     private val trackInteractor: TrackInteractor,
-    private val trackHistoryInteractor: TrackHistoryInteractor
+    private val trackHistoryInteractor: TrackHistoryInteractor,
+    private val networkUtil: NetworkUtil
 ) : ViewModel() {
 
     companion object {
@@ -34,6 +36,11 @@ class SearchViewModel(
 
     fun searchTracks(expression: String) {
         _searchStateLiveData.value = SearchState.Loading
+
+        if (!networkUtil.isNetworkAvailable()) {
+            _searchStateLiveData.postValue(SearchState.Error)
+            return
+        }
 
         trackInteractor.browseTracks(expression) { result ->
             result.onFailure { error ->

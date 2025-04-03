@@ -31,60 +31,60 @@ import orc.zdertis420.playlistmaker.domain.usecase.ContactSupportUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.SeeEulaUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.ShareAppUseCase
 
-object Creator {
-    fun provideTrackInteractor(): TrackInteractor {
-        return TrackInteractorImplementation(getTrackRepository())
-    }
-
-    private fun getTrackRepository(): TrackRepository {
-        return TrackRepositoryImplementation(RetrofitNetworkClient())
-    }
-
-    fun provideTrackHistoryInteractor(context: Context): TrackHistoryInteractor {
-        return TrackHistoryInteractorImplementation(getTrackHistoryRepository(context))
-    }
-
-    private fun getTrackHistoryRepository(context: Context): TrackHistoryRepository {
-        return TrackHistoryRepositoryImplementation(context)
-    }
-
-    fun providePlayerInteractor(): PlayerInteractor {
-        return PlayerInteractorImplementation(getPlayerRepository())
-    }
-
-    private fun getPlayerRepository(): PlayerRepository {
-        return PlayerRepositoryImplementation()
-    }
-
-    fun provideThemeInteractor(context: Context): ThemeInteractor {
-        return ThemeInteractorImplementation(getThemeRepository(context))
-    }
-
-    private fun getThemeRepository(context: Context): ThemeRepository {
-        return ThemeRepositoryImplementation(context)
-    }
-
-    fun provideShareAppUseCase(context: Context): ShareAppUseCase {
-        return ShareAppUseCaseImplementation(getShareAppRepository(context))
-    }
-
-    private fun getShareAppRepository(context: Context): ShareAppRepository {
-        return ShareAppRepositoryImplementation(context)
-    }
-
-    fun provideContactSupportUSeCase(context: Context): ContactSupportUseCase {
-        return ContactSupportUseCaseImplementation(getContactSupportRepository(context))
-    }
-
-    private fun getContactSupportRepository(context: Context): ContactSupportRepository {
-        return ContactSupportRepositoryImplementation(context)
-    }
-
-    fun provideSeeEulaUseCase(context: Context): SeeEulaUseCase {
-        return SeeEulaUseCaseImplementation(getSeeEulaRepository(context))
-    }
-
-    private fun getSeeEulaRepository(context: Context): SeeEulaRepository {
-        return SeeEulaRepositoryImplementation(context)
-    }
-}
+//object Creator {
+//    fun provideTrackInteractor(): TrackInteractor {
+//        return TrackInteractorImplementation(getTrackRepository())
+//    }
+//
+//    private fun getTrackRepository(): TrackRepository {
+//        return TrackRepositoryImplementation(RetrofitNetworkClient())
+//    }
+//
+//    fun provideTrackHistoryInteractor(context: Context): TrackHistoryInteractor {
+//        return TrackHistoryInteractorImplementation(getTrackHistoryRepository(context))
+//    }
+//
+//    private fun getTrackHistoryRepository(context: Context): TrackHistoryRepository {
+//        return TrackHistoryRepositoryImplementation(context)
+//    }
+//
+//    fun providePlayerInteractor(): PlayerInteractor {
+//        return PlayerInteractorImplementation(getPlayerRepository())
+//    }
+//
+//    private fun getPlayerRepository(): PlayerRepository {
+//        return PlayerRepositoryImplementation()
+//    }
+//
+//    fun provideThemeInteractor(context: Context): ThemeInteractor {
+//        return ThemeInteractorImplementation(getThemeRepository(context))
+//    }
+//
+//    private fun getThemeRepository(context: Context): ThemeRepository {
+//        return ThemeRepositoryImplementation(context)
+//    }
+//
+//    fun provideShareAppUseCase(context: Context): ShareAppUseCase {
+//        return ShareAppUseCaseImplementation(getShareAppRepository(context))
+//    }
+//
+//    private fun getShareAppRepository(context: Context): ShareAppRepository {
+//        return ShareAppRepositoryImplementation(context)
+//    }
+//
+//    fun provideContactSupportUSeCase(context: Context): ContactSupportUseCase {
+//        return ContactSupportUseCaseImplementation(getContactSupportRepository(context))
+//    }
+//
+//    private fun getContactSupportRepository(context: Context): ContactSupportRepository {
+//        return ContactSupportRepositoryImplementation(context)
+//    }
+//
+//    fun provideSeeEulaUseCase(context: Context): SeeEulaUseCase {
+//        return SeeEulaUseCaseImplementation(getSeeEulaRepository(context))
+//    }
+//
+//    private fun getSeeEulaRepository(context: Context): SeeEulaRepository {
+//        return SeeEulaRepositoryImplementation(context)
+//    }
+//}

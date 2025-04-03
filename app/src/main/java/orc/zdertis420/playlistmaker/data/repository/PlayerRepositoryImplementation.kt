@@ -4,13 +4,12 @@ import android.media.MediaPlayer
 import android.util.Log
 import orc.zdertis420.playlistmaker.domain.repository.PlayerRepository
 
-class PlayerRepositoryImplementation : PlayerRepository {
+class PlayerRepositoryImplementation(private val mediaPlayer: MediaPlayer) : PlayerRepository {
 
     enum class PlayerState {
         IDLE, PREPARING, PREPARED, STARTED, PAUSED, COMPLETED, ERROR, RELEASED
     }
 
-    private var mediaPlayer: MediaPlayer? = null
     private var playerState = PlayerState.IDLE
 
     override fun preparePlayer(url: String, onPrepared: () -> Unit, onCompleted: () -> Unit) {
@@ -19,9 +18,8 @@ class PlayerRepositoryImplementation : PlayerRepository {
         Log.d("STATE", playerState.toString())
 
         Log.d("PLAYER", "MediaPlayer created")
-        mediaPlayer = MediaPlayer()
 
-        mediaPlayer?.apply {
+        mediaPlayer.apply {
             try {
                 setDataSource(url)
                 prepareAsync()
@@ -54,29 +52,28 @@ class PlayerRepositoryImplementation : PlayerRepository {
 
     override fun startPlayer() {
         if (playerState == PlayerState.PREPARED || playerState == PlayerState.PAUSED) {
-            mediaPlayer?.start()
+            mediaPlayer.start()
             playerState = PlayerState.STARTED
         }
     }
 
     override fun pausePlayer() {
         if (playerState == PlayerState.STARTED) {
-            mediaPlayer?.pause()
+            mediaPlayer.pause()
             playerState = PlayerState.PAUSED
         }
     }
 
     override fun releasePlayer() {
-        mediaPlayer?.release()
-        mediaPlayer = null
+        mediaPlayer.release()
         playerState = PlayerState.RELEASED
     }
 
     override fun isPlaying(): Boolean {
-        return mediaPlayer?.isPlaying ?: false
+        return mediaPlayer.isPlaying
     }
 
     override fun getCurrentPosition(): Long {
-        return mediaPlayer?.currentPosition?.toLong() ?: 0L
+        return mediaPlayer.currentPosition.toLong()
     }
 }
