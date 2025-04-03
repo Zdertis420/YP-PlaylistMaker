@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("kotlin-kapt")
 }
 
 android {
@@ -15,6 +16,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildFeatures {
+        viewBinding = true
     }
 
     buildTypes {
@@ -36,6 +41,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.dagger)
+    kapt(libs.dagger.compiler)
     implementation(libs.retrofit)
     implementation(libs.gson)
     implementation(libs.converter.gson)

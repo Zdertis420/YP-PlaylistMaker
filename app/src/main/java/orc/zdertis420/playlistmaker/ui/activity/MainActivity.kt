@@ -3,36 +3,31 @@ package orc.zdertis420.playlistmaker.ui.activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import orc.zdertis420.playlistmaker.R
+import orc.zdertis420.playlistmaker.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
-    private lateinit var search: Button
-    private lateinit var mediaLibrary: Button
-    private lateinit var settings: Button
+    private lateinit var views: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        views = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(views.root)
+        ViewCompat.setOnApplyWindowInsetsListener(views.main) { view, windowInsetsCompat ->
+            val insets = windowInsetsCompat.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
         }
 
-        search = findViewById(R.id.search)
-        mediaLibrary = findViewById(R.id.media_library)
-        settings = findViewById(R.id.settings)
-
-        search.setOnClickListener(this)
-        mediaLibrary.setOnClickListener(this)
-        settings.setOnClickListener(this)
+        views.search.setOnClickListener(this)
+        views.mediaLibrary.setOnClickListener(this)
+        views.settings.setOnClickListener(this)
     }
 
     override fun onClick(v: View?) {

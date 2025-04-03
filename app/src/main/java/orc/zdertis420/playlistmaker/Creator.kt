@@ -2,7 +2,10 @@ package orc.zdertis420.playlistmaker
 
 import android.content.Context
 import orc.zdertis420.playlistmaker.data.network.RetrofitNetworkClient
+import orc.zdertis420.playlistmaker.data.repository.ContactSupportRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.PlayerRepositoryImplementation
+import orc.zdertis420.playlistmaker.data.repository.SeeEulaRepositoryImplementation
+import orc.zdertis420.playlistmaker.data.repository.ShareAppRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.ThemeRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackHistoryRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackRepositoryImplementation
@@ -21,6 +24,9 @@ import orc.zdertis420.playlistmaker.domain.implementations.interactor.TrackInter
 import orc.zdertis420.playlistmaker.domain.implementations.usecase.ContactSupportUseCaseImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.usecase.SeeEulaUseCaseImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.usecase.ShareAppUseCaseImplementation
+import orc.zdertis420.playlistmaker.domain.repository.ContactSupportRepository
+import orc.zdertis420.playlistmaker.domain.repository.SeeEulaRepository
+import orc.zdertis420.playlistmaker.domain.repository.ShareAppRepository
 import orc.zdertis420.playlistmaker.domain.usecase.ContactSupportUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.SeeEulaUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.ShareAppUseCase
@@ -59,15 +65,26 @@ object Creator {
     }
 
     fun provideShareAppUseCase(context: Context): ShareAppUseCase {
-        return ShareAppUseCaseImplementation(context)
+        return ShareAppUseCaseImplementation(getShareAppRepository(context))
+    }
+
+    private fun getShareAppRepository(context: Context): ShareAppRepository {
+        return ShareAppRepositoryImplementation(context)
     }
 
     fun provideContactSupportUSeCase(context: Context): ContactSupportUseCase {
-        return ContactSupportUseCaseImplementation(context)
+        return ContactSupportUseCaseImplementation(getContactSupportRepository(context))
+    }
+
+    private fun getContactSupportRepository(context: Context): ContactSupportRepository {
+        return ContactSupportRepositoryImplementation(context)
     }
 
     fun provideSeeEulaUseCase(context: Context): SeeEulaUseCase {
-        return SeeEulaUseCaseImplementation(context)
+        return SeeEulaUseCaseImplementation(getSeeEulaRepository(context))
     }
 
+    private fun getSeeEulaRepository(context: Context): SeeEulaRepository {
+        return SeeEulaRepositoryImplementation(context)
+    }
 }

@@ -4,8 +4,7 @@ interface PlayerRepository {
     fun preparePlayer(
         url: String,
         onPrepared: () -> Unit,
-        onCompleted: () -> Unit
-    )
+        onCompleted: () -> Unit)
 
     fun startPlayer()
 
@@ -15,5 +14,5 @@ interface PlayerRepository {
 
     fun isPlaying(): Boolean
 
-    fun getCurrentPosition(): Int
+    fun getCurrentPosition(): Long
 }

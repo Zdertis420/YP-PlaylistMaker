@@ -26,8 +26,7 @@ class PlayerInteractorImplementation(
         return playerRepository.isPlaying()
     }
 
-    override fun getCurrentPosition(): Int {
+    override fun getCurrentPosition(): Long {
         return playerRepository.getCurrentPosition()
     }
-
 }

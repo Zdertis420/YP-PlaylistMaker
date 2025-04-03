@@ -2,137 +2,108 @@ package orc.zdertis420.playlistmaker.ui.activity
 
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.View
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.imageview.ShapeableImageView
 import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.R
+import orc.zdertis420.playlistmaker.data.dto.TrackDto
+import orc.zdertis420.playlistmaker.data.mapper.toTrack
+import orc.zdertis420.playlistmaker.databinding.ActivityPlayerBinding
 import orc.zdertis420.playlistmaker.domain.entities.Track
+import orc.zdertis420.playlistmaker.ui.viewmodel.PlayerViewModel
+import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
-    companion object {
-        private const val DELAY = 1000L
-    }
+    private lateinit var views: ActivityPlayerBinding
+    private lateinit var viewModel: PlayerViewModel
 
-    private lateinit var back: MaterialToolbar
-
-    private lateinit var trackImage: ShapeableImageView
-    private lateinit var trackName: TextView
-    private lateinit var trackAuthor: TextView
-    private lateinit var saveToLibrary: ImageView
-    private lateinit var playButton: ImageView
-    private lateinit var likeButton: ImageView
-    private lateinit var timePlaying: TextView
-    private lateinit var country: TextView
-    private lateinit var genre: TextView
-    private lateinit var year: TextView
-    private lateinit var album: TextView
-    private lateinit var duration: TextView
-    private var previewUrl: String = ""
+    private var previewUrl = ""
 
     private val playerInteractor = Creator.providePlayerInteractor()
 
-    private var mainThreadHandler: Handler = Handler(Looper.getMainLooper())
-    private lateinit var updateTimePLaying: Runnable
     private val simpleDate by lazy { SimpleDateFormat("mm:ss", Locale.getDefault()) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_player)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.player_activity)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        views = ActivityPlayerBinding.inflate(layoutInflater)
+        setContentView(views.root)
+        ViewCompat.setOnApplyWindowInsetsListener(views.playerActivity) { view, windowInsetsCompat ->
+            val insets = windowInsetsCompat.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
         }
 
-        back = findViewById(R.id.back)
 
-        trackImage = findViewById(R.id.track_image)
-        trackName = findViewById(R.id.track_name)
-        trackAuthor = findViewById(R.id.track_author)
-        saveToLibrary = findViewById(R.id.save_to_library)
-        playButton = findViewById(R.id.play_button)
-        likeButton = findViewById(R.id.like_button)
-        timePlaying = findViewById(R.id.time_playing)
-        country = findViewById(R.id.country)
-        genre = findViewById(R.id.genre)
-        year = findViewById(R.id.year)
-        album = findViewById(R.id.album)
-        duration = findViewById(R.id.duration)
+        views.back.setOnClickListener(this)
 
-        back.setOnClickListener(this)
+        views.playButton.setOnClickListener(this)
 
-        playButton.setOnClickListener(this)
-
-        timePlaying.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(0L)
+        views.timePlaying.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(0L)
 
         val track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra("track", Track::class.java)
+            intent.getParcelableExtra("track", TrackDto::class.java)
         } else {
             intent.getParcelableExtra("track")
+        }?.toTrack()
+
+        viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return PlayerViewModel(playerInteractor, track!!) as T
+            }
+        })[PlayerViewModel::class.java]
+
+        viewModel.playerStateLiveData.observe(this) { state ->
+            render(state)
         }
 
         loadTrack(track!!)
 
-        playerInteractor.prepare(track.previewUrl,
-            onPrepared = { playButton.isEnabled = true },
-            onCompleted = { resetPlayer() }
-        )
+        Log.d("THREAD", Thread.currentThread().toString())
 
-        updateTimePLaying = object : Runnable {
-            override fun run() {
-                timePlaying.text = simpleDate.format(playerInteractor.getCurrentPosition())
+        viewModel.prepare()
+    }
 
-                mainThreadHandler.postDelayed(this, DELAY)
+    private fun render(state: PlayerState) {
+        Log.d("STATE", state.toString())
+
+        when (state) {
+            is PlayerState.Prepared -> showPrepared()
+            is PlayerState.Play -> showPlaying(state.remainingMillis)
+            is PlayerState.Pause -> showPause()
+            is PlayerState.Error -> {
+                Log.e("ERROR", state.msg)
+                Toast.makeText(this, state.msg, Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun playbackControl() {
-        if (playerInteractor.isPlaying()) {
-            pausePlayer()
-        } else {
-            startPlayer()
-        }
-
-        mainThreadHandler.post { updateTimePLaying.run() }
+    private fun showPrepared() {
+        views.playButton.isEnabled = true
+        views.timePlaying.text = "00:00"
     }
 
-    private fun startPlayer() {
-        playerInteractor.start()
+    private fun showPlaying(remainingMillis: Long) {
+        views.playButton.setImageResource(R.drawable.pause_button)
 
-        playButton.setImageResource(R.drawable.pause_button)
-
-        mainThreadHandler.post { updateTimePLaying.run() }
+        views.timePlaying.text = simpleDate.format(remainingMillis)
     }
 
-    private fun pausePlayer() {
-        playerInteractor.pause()
-
-        playButton.setImageResource(R.drawable.play_button)
-
-        mainThreadHandler.post { updateTimePLaying.run() }
-    }
-
-    private fun resetPlayer() {
-        timePlaying.text = "0:00"
-        mainThreadHandler.removeCallbacks(updateTimePLaying)
+    private fun showPause() {
+        views.playButton.setImageResource(R.drawable.play_button)
     }
 
     private fun loadTrack(track: Track) {
@@ -147,43 +118,43 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
             .error(R.drawable.placeholder)
             .diskCacheStrategy(DiskCacheStrategy.NONE)
             .skipMemoryCache(true)
-            .into(trackImage)
+            .into(views.trackImage)
 
 
-        trackName.text = track.trackName
-        trackAuthor.text = track.artistName
-        country.text = track.country
-        genre.text = track.primaryGenreName
-        year.text = track.releaseDate.substring(0, 4)
-        album.text = track.collectionName
-        duration.text = SimpleDateFormat("mm:ss", Locale.getDefault())
+        views.trackName.text = track.trackName
+        views.trackAuthor.text = track.artistName
+        views.country.text = track.country
+        views.genre.text = track.primaryGenreName
+        views.year.text = track.releaseDate.substring(0, 4)
+        views.album.text = track.collectionName
+        views.duration.text = SimpleDateFormat("mm:ss", Locale.getDefault())
             .format(track.trackTimeMillis)
         previewUrl = track.previewUrl
 
 
 
-        trackName.isSelected = true
-        trackAuthor.isSelected = true
-        country.isSelected = true
-        genre.isSelected = true
-        album.isSelected = true
+        views.trackName.isSelected = true
+        views.trackAuthor.isSelected = true
+        views.country.isSelected = true
+        views.genre.isSelected = true
+        views.album.isSelected = true
     }
 
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.back -> finish()
 
-            R.id.play_button -> playbackControl()
+            R.id.play_button -> viewModel.playbackControl()
         }
     }
 
     override fun onPause() {
         super.onPause()
-        pausePlayer()
+        viewModel.pause()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        playerInteractor.release()
+        viewModel.onActivityDestroyed()
     }
 }

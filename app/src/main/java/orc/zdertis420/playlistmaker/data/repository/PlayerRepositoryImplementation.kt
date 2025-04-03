@@ -14,15 +14,21 @@ class PlayerRepositoryImplementation : PlayerRepository {
     private var playerState = PlayerState.IDLE
 
     override fun preparePlayer(url: String, onPrepared: () -> Unit, onCompleted: () -> Unit) {
-        playerState = PlayerState.PREPARING
 
-        mediaPlayer = MediaPlayer().apply {
+        playerState = PlayerState.PREPARING
+        Log.d("STATE", playerState.toString())
+
+        Log.d("PLAYER", "MediaPlayer created")
+        mediaPlayer = MediaPlayer()
+
+        mediaPlayer?.apply {
             try {
                 setDataSource(url)
                 prepareAsync()
 
                 setOnPreparedListener {
                     playerState = PlayerState.PREPARED
+                    onPrepared.invoke()
                 }
 
                 setOnErrorListener { _, error, extras ->
@@ -37,9 +43,13 @@ class PlayerRepositoryImplementation : PlayerRepository {
                 }
             } catch (e: Exception) {
                 playerState = PlayerState.ERROR
-                Log.e("ERROR", "Error while preparing MediaPlayer: $e")
+                Log.e("ERROR", "Error while preparing MediaPlayer: ${e.message}\n$e")
+                e.printStackTrace()
             }
         }
+
+        Log.d("PLAYER", playerState.toString())
+
     }
 
     override fun startPlayer() {
@@ -66,7 +76,7 @@ class PlayerRepositoryImplementation : PlayerRepository {
         return mediaPlayer?.isPlaying ?: false
     }
 
-    override fun getCurrentPosition(): Int {
-        return mediaPlayer?.currentPosition ?: 0
+    override fun getCurrentPosition(): Long {
+        return mediaPlayer?.currentPosition?.toLong() ?: 0L
     }
 }
