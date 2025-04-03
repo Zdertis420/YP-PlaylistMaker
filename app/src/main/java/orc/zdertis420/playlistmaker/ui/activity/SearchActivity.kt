@@ -16,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.databinding.ActivitySearchBinding
@@ -25,7 +24,7 @@ import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.SearchState
 import orc.zdertis420.playlistmaker.ui.viewmodel.SearchViewModel
 import orc.zdertis420.playlistmaker.utils.KeyboardUtil
-import orc.zdertis420.playlistmaker.utils.NetworkUtil
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
@@ -37,7 +36,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var views: ActivitySearchBinding
 
-    private val viewModel: SearchViewModel by viewModel()
+    private val viewModel: SearchViewModel by viewModel<SearchViewModel>()
 
     private var isClickAllowed = true
     private val handler = Handler(Looper.getMainLooper())
@@ -46,7 +45,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     private var tracksHistoryList = mutableListOf<Track>()
 
-    private val keyboardUtil = KeyboardUtil(this)
+    private val keyboardUtil by inject<KeyboardUtil>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

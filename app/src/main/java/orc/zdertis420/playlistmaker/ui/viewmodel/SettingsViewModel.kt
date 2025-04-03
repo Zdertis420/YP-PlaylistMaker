@@ -1,7 +1,6 @@
 package orc.zdertis420.playlistmaker.ui.viewmodel
 
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import orc.zdertis420.playlistmaker.domain.interactor.ThemeInteractor
 import orc.zdertis420.playlistmaker.domain.usecase.ContactSupportUseCase
@@ -25,6 +24,8 @@ class SettingsViewModel(
 
         themeInteractor.switchTheme(newTheme)
         themeInteractor.saveTheme(newTheme)
+
+//        Log.d("THEME", newTheme.toString())
     }
 
     fun shareApp() {

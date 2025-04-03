@@ -5,14 +5,18 @@ import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import orc.zdertis420.playlistmaker.data.dto.TrackDto
+import orc.zdertis420.playlistmaker.data.mapper.toDto
+import orc.zdertis420.playlistmaker.data.mapper.toTrack
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
 
 class PlayerViewModel(
     private val playerInteractor: PlayerInteractor,
-    private val track: Track
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _playerStateLiveData = MutableLiveData<PlayerState>()
@@ -31,15 +35,28 @@ class PlayerViewModel(
         private const val MAX_DURATION = 30000L
     }
 
+    private var track: Track? = null
+
+    init {
+        savedStateHandle.get<TrackDto>("TRACK")?.let {
+            track = it.toTrack()
+        }
+    }
+
+    fun setTrack(track: Track) {
+        this.track = track
+        savedStateHandle.set("TRACK", track.toDto())
+    }
+
     fun prepare() {
-        if (track.previewUrl == "") {
+        if (track?.previewUrl == "") {
             _playerStateLiveData.value = PlayerState.Error("No preview provided")
             Log.e("ERROR", "no preview")
             return
         }
 
         playerInteractor.prepare(
-            track.previewUrl,
+            track!!.previewUrl,
             onPrepared = { _playerStateLiveData.postValue(PlayerState.Prepared) },
             onCompleted = { _playerStateLiveData.postValue(PlayerState.Prepared) }
         )

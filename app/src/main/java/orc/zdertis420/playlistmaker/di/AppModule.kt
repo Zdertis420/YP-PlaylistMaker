@@ -12,7 +12,6 @@ import orc.zdertis420.playlistmaker.data.repository.ShareAppRepositoryImplementa
 import orc.zdertis420.playlistmaker.data.repository.ThemeRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackHistoryRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackRepositoryImplementation
-import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.implementations.interactor.ThemeInteractorImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.interactor.TrackHistoryInteractorImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.interactor.TrackInteractorImplementation
@@ -34,6 +33,7 @@ import orc.zdertis420.playlistmaker.domain.usecase.ShareAppUseCase
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlayerViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.SearchViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.SettingsViewModel
+import orc.zdertis420.playlistmaker.utils.KeyboardUtil
 import orc.zdertis420.playlistmaker.utils.NetworkUtil
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -41,37 +41,55 @@ import org.koin.dsl.module
 
 val appModule = module {
     //Player
-    factory <PlayerInteractor> { PlayerInteractorImplementation(get()) }
+    factory<PlayerInteractor> { PlayerInteractorImplementation(get<PlayerRepository>()) }
     single<PlayerRepository> { PlayerRepositoryImplementation(get<MediaPlayer>()) }
-    factory { MediaPlayer() }
+    single { MediaPlayer() }
+    //SavedState
+
     //Player VM
-    viewModel<PlayerViewModel> { (track: Track) -> PlayerViewModel(get(), track) }
+    viewModel<PlayerViewModel> { PlayerViewModel(get<PlayerInteractor>(), get()) }
 
     //Search
-    factory<TrackInteractor> { TrackInteractorImplementation(get()) }
-    single<TrackRepository> { TrackRepositoryImplementation(get()) }
+    //Tracks browsing
+    factory<TrackInteractor> { TrackInteractorImplementation(get<TrackRepository>()) }
+    single<TrackRepository> { TrackRepositoryImplementation(get<RetrofitNetworkClient>()) }
     factory { RetrofitNetworkClient() }
     //History
-    factory<TrackHistoryInteractor> { TrackHistoryInteractorImplementation(get()) }
+    factory<TrackHistoryInteractor> { TrackHistoryInteractorImplementation(get<TrackHistoryRepository>()) }
     single<TrackHistoryRepository> { TrackHistoryRepositoryImplementation(androidContext()) }
     //NetworkUtil
     single<NetworkUtil> { NetworkUtil(androidContext()) }
     //Search VM
-    viewModel<SearchViewModel> { SearchViewModel(get(), get(), get()) }
+    viewModel<SearchViewModel> {
+        SearchViewModel(
+            get<TrackInteractor>(),
+            get<TrackHistoryInteractor>(),
+            get<NetworkUtil>()
+        )
+    }
+    //KeyboardUtil
+    single<KeyboardUtil> { KeyboardUtil(androidContext()) }
 
     //Settings
     //Theme
-    factory<ThemeInteractor> { ThemeInteractorImplementation(get()) }
+    factory<ThemeInteractor> { ThemeInteractorImplementation(get<ThemeRepository>()) }
     single<ThemeRepository> { ThemeRepositoryImplementation(androidContext()) }
     //ShareApp
-    factory<ShareAppUseCase> { ShareAppUseCaseImplementation(get()) }
+    factory<ShareAppUseCase> { ShareAppUseCaseImplementation(get<ShareAppRepository>()) }
     single<ShareAppRepository> { ShareAppRepositoryImplementation(androidContext()) }
     //SeeEula
-    factory<SeeEulaUseCase> { SeeEulaUseCaseImplementation(get()) }
+    factory<SeeEulaUseCase> { SeeEulaUseCaseImplementation(get<SeeEulaRepository>()) }
     single<SeeEulaRepository> { SeeEulaRepositoryImplementation(androidContext()) }
     //ContactSupport
-    factory<ContactSupportUseCase> { ContactSupportUseCaseImplementation(get()) }
+    factory<ContactSupportUseCase> { ContactSupportUseCaseImplementation(get<ContactSupportRepository>()) }
     single<ContactSupportRepository> { ContactSupportRepositoryImplementation(androidContext()) }
     //Settings VM
-    viewModel<SettingsViewModel> { SettingsViewModel(get(), get(), get(), get()) }
+    viewModel<SettingsViewModel> {
+        SettingsViewModel(
+            get<ThemeInteractor>(),
+            get<ShareAppUseCase>(),
+            get<ContactSupportUseCase>(),
+            get<SeeEulaUseCase>()
+        )
+    }
 }
