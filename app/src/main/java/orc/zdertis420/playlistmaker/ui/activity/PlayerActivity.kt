@@ -9,12 +9,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.dto.TrackDto
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
@@ -22,17 +19,16 @@ import orc.zdertis420.playlistmaker.databinding.ActivityPlayerBinding
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlayerViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var views: ActivityPlayerBinding
-    private lateinit var viewModel: PlayerViewModel
+    private val viewModel: PlayerViewModel by viewModel<PlayerViewModel>()
 
     private var previewUrl = ""
-
-    private val playerInteractor = Creator.providePlayerInteractor()
 
     private val simpleDate by lazy { SimpleDateFormat("mm:ss", Locale.getDefault()) }
 
@@ -60,17 +56,13 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
             intent.getParcelableExtra("track")
         }?.toTrack()
 
-        viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return PlayerViewModel(playerInteractor, track!!) as T
-            }
-        })[PlayerViewModel::class.java]
+        viewModel.setTrack(track!!)
 
         viewModel.playerStateLiveData.observe(this) { state ->
             render(state)
         }
 
-        loadTrack(track!!)
+        loadTrack(track)
 
         Log.d("THREAD", Thread.currentThread().toString())
 

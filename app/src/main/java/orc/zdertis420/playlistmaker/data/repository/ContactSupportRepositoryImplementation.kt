@@ -7,8 +7,8 @@ import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.domain.repository.ContactSupportRepository
 
 class ContactSupportRepositoryImplementation(private val context: Context) : ContactSupportRepository {
-    override fun contactSupport() {
-        context.startActivity(Intent.createChooser(Intent().apply {
+    override fun contactSupport(): Intent {
+        return Intent.createChooser(Intent().apply {
             action = Intent.ACTION_SENDTO
             data = "mailto:".toUri()
 
@@ -24,6 +24,6 @@ class ContactSupportRepositoryImplementation(private val context: Context) : Con
                 Intent.EXTRA_TEXT,
                 context.getString(R.string.text)
             )
-        }, null))
+        }, null)
     }
 }

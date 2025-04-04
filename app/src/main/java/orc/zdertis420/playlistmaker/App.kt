@@ -1,14 +1,24 @@
 package orc.zdertis420.playlistmaker
 
 import android.app.Application
+import orc.zdertis420.playlistmaker.di.appModule
+import orc.zdertis420.playlistmaker.domain.interactor.ThemeInteractor
+import org.koin.android.ext.android.inject
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
 
 class App : Application() {
 
     var isDarkTheme = false
-    private val themeInteractor = Creator.provideThemeInteractor(this)
+    val themeInteractor by inject<ThemeInteractor>()
 
     override fun onCreate() {
         super.onCreate()
+
+        startKoin {
+            androidContext(this@App)
+            modules(appModule)
+        }
 
         switchTheme(themeInteractor.getTheme())
     }

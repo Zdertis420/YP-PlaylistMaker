@@ -1,6 +1,8 @@
 package orc.zdertis420.playlistmaker.ui.viewmodel
 
+import android.content.Intent
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import orc.zdertis420.playlistmaker.domain.interactor.ThemeInteractor
@@ -15,6 +17,9 @@ class SettingsViewModel(
     private val seeEulaUseCase: SeeEulaUseCase
 ) : ViewModel() {
 
+    private val _actionLiveData = MutableLiveData<Intent>()
+    val actionLiveData: LiveData<Intent> get() = _actionLiveData
+
     init {
 
         Log.v("VIEW MODEL", "CREATED, INIT")
@@ -25,17 +30,19 @@ class SettingsViewModel(
 
         themeInteractor.switchTheme(newTheme)
         themeInteractor.saveTheme(newTheme)
+
+//        Log.d("THEME", newTheme.toString())
     }
 
     fun shareApp() {
-        shareAppUseCase.shareApp()
+        _actionLiveData.postValue(shareAppUseCase.shareApp())
     }
 
     fun contactSupport() {
-        contactSupportUseCase.contactSupport()
+        _actionLiveData.postValue(contactSupportUseCase.contactSupport())
     }
 
     fun seeEula() {
-        seeEulaUseCase.seeEula()
+        _actionLiveData.postValue(seeEulaUseCase.seeEula())
     }
 }

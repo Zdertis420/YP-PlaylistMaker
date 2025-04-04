@@ -4,6 +4,7 @@ converterGson = "2.5.0"
 daggerCompiler = "2.45"
 glide = "4.16.0"
 gson = "2.10.1"
+koinAndroid = "3.3.0"
 kotlin = "2.0.21"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -18,8 +19,7 @@ retrofit = "2.9.0"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
-dagger = { module = "com.google.dagger:dagger", version.ref = "daggerCompiler" }
-dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "daggerCompiler" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinAndroid" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }

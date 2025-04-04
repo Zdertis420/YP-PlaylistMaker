@@ -1,7 +1,9 @@
 package orc.zdertis420.playlistmaker.data.dto
 
-import java.io.Serializable
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class TrackDto (
     val trackName: String,
     val artistName: String,
@@ -12,4 +14,4 @@ data class TrackDto (
     val primaryGenreName: String,
     val country: String,
     val previewUrl: String
-) : Serializable
+) : Parcelable

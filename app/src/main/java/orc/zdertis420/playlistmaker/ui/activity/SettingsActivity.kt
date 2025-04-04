@@ -7,23 +7,20 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import orc.zdertis420.playlistmaker.Creator
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.databinding.ActivitySettingsBinding
+import orc.zdertis420.playlistmaker.domain.interactor.ThemeInteractor
 import orc.zdertis420.playlistmaker.ui.viewmodel.SettingsViewModel
+import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class SettingsActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var views: ActivitySettingsBinding
 
-    private lateinit var viewModel: SettingsViewModel
+    private val viewModel: SettingsViewModel by viewModel<SettingsViewModel>()
 
-    private val shareAppUseCase = Creator.provideShareAppUseCase(this)
-    private val contactSupportUseCase = Creator.provideContactSupportUSeCase(this)
-    private val seeEulaUseCase = Creator.provideSeeEulaUseCase(this)
-    private val themeInteractor = Creator.provideThemeInteractor(this)
+    private val themeInteractor by inject<ThemeInteractor>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,11 +34,9 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
             WindowInsetsCompat.CONSUMED
         }
 
-        viewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return SettingsViewModel(themeInteractor, shareAppUseCase, contactSupportUseCase, seeEulaUseCase) as T
-            }
-        })[SettingsViewModel::class.java]
+        viewModel.actionLiveData.observe(this) { intent ->
+            startActivity(intent)
+        }
 
         views.switchTheme.isChecked = themeInteractor.getTheme()
 
@@ -50,6 +45,7 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
         views.switchTheme.setOnCheckedChangeListener { switch, state ->
             Log.i("THEME", state.toString())
             viewModel.toggleTheme()
+            Log.d("THEME", state.toString())
         }
 
         views.share.setOnClickListener(this)
