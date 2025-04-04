@@ -1,6 +1,9 @@
 package orc.zdertis420.playlistmaker.ui.viewmodel
 
+import android.content.Intent
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import orc.zdertis420.playlistmaker.domain.interactor.ThemeInteractor
 import orc.zdertis420.playlistmaker.domain.usecase.ContactSupportUseCase
@@ -13,6 +16,9 @@ class SettingsViewModel(
     private val contactSupportUseCase: ContactSupportUseCase,
     private val seeEulaUseCase: SeeEulaUseCase
 ) : ViewModel() {
+
+    private val _actionLiveData = MutableLiveData<Intent>()
+    val actionLiveData: LiveData<Intent> get() = _actionLiveData
 
     init {
 
@@ -29,14 +35,14 @@ class SettingsViewModel(
     }
 
     fun shareApp() {
-        shareAppUseCase.shareApp()
+        _actionLiveData.postValue(shareAppUseCase.shareApp())
     }
 
     fun contactSupport() {
-        contactSupportUseCase.contactSupport()
+        _actionLiveData.postValue(contactSupportUseCase.contactSupport())
     }
 
     fun seeEula() {
-        seeEulaUseCase.seeEula()
+        _actionLiveData.postValue(seeEulaUseCase.seeEula())
     }
 }

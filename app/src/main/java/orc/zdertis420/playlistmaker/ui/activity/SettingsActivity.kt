@@ -34,6 +34,10 @@ class SettingsActivity : AppCompatActivity(), View.OnClickListener {
             WindowInsetsCompat.CONSUMED
         }
 
+        viewModel.actionLiveData.observe(this) { intent ->
+            startActivity(intent)
+        }
+
         views.switchTheme.isChecked = themeInteractor.getTheme()
 
         views.backToMain.setOnClickListener(this)

@@ -7,9 +7,7 @@ import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.domain.repository.SeeEulaRepository
 
 class SeeEulaRepositoryImplementation(private val context: Context) : SeeEulaRepository {
-    override fun seeEula() {
-        context.startActivity(
-            Intent(Intent.ACTION_VIEW, context.getString(R.string.offer).toUri())
-        )
+    override fun seeEula(): Intent {
+        return Intent(Intent.ACTION_VIEW, context.getString(R.string.offer).toUri())
     }
 }
