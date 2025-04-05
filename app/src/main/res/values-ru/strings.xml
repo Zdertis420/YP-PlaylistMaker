@@ -21,4 +21,9 @@
     <string name="album">Альбом</string>
     <string name="duration">Продолжительность</string>
     <string name="no_preview">Для этого трека нет превью</string>
+    <string name="liked_tracks">Избранные треки</string>
+    <string name="empty_media_library">Ваша медиатека пуста</string>
+    <string name="playlists">Плейлисты</string>
+    <string name="no_playlists">Вы не создали ни одного плейлиста</string>
+    <string name="new_playlist">Новый плейлист</string>
 </resources>

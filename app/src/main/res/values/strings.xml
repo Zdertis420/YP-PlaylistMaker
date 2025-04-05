@@ -24,6 +24,11 @@
     <string name="album">Album</string>
     <string name="duration">Duration</string>
     <string name="no_preview">There\'s no preview for this track</string>
+    <string name="liked_tracks">Liked tracks</string>
+    <string name="empty_media_library">Your media library is empty</string>
+    <string name="playlists">Playlists</string>
+    <string name="no_playlists">You didn\'t create any playlist</string>
+    <string name="new_playlist">New playlist</string>
 
     <string name="lorem_ipsum" translatable="false">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
