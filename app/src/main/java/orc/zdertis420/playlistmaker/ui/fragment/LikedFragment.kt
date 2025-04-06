@@ -8,11 +8,23 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.databinding.FragmentLikedBinding
+import orc.zdertis420.playlistmaker.ui.viewmodel.LikedViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class FragmentLiked : Fragment() {
+class LikedFragment : Fragment() {
+
+    companion object {
+        fun newInstance(): LikedFragment {
+            val fragment = LikedFragment()
+            return fragment
+        }
+    }
 
     private var _views: FragmentLikedBinding? = null
     private val views get() = _views
+
+    private val viewModel by viewModel<LikedViewModel>()
+
 
     override fun onCreateView(
         inflater: LayoutInflater,

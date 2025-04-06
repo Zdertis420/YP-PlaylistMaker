@@ -8,11 +8,22 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.databinding.FragmentPlaylistsBinding
+import orc.zdertis420.playlistmaker.ui.viewmodel.PlaylistsViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class FragmentPlaylists : Fragment() {
+class PlaylistsFragment : Fragment() {
+
+    companion object {
+        fun newInstance(): PlaylistsFragment {
+            val fragment = PlaylistsFragment()
+            return fragment
+        }
+    }
 
     private var _views: FragmentPlaylistsBinding? = null
     private val views get() = _views
+
+    private val viewModel by viewModel<PlaylistsViewModel>()
 
     override fun onCreateView(
         inflater: LayoutInflater,

@@ -30,7 +30,9 @@ import orc.zdertis420.playlistmaker.domain.repository.TrackRepository
 import orc.zdertis420.playlistmaker.domain.usecase.ContactSupportUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.SeeEulaUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.ShareAppUseCase
+import orc.zdertis420.playlistmaker.ui.viewmodel.LikedViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlayerViewModel
+import orc.zdertis420.playlistmaker.ui.viewmodel.PlaylistsViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.SearchViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.SettingsViewModel
 import orc.zdertis420.playlistmaker.utils.KeyboardUtil
@@ -92,4 +94,10 @@ val appModule = module {
             get<SeeEulaUseCase>()
         )
     }
+
+    //Liked
+    viewModel<LikedViewModel> { LikedViewModel() }
+
+    //Playlists
+    viewModel<PlaylistsViewModel> { PlaylistsViewModel() }
 }

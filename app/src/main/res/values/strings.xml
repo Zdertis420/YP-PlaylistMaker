@@ -27,7 +27,7 @@
     <string name="liked_tracks">Liked tracks</string>
     <string name="empty_media_library">Your media library is empty</string>
     <string name="playlists">Playlists</string>
-    <string name="no_playlists">You didn\'t create any playlist</string>
+    <string name="no_playlists">You haven\'t created any playlist yet</string>
     <string name="new_playlist">New playlist</string>
 
     <string name="lorem_ipsum" translatable="false">
