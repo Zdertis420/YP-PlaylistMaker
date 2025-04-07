@@ -1,4 +1,4 @@
-package orc.zdertis420.playlistmaker.ui.track
+package orc.zdertis420.playlistmaker.ui.adapter
 
 import android.annotation.SuppressLint
 import android.view.LayoutInflater

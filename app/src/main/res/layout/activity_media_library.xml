@@ -1,9 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/activity_media_library"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background_color"
+    android:paddingStart="@dimen/small_padding"
+    android:paddingTop="10dp"
+    android:paddingEnd="@dimen/small_padding"
+    android:paddingBottom="6dp"
     tools:context=".ui.activity.MediaLibraryActivity">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/media_toolbar"
+        style="@style/toolbar_style"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:title="@string/media_library"/>
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/media_tab_layout"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@color/background_color"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/media_toolbar"
+        app:tabTextColor="@color/standard_text_color"
+        app:tabIndicatorColor="@color/standard_text_color"/>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/media_view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/media_tab_layout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

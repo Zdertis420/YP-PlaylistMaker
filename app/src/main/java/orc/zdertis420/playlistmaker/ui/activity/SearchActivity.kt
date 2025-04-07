@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.databinding.ActivitySearchBinding
-import orc.zdertis420.playlistmaker.ui.track.TrackAdapter
+import orc.zdertis420.playlistmaker.ui.adapter.TrackAdapter
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.SearchState
 import orc.zdertis420.playlistmaker.ui.viewmodel.SearchViewModel
