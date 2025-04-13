@@ -1,40 +1,40 @@
-package orc.zdertis420.playlistmaker.ui.activity
+package orc.zdertis420.playlistmaker.ui.fragment
 
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.PersistableBundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.mapper.toDto
-import orc.zdertis420.playlistmaker.databinding.ActivitySearchBinding
-import orc.zdertis420.playlistmaker.ui.adapter.TrackAdapter
+import orc.zdertis420.playlistmaker.databinding.FragmentSearchBinding
 import orc.zdertis420.playlistmaker.domain.entities.Track
-import orc.zdertis420.playlistmaker.ui.viewmodel.states.SearchState
+import orc.zdertis420.playlistmaker.ui.activity.PlayerActivity
+import orc.zdertis420.playlistmaker.ui.adapter.TrackAdapter
 import orc.zdertis420.playlistmaker.ui.viewmodel.SearchViewModel
+import orc.zdertis420.playlistmaker.ui.viewmodel.states.SearchState
 import orc.zdertis420.playlistmaker.utils.KeyboardUtil
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import kotlin.getValue
 
-
-class SearchActivity : AppCompatActivity(), View.OnClickListener {
+class SearchFragment : Fragment(), View.OnClickListener {
 
     companion object {
         private const val CLICK_DELAY = 1000L
     }
 
-    private lateinit var views: ActivitySearchBinding
+    private var _views: FragmentSearchBinding? = null
+    private val views get() = _views!!
 
     private val viewModel: SearchViewModel by viewModel<SearchViewModel>()
 
@@ -47,18 +47,20 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
 
     private val keyboardUtil by inject<KeyboardUtil>()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        views = ActivitySearchBinding.inflate(layoutInflater)
-        setContentView(views.root)
-        ViewCompat.setOnApplyWindowInsetsListener(views.searchActivity) { view, windowInsetsCompat ->
-            val insets = windowInsetsCompat.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
-            WindowInsetsCompat.CONSUMED
-        }
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        _views = FragmentSearchBinding.inflate(inflater, container, false)
 
-        viewModel.searchStateLiveData.observe(this) { state ->
+        return views.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        viewModel.searchStateLiveData.observe(viewLifecycleOwner) { state ->
             render(state)
         }
 
@@ -67,14 +69,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         setupRecyclers()
 
         setupListeners()
-    }
-
-    override fun onRestoreInstanceState(
-        savedInstanceState: Bundle?,
-        persistentState: PersistableBundle?
-    ) {
-        super.onRestoreInstanceState(savedInstanceState, persistentState)
-        views.searchLine.setText(savedInstanceState?.getString("User input") ?: "")
     }
 
     private fun setupTheme() {
@@ -92,19 +86,18 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     private fun setupRecyclers() {
         with(views) {
             trackList.apply {
-                layoutManager = LinearLayoutManager(this@SearchActivity)
+                layoutManager = LinearLayoutManager(requireContext())
                 adapter = TrackAdapter(emptyList())
             }
 
             tracksHistory.apply {
-                layoutManager = LinearLayoutManager(this@SearchActivity)
+                layoutManager = LinearLayoutManager(requireContext())
                 adapter = TrackAdapter(tracksHistoryList)
             }
         }
     }
 
     private fun setupListeners() {
-        views.backToMain.setOnClickListener(this)
         views.clearText.setOnClickListener(this)
 
         views.updateConnection.setOnClickListener(this)
@@ -151,7 +144,8 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         (views.trackList.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
-            val track = (viewModel.searchStateLiveData.value as SearchState.Success).tracks[position]
+            val track =
+                (viewModel.searchStateLiveData.value as SearchState.Success).tracks[position]
 
             addToHistory(track)
 
@@ -178,7 +172,7 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun startPlayerActivity(track: Track) {
-        val startPlayerActivity = Intent(this, PlayerActivity::class.java)
+        val startPlayerActivity = Intent(requireActivity(), PlayerActivity::class.java)
 
         startPlayerActivity.putExtra("track", track.toDto())
 
@@ -199,6 +193,8 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         Log.d("HISTORY AFTER", tracksHistoryList.toString())
 
         (views.tracksHistory.adapter as TrackAdapter).updateTracks(tracksHistoryList)
+
+        viewModel.saveTracksHistory(tracksHistoryList)
     }
 
     private fun showTracks(tracks: List<Track>) {
@@ -285,8 +281,6 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
             clickDebounce()
 
             when (v?.id) {
-                R.id.back_to_main -> finish()
-
                 R.id.clear_text -> {
                     views.searchLine.text.clear()
                     searchQuery = ""
@@ -315,17 +309,9 @@ class SearchActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    override fun onSaveInstanceState(
-        outState: Bundle,
-        outPersistentState: PersistableBundle
-    ) {
-        outState.putString("User input", searchQuery)
-        super.onSaveInstanceState(outState, outPersistentState)
-    }
+    override fun onDestroyView() {
+        super.onDestroyView()
 
-    override fun onPause() {
-        super.onPause()
-
-        viewModel.saveTracksHistory(tracksHistoryList)
+        _views = null
     }
 }
