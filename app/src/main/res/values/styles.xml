@@ -28,7 +28,6 @@
     </style>
 
     <style name="toolbar_style" parent="header_style">
-        <item name="navigationIcon">@drawable/arrow_back</item>
         <item name="navigationIconTint">@color/standard_text_color</item>
     </style>
 

@@ -43,6 +43,7 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
             WindowInsetsCompat.CONSUMED
         }
 
+        views.playButton.isEnabled = false
 
         views.back.setOnClickListener(this)
 
