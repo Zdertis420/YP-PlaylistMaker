@@ -1,12 +1,13 @@
 package orc.zdertis420.playlistmaker.ui.viewmodel
 
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.Runnable
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.interactor.TrackHistoryInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.TrackInteractor
@@ -29,48 +30,47 @@ class SearchViewModel(
 
     private var searchQuery = ""
 
-    private val handler = Handler(Looper.getMainLooper())
-    private val searchRunnable = Runnable {
-        searchTracks(searchQuery)
-    }
+    private var searchJob: Job? = null
 
     fun searchTracks(expression: String) {
         _searchStateLiveData.value = SearchState.Loading
 
         if (!networkUtil.isNetworkAvailable()) {
-            _searchStateLiveData.postValue(SearchState.Error)
+            _searchStateLiveData.value = SearchState.Error
             return
         }
 
-        trackInteractor.browseTracks(expression) { result ->
-            result.onFailure { error ->
-                _searchStateLiveData.postValue(SearchState.Error)
-
-                Log.e("ERROR", error.toString())
-            }
-
-            result.onSuccess { foundTracks ->
-                if (foundTracks.isEmpty()) {
-                    _searchStateLiveData.postValue(SearchState.Empty)
-                } else {
-                    _searchStateLiveData.postValue(SearchState.Success(foundTracks))
+        viewModelScope.launch {
+            trackInteractor.browseTracks(expression)
+                .collect { result ->
+                    result.onSuccess { foundTracks ->
+                        if (foundTracks.isEmpty()) {
+                            _searchStateLiveData.value = SearchState.Empty
+                        } else {
+                            _searchStateLiveData.value = SearchState.Success(foundTracks)
+                        }
+                    }.onFailure {
+                        _searchStateLiveData.value = SearchState.Error
+                    }
                 }
-            }
         }
     }
 
     fun searchDebounce(query: String) {
         searchQuery = query
 
-        handler.removeCallbacks(searchRunnable)
-        handler.postDelayed(searchRunnable, SEARCH_DELAY)
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            delay(SEARCH_DELAY)
+            searchTracks(searchQuery)
+        }
     }
 
     fun getTracksHistory() {
         Log.d("GET", "HISTORY")
         val history = trackHistoryInteractor.getTrackHistory()
 
-        _searchStateLiveData.postValue(SearchState.History(history))
+        _searchStateLiveData.value = SearchState.History(history)
     }
 
     fun saveTracksHistory(tracksHistory: MutableList<Track>) {
@@ -79,6 +79,6 @@ class SearchViewModel(
 
     fun clearHistory() {
         trackHistoryInteractor.clearTrackHistory()
-        _searchStateLiveData.postValue(SearchState.History(emptyList()))
+        _searchStateLiveData.value = SearchState.History(emptyList())
     }
 }
