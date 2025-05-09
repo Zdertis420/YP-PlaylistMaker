@@ -1,5 +1,6 @@
 package orc.zdertis420.playlistmaker.data.repository
 
+import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import orc.zdertis420.playlistmaker.data.NetworkClient
@@ -15,14 +16,23 @@ class TrackRepositoryImplementation(private val networkClient: NetworkClient) : 
             val requestDto = TrackSearchRequest(query)
             val response = networkClient.doRequest(requestDto)
 
-            if (response.resultCode == 200) {
-                val itunesResponse = response as? TrackResponse
-                val trackDto = itunesResponse?.results ?: emptyList()
-                val domainTracks = trackDto.map { it.toTrack() }
-                emit(Result.success(domainTracks))
-            } else {
+            if (response.resultCode != 200) {
                 emit(Result.failure(Throwable("Error code: ${response.resultCode}")))
+                return@flow
             }
+
+            val trackResponse = response as TrackResponse
+
+            val tracks = trackResponse.results.mapNotNull { trackDto ->
+                try {
+                    trackDto.toTrack()
+                } catch (_: NullPointerException) {
+                    Log.d("NULL FOUND", "SKIP THAT MF")
+                    null
+                }
+            }
+
+            emit(Result.success(tracks))
         } catch (e: Exception) {
             emit(Result.failure(e))
         }

@@ -22,7 +22,7 @@ class SearchViewModel(
 ) : ViewModel() {
 
     companion object {
-        private const val SEARCH_DELAY = 1500L
+        private const val SEARCH_DELAY = 1000L
     }
 
     private val _searchStateLiveData = MutableLiveData<SearchState>()
@@ -33,8 +33,11 @@ class SearchViewModel(
     private var searchJob: Job? = null
 
     fun searchTracks(expression: String) {
+        Log.d("SEARCH", "Started search with query: $expression")
+
         _searchStateLiveData.value = SearchState.Loading
 
+        Log.d("SEARCH", "Network availability: ${networkUtil.isNetworkAvailable()}")
         if (!networkUtil.isNetworkAvailable()) {
             _searchStateLiveData.value = SearchState.Error
             return
@@ -45,11 +48,14 @@ class SearchViewModel(
                 .collect { result ->
                     result.onSuccess { foundTracks ->
                         if (foundTracks.isEmpty()) {
+                            Log.d("SEARCH", "Result is empty")
                             _searchStateLiveData.value = SearchState.Empty
                         } else {
+                            Log.d("SEARCH", "Result is $foundTracks")
                             _searchStateLiveData.value = SearchState.Success(foundTracks)
                         }
                     }.onFailure {
+                        Log.d("SEARCH", "Search ended with error: $result")
                         _searchStateLiveData.value = SearchState.Error
                     }
                 }
@@ -67,7 +73,6 @@ class SearchViewModel(
     }
 
     fun getTracksHistory() {
-        Log.d("GET", "HISTORY")
         val history = trackHistoryInteractor.getTrackHistory()
 
         _searchStateLiveData.value = SearchState.History(history)

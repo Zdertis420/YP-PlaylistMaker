@@ -28,7 +28,7 @@ class PlayerViewModel(
     private var updateTimeJob: Job? = null
 
     companion object {
-        private const val DELAY = 1000L
+        private const val DELAY = 300L
         private const val MAX_DURATION = 30000L
     }
 
