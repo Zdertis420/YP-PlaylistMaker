@@ -1,12 +1,15 @@
 package orc.zdertis420.playlistmaker.ui.viewmodel
 
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.data.dto.TrackDto
 import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
@@ -22,16 +25,10 @@ class PlayerViewModel(
     private val _playerStateLiveData = MutableLiveData<PlayerState>()
     val playerStateLiveData: LiveData<PlayerState> get() = _playerStateLiveData
 
-    private var mainThreadHandler: Handler = Handler(Looper.getMainLooper())
-    private val updateTimeRunnable = object : Runnable {
-        override fun run() {
-            updatePlaybackTime()
-            mainThreadHandler.postDelayed(this, 1000)
-        }
-    }
+    private var updateTimeJob: Job? = null
 
     companion object {
-        private const val DELAY = 1000L
+        private const val DELAY = 300L
         private const val MAX_DURATION = 30000L
     }
 
@@ -45,7 +42,7 @@ class PlayerViewModel(
 
     fun setTrack(track: Track) {
         this.track = track
-        savedStateHandle.set("TRACK", track.toDto())
+        savedStateHandle["TRACK"] = track.toDto()
     }
 
     fun prepare() {
@@ -55,11 +52,13 @@ class PlayerViewModel(
             return
         }
 
+
         playerInteractor.prepare(
             track!!.previewUrl,
             onPrepared = { _playerStateLiveData.postValue(PlayerState.Prepared) },
             onCompleted = { _playerStateLiveData.postValue(PlayerState.Prepared) }
         )
+
 
 //        Log.d("PLAYER STATE", playerStateLiveData.value.toString())
     }
@@ -82,7 +81,14 @@ class PlayerViewModel(
         if (playerStateLiveData.value == PlayerState.Prepared || playerStateLiveData.value == PlayerState.Pause) {
             playerInteractor.start()
             _playerStateLiveData.postValue(PlayerState.Play(0, MAX_DURATION))
-            mainThreadHandler.postDelayed(updateTimeRunnable, DELAY)
+
+            updateTimeJob?.cancel()
+            updateTimeJob = viewModelScope.launch(Dispatchers.Main) {
+                while (true) {
+                    updatePlaybackTime()
+                    delay(DELAY)
+                }
+            }
         }
 
         Log.d("PLAYER STATE (VM)", playerStateLiveData.value.toString())
@@ -92,13 +98,20 @@ class PlayerViewModel(
         playerInteractor.pause()
         _playerStateLiveData.postValue(PlayerState.Pause)
 
-        mainThreadHandler.removeCallbacks(updateTimeRunnable)
+        updateTimeJob?.cancel()
 
         Log.d("PLAYER STATE (VM)", playerStateLiveData.value.toString())
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        updateTimeJob?.cancel()
+        playerInteractor.release()
+    }
+
     fun onActivityDestroyed() {
         Log.d("PLAYER", playerStateLiveData.value.toString())
+        updateTimeJob?.cancel()
         playerInteractor.release()
     }
 }
