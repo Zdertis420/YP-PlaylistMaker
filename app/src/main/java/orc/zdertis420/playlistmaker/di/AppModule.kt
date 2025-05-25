@@ -5,13 +5,15 @@ import orc.zdertis420.playlistmaker.domain.implementations.interactor.PlayerInte
 import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
 import orc.zdertis420.playlistmaker.domain.repository.PlayerRepository
 import android.media.MediaPlayer
+import androidx.room.Room
+import orc.zdertis420.playlistmaker.data.db.DataBase
 import orc.zdertis420.playlistmaker.data.network.RetrofitNetworkClient
 import orc.zdertis420.playlistmaker.data.repository.ContactSupportRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.SeeEulaRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.ShareAppRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.ThemeRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackHistoryRepositoryImplementation
-import orc.zdertis420.playlistmaker.data.repository.TrackRepositoryImplementation
+import orc.zdertis420.playlistmaker.data.repository.TrackSearchRepositoryImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.interactor.ThemeInteractorImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.interactor.TrackHistoryInteractorImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.interactor.TrackInteractorImplementation
@@ -26,7 +28,7 @@ import orc.zdertis420.playlistmaker.domain.repository.SeeEulaRepository
 import orc.zdertis420.playlistmaker.domain.repository.ShareAppRepository
 import orc.zdertis420.playlistmaker.domain.repository.ThemeRepository
 import orc.zdertis420.playlistmaker.domain.repository.TrackHistoryRepository
-import orc.zdertis420.playlistmaker.domain.repository.TrackRepository
+import orc.zdertis420.playlistmaker.domain.repository.TrackSearchRepository
 import orc.zdertis420.playlistmaker.domain.usecase.ContactSupportUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.SeeEulaUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.ShareAppUseCase
@@ -41,26 +43,29 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
-val appModule = module {
-    //Player
+val player = module {
+    //Dependencies
     factory<PlayerInteractor> { PlayerInteractorImplementation(get<PlayerRepository>()) }
     single<PlayerRepository> { PlayerRepositoryImplementation(get<MediaPlayer>()) }
     single { MediaPlayer() }
-    //SavedState
 
     //Player VM
     viewModel<PlayerViewModel> { PlayerViewModel(get<PlayerInteractor>(), get()) }
+}
 
-    //Search
+val search = module {
     //Tracks browsing
-    factory<TrackInteractor> { TrackInteractorImplementation(get<TrackRepository>()) }
-    single<TrackRepository> { TrackRepositoryImplementation(get<RetrofitNetworkClient>()) }
+    factory<TrackInteractor> { TrackInteractorImplementation(get<TrackSearchRepository>()) }
+    single<TrackSearchRepository> { TrackSearchRepositoryImplementation(get<RetrofitNetworkClient>()) }
     factory { RetrofitNetworkClient() }
     //History
     factory<TrackHistoryInteractor> { TrackHistoryInteractorImplementation(get<TrackHistoryRepository>()) }
     single<TrackHistoryRepository> { TrackHistoryRepositoryImplementation(androidContext()) }
     //NetworkUtil
     single<NetworkUtil> { NetworkUtil(androidContext()) }
+    //KeyboardUtil
+    single<KeyboardUtil> { KeyboardUtil(androidContext()) }
+
     //Search VM
     viewModel<SearchViewModel> {
         SearchViewModel(
@@ -69,10 +74,9 @@ val appModule = module {
             get<NetworkUtil>()
         )
     }
-    //KeyboardUtil
-    single<KeyboardUtil> { KeyboardUtil(androidContext()) }
+}
 
-    //Settings
+val settings = module {
     //Theme
     factory<ThemeInteractor> { ThemeInteractorImplementation(get<ThemeRepository>()) }
     single<ThemeRepository> { ThemeRepositoryImplementation(androidContext()) }
@@ -94,10 +98,19 @@ val appModule = module {
             get<SeeEulaUseCase>()
         )
     }
+}
 
-    //Liked
+val liked = module {
     viewModel<LikedViewModel> { LikedViewModel() }
+}
 
-    //Playlists
+val playlists = module {
     viewModel<PlaylistsViewModel> { PlaylistsViewModel() }
+}
+
+val database = module {
+    single {
+        Room.databaseBuilder(androidContext(), DataBase::class.java, "database.db")
+            .build()
+    }
 }

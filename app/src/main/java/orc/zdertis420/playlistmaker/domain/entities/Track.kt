@@ -3,6 +3,8 @@ package orc.zdertis420.playlistmaker.domain.entities
 import com.google.gson.annotations.SerializedName
 
 data class Track(
+    @SerializedName("trackId")
+    val trackId: Long,
     @SerializedName("trackName")
     val trackName: String,
     @SerializedName("artistName")
