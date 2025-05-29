@@ -21,7 +21,7 @@ class LikedFragment : Fragment() {
     }
 
     private var _views: FragmentLikedBinding? = null
-    private val views get() = _views
+    private val views get() = _views!!
 
     private val viewModel by viewModel<LikedViewModel>()
 
@@ -32,7 +32,7 @@ class LikedFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         _views = FragmentLikedBinding.inflate(inflater, container, false)
-        return views?.root
+        return views.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -41,9 +41,9 @@ class LikedFragment : Fragment() {
         val currentNightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
 
         if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
-            views?.noTracksLiked?.setImageResource(R.drawable.empty_result_dark)
+            views.noTracksLiked.setImageResource(R.drawable.empty_result_dark)
         } else {
-            views?.noTracksLiked?.setImageResource(R.drawable.empty_result_light)
+            views.noTracksLiked.setImageResource(R.drawable.empty_result_light)
         }
     }
 

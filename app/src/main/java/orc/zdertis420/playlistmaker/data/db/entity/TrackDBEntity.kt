@@ -15,5 +15,6 @@ data class TrackDBEntity(
     val releaseDate: String,
     val primaryGenreName: String,
     val country: String,
-    val previewUrl: String
+    val previewUrl: String,
+    var isLiked: Boolean
 )

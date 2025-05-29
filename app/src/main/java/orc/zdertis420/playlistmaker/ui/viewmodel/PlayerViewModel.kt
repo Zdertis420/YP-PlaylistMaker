@@ -15,11 +15,13 @@ import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
+import orc.zdertis420.playlistmaker.domain.interactor.TrackLikedInteractor
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
 
 class PlayerViewModel(
     private val playerInteractor: PlayerInteractor,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val trackLikedInteractor: TrackLikedInteractor
 ) : ViewModel() {
 
     private val _playerStateLiveData = MutableLiveData<PlayerState>()
@@ -101,6 +103,18 @@ class PlayerViewModel(
         updateTimeJob?.cancel()
 
         Log.d("PLAYER STATE (VM)", playerStateLiveData.value.toString())
+    }
+
+    fun toggleLike(track: Track) {
+        Log.d("TRACK", "Like toggled for ${track.trackName}")
+
+        viewModelScope.launch {
+            if (track.isLiked) {
+                trackLikedInteractor.unlikeTrack(track)
+            } else {
+                trackLikedInteractor.likeTrack(track)
+            }
+        }
     }
 
     override fun onCleared() {

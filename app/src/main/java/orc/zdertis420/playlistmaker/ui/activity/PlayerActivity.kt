@@ -28,6 +28,7 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var views: ActivityPlayerBinding
     private val viewModel: PlayerViewModel by viewModel<PlayerViewModel>()
 
+    private lateinit var track: Track
     private var previewUrl = ""
 
     private val simpleDate by lazy { SimpleDateFormat("mm:ss", Locale.getDefault()) }
@@ -46,18 +47,18 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         views.playButton.isEnabled = false
 
         views.back.setOnClickListener(this)
-
         views.playButton.setOnClickListener(this)
+        views.likeButton.setOnClickListener(this)
 
         views.timePlaying.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(0L)
 
-        val track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getParcelableExtra("track", TrackDto::class.java)
         } else {
             intent.getParcelableExtra("track")
-        }?.toTrack()
+        }!!.toTrack()
 
-        viewModel.setTrack(track!!)
+        viewModel.setTrack(track)
 
         viewModel.playerStateLiveData.observe(this) { state ->
             render(state)
@@ -124,6 +125,10 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
             .format(track.trackTimeMillis)
         previewUrl = track.previewUrl
 
+        if (track.isLiked) {
+            views.likeButton.setImageResource(R.drawable.like_button_active)
+        }
+
 
 
         views.trackName.isSelected = true
@@ -138,6 +143,8 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
             R.id.back -> finish()
 
             R.id.play_button -> viewModel.playbackControl()
+
+            R.id.like_button -> viewModel.toggleLike(track)
         }
     }
 

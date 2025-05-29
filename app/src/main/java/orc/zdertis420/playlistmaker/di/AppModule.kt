@@ -13,21 +13,25 @@ import orc.zdertis420.playlistmaker.data.repository.SeeEulaRepositoryImplementat
 import orc.zdertis420.playlistmaker.data.repository.ShareAppRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.ThemeRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackHistoryRepositoryImplementation
+import orc.zdertis420.playlistmaker.data.repository.TrackLikedRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackSearchRepositoryImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.interactor.ThemeInteractorImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.interactor.TrackHistoryInteractorImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.interactor.TrackInteractorImplementation
+import orc.zdertis420.playlistmaker.domain.implementations.interactor.TrackLikedInteractorImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.usecase.ContactSupportUseCaseImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.usecase.SeeEulaUseCaseImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.usecase.ShareAppUseCaseImplementation
 import orc.zdertis420.playlistmaker.domain.interactor.ThemeInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.TrackHistoryInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.TrackInteractor
+import orc.zdertis420.playlistmaker.domain.interactor.TrackLikedInteractor
 import orc.zdertis420.playlistmaker.domain.repository.ContactSupportRepository
 import orc.zdertis420.playlistmaker.domain.repository.SeeEulaRepository
 import orc.zdertis420.playlistmaker.domain.repository.ShareAppRepository
 import orc.zdertis420.playlistmaker.domain.repository.ThemeRepository
 import orc.zdertis420.playlistmaker.domain.repository.TrackHistoryRepository
+import orc.zdertis420.playlistmaker.domain.repository.TrackLikedRepository
 import orc.zdertis420.playlistmaker.domain.repository.TrackSearchRepository
 import orc.zdertis420.playlistmaker.domain.usecase.ContactSupportUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.SeeEulaUseCase
@@ -45,12 +49,14 @@ import org.koin.dsl.module
 
 val player = module {
     //Dependencies
+    factory<TrackLikedInteractor> { TrackLikedInteractorImplementation(get<TrackLikedRepository>()) }
+    single<TrackLikedRepository> { TrackLikedRepositoryImplementation(get()) }
     factory<PlayerInteractor> { PlayerInteractorImplementation(get<PlayerRepository>()) }
     single<PlayerRepository> { PlayerRepositoryImplementation(get<MediaPlayer>()) }
     single { MediaPlayer() }
 
     //Player VM
-    viewModel<PlayerViewModel> { PlayerViewModel(get<PlayerInteractor>(), get()) }
+    viewModel<PlayerViewModel> { PlayerViewModel(get<PlayerInteractor>(), get(), get<TrackLikedInteractor>()) }
 }
 
 val search = module {
@@ -101,6 +107,7 @@ val settings = module {
 }
 
 val liked = module {
+    single<TrackLikedRepository> { TrackLikedRepositoryImplementation(get()) }
     viewModel<LikedViewModel> { LikedViewModel() }
 }
 

@@ -11,10 +11,10 @@ import orc.zdertis420.playlistmaker.data.db.entity.TrackDBEntity
 interface LikedDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun addLiked(trackId: Long)
+    suspend fun addLiked(track: TrackDBEntity)
 
-    @Delete
-    suspend fun deleteLiked(trackId: Long)
+    @Query("DELETE FROM liked_table WHERE trackId = :trackId")
+    suspend fun deleteLikedById(trackId: Long)
 
     @Query("SELECT * FROM liked_table")
     suspend fun getLikedTracks(): List<TrackDBEntity>

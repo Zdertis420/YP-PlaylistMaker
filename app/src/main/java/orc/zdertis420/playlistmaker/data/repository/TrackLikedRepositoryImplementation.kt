@@ -1,25 +1,24 @@
 package orc.zdertis420.playlistmaker.data.repository
 
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.withContext
 import orc.zdertis420.playlistmaker.data.db.DataBase
+import orc.zdertis420.playlistmaker.data.mapper.toDBEntity
+import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.repository.TrackLikedRepository
 
 class TrackLikedRepositoryImplementation(private val dataBase: DataBase) : TrackLikedRepository {
-    override fun likeTrack(trackId: Long) {
-
+    override suspend fun likeTrack(track: Track) {
+        dataBase.getLikedDao().addLiked(track.toDto().toDBEntity())
     }
 
-    override fun unlikeTrack(trackId: Long) {
-
+    override suspend fun unlikeTrack(track: Track) {
+        dataBase.getLikedDao().deleteLikedById(track.trackId)
     }
 
     override fun getLiked(): Flow<List<Track>> = flow {
-        val likedTracks = dataBase.getLikedDao().getLikedTracks()
-        emit(likedTracks.map { it.toTrack() })
+        emit(dataBase.getLikedDao().getLikedTracks().map { it.toTrack() })
     }
 }

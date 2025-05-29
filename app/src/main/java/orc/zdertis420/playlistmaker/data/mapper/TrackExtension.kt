@@ -14,7 +14,8 @@ fun Track.toDto() = TrackDto(
     releaseDate = releaseDate,
     primaryGenreName = primaryGenreName,
     country = country,
-    previewUrl = previewUrl
+    previewUrl = previewUrl,
+    isLiked = isLiked
 )
 
 
@@ -28,7 +29,8 @@ fun TrackDto.toTrack() = Track(
     releaseDate = releaseDate,
     primaryGenreName = primaryGenreName,
     country = country,
-    previewUrl = previewUrl
+    previewUrl = previewUrl,
+    isLiked = isLiked
 )
 
 
@@ -42,7 +44,8 @@ fun TrackDto.toDBEntity() = TrackDBEntity(
     releaseDate = releaseDate,
     primaryGenreName = primaryGenreName,
     country = country,
-    previewUrl = previewUrl
+    previewUrl = previewUrl,
+    isLiked = isLiked
 )
 
 fun TrackDBEntity.toTrack() = Track(
@@ -55,5 +58,6 @@ fun TrackDBEntity.toTrack() = Track(
     releaseDate = releaseDate,
     primaryGenreName = primaryGenreName,
     country = country,
-    previewUrl = previewUrl
+    previewUrl = previewUrl,
+    isLiked = isLiked
 )

@@ -1,12 +1,12 @@
-package orc.zdertis420.playlistmaker.domain.repository
+package orc.zdertis420.playlistmaker.domain.interactor
 
 import kotlinx.coroutines.flow.Flow
 import orc.zdertis420.playlistmaker.domain.entities.Track
 
-interface TrackLikedRepository {
+interface TrackLikedInteractor {
     suspend fun likeTrack(track: Track)
 
     suspend fun unlikeTrack(track: Track)
 
-    fun getLiked(): Flow<List<Track>>
+    fun getLikedTracks(): Flow<List<Track>>
 }
