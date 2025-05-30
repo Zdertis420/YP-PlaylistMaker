@@ -108,7 +108,8 @@ val settings = module {
 
 val liked = module {
     single<TrackLikedRepository> { TrackLikedRepositoryImplementation(get()) }
-    viewModel<LikedViewModel> { LikedViewModel() }
+    factory<TrackLikedInteractor> { TrackLikedInteractorImplementation(get<TrackLikedRepository>()) }
+    viewModel<LikedViewModel> { LikedViewModel(get<TrackLikedInteractor>()) }
 }
 
 val playlists = module {

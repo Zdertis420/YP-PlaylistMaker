@@ -110,8 +110,10 @@ class PlayerViewModel(
 
         viewModelScope.launch {
             if (track.isLiked) {
+                track.isLiked = false
                 trackLikedInteractor.unlikeTrack(track)
             } else {
+                track.isLiked = true
                 trackLikedInteractor.likeTrack(track)
             }
         }
