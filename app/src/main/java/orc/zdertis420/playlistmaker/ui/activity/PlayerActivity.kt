@@ -72,9 +72,20 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
             }
         }
 
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.likeStateFlow.collect { isLiked ->
+                    toggleLikeView(isLiked)
+                    track.isLiked = isLiked
+                }
+            }
+        }
+
         loadTrack(track)
 
         Log.d("THREAD", Thread.currentThread().toString())
+
+        viewModel.observeLiked()
 
         viewModel.prepare()
     }
@@ -135,10 +146,6 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
             .format(track.trackTimeMillis)
         previewUrl = track.previewUrl
 
-        if (track.isLiked) {
-            views.likeButton.setImageResource(R.drawable.like_button_active)
-        }
-
 
 
         views.trackName.isSelected = true
@@ -148,13 +155,11 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         views.album.isSelected = true
     }
 
-    private fun toggleLikeView() {
-        if (track.isLiked) {
-            track.isLiked = false
-            views.likeButton.setImageResource(R.drawable.like_button)
-        } else {
-            track.isLiked = true
+    private fun toggleLikeView(isLiked: Boolean) {
+        if (isLiked) {
             views.likeButton.setImageResource(R.drawable.like_button_active)
+        } else {
+            views.likeButton.setImageResource(R.drawable.like_button)
         }
     }
 
@@ -165,8 +170,10 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
             R.id.play_button -> viewModel.playbackControl()
 
             R.id.like_button -> {
+                Log.d("TRACK", "Like toggled for ${track.trackName}: ${!track.isLiked}. Activity")
+
                 viewModel.toggleLike(track)
-                toggleLikeView()
+                viewModel.observeLiked()
             }
         }
     }

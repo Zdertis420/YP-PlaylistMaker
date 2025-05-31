@@ -52,7 +52,7 @@ class LikedFragment : Fragment() {
         views.likedTracks.adapter = TrackAdapter(emptyList())
 
         (views.likedTracks.adapter as TrackAdapter).setOnItemClickListener { position ->
-            val track = (viewModel.screenState.value as LikedState.LikedTracks).tracks.reversed()[position]
+            val track = (viewModel.screenState.value as LikedState.LikedTracks).tracks[position]
             startPlayerActivity(track)
         }
 
@@ -107,7 +107,7 @@ class LikedFragment : Fragment() {
     }
 
     private fun showLiked(tracks: List<Track>) {
-        (views.likedTracks.adapter as TrackAdapter).updateTracks(tracks.reversed())
+        (views.likedTracks.adapter as TrackAdapter).updateTracks(tracks)
 
         views.noTracksLiked.visibility = View.GONE
         views.progressBar.visibility = View.GONE

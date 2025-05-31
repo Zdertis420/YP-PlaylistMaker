@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.data.dto.TrackDto
 import orc.zdertis420.playlistmaker.data.mapper.toDto
@@ -27,6 +28,9 @@ class PlayerViewModel(
 
     private val _playerStateFlow = MutableStateFlow<PlayerState>(PlayerState.Preparing)
     val playerStateFlow: StateFlow<PlayerState> = _playerStateFlow.asStateFlow()
+
+    private val _likeStateFlow = MutableStateFlow(false)
+    val likeStateFlow: StateFlow<Boolean> = _likeStateFlow
 
     private var updateTimeJob: Job? = null
 
@@ -66,7 +70,7 @@ class PlayerViewModel(
 //        Log.d("PLAYER STATE", playerStateLiveData.value.toString())
     }
 
-    private fun updatePlaybackTime() {
+    fun updatePlaybackTime() {
         val elapsedTime = playerInteractor.getCurrentPosition()
         val remainingTime = MAX_DURATION - elapsedTime
         _playerStateFlow.value = PlayerState.Play(elapsedTime, remainingTime)
@@ -107,15 +111,23 @@ class PlayerViewModel(
     }
 
     fun toggleLike(track: Track) {
-        Log.d("TRACK", "Like toggled for ${track.trackName}")
-
         viewModelScope.launch {
-            if (track.isLiked) {
-                track.isLiked = false
+            if (_likeStateFlow.value) {
                 trackLikedInteractor.unlikeTrack(track)
             } else {
-                track.isLiked = true
                 trackLikedInteractor.likeTrack(track)
+            }
+        }
+
+        Log.d("TRACK", "Like toggled for ${track.trackName}: ${!track.isLiked}. VM")
+    }
+
+    fun observeLiked() {
+        viewModelScope.launch {
+            trackLikedInteractor.getLikedTracks().collectLatest { liked ->
+                val isLiked = liked.any { it.trackId == track!!.trackId }
+                _likeStateFlow.value = isLiked
+                track!!.isLiked = isLiked
             }
         }
     }
