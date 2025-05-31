@@ -9,9 +9,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.dto.TrackDto
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
@@ -28,6 +32,7 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var views: ActivityPlayerBinding
     private val viewModel: PlayerViewModel by viewModel<PlayerViewModel>()
 
+    private lateinit var track: Track
     private var previewUrl = ""
 
     private val simpleDate by lazy { SimpleDateFormat("mm:ss", Locale.getDefault()) }
@@ -46,26 +51,41 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         views.playButton.isEnabled = false
 
         views.back.setOnClickListener(this)
-
         views.playButton.setOnClickListener(this)
+        views.likeButton.setOnClickListener(this)
 
         views.timePlaying.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(0L)
 
-        val track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getParcelableExtra("track", TrackDto::class.java)
         } else {
             intent.getParcelableExtra("track")
-        }?.toTrack()
+        }!!.toTrack()
 
-        viewModel.setTrack(track!!)
+        viewModel.setTrack(track)
 
-        viewModel.playerStateLiveData.observe(this) { state ->
-            render(state)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.playerStateFlow.collect { state ->
+                    render(state)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.likeStateFlow.collect { isLiked ->
+                    toggleLikeView(isLiked)
+                    track.isLiked = isLiked
+                }
+            }
         }
 
         loadTrack(track)
 
         Log.d("THREAD", Thread.currentThread().toString())
+
+        viewModel.observeLiked()
 
         viewModel.prepare()
     }
@@ -81,6 +101,8 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
                 Log.e("ERROR", state.msg)
                 Toast.makeText(this, state.msg, Toast.LENGTH_SHORT).show()
             }
+
+            PlayerState.Preparing -> Toast.makeText(this, R.string.preparing, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -133,11 +155,26 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         views.album.isSelected = true
     }
 
+    private fun toggleLikeView(isLiked: Boolean) {
+        if (isLiked) {
+            views.likeButton.setImageResource(R.drawable.like_button_active)
+        } else {
+            views.likeButton.setImageResource(R.drawable.like_button)
+        }
+    }
+
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.back -> finish()
 
             R.id.play_button -> viewModel.playbackControl()
+
+            R.id.like_button -> {
+                Log.d("TRACK", "Like toggled for ${track.trackName}: ${!track.isLiked}. Activity")
+
+                viewModel.toggleLike(track)
+                viewModel.observeLiked()
+            }
         }
     }
 

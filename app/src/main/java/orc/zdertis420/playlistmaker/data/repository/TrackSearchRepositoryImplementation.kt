@@ -7,10 +7,10 @@ import orc.zdertis420.playlistmaker.data.NetworkClient
 import orc.zdertis420.playlistmaker.data.dto.TrackResponse
 import orc.zdertis420.playlistmaker.data.dto.TrackSearchRequest
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
-import orc.zdertis420.playlistmaker.domain.repository.TrackRepository
+import orc.zdertis420.playlistmaker.domain.repository.TrackSearchRepository
 import orc.zdertis420.playlistmaker.domain.entities.Track
 
-class TrackRepositoryImplementation(private val networkClient: NetworkClient) : TrackRepository {
+class TrackSearchRepositoryImplementation(private val networkClient: NetworkClient) : TrackSearchRepository {
     override fun browseTracks(query: String): Flow<Result<List<Track>>> = flow {
         try {
             val requestDto = TrackSearchRequest(query)

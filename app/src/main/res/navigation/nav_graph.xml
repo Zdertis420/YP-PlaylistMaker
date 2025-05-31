@@ -37,7 +37,11 @@
     <fragment
         android:id="@+id/likedFragment"
         android:name="orc.zdertis420.playlistmaker.ui.fragment.LikedFragment"
-        android:label="LikedFragment" />
+        android:label="LikedFragment" >
+        <action
+            android:id="@+id/action_likedFragment_to_playerActivity"
+            app:destination="@id/playerActivity" />
+    </fragment>
 
     <fragment
         android:id="@+id/playlistsFragment"
