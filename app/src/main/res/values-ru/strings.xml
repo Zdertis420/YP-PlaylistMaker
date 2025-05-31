@@ -26,4 +26,5 @@
     <string name="playlists">Плейлисты</string>
     <string name="no_playlists">Вы не создали ни одного плейлиста</string>
     <string name="new_playlist">Новый плейлист</string>
+    <string name="preparing">Подготовка</string>
 </resources>

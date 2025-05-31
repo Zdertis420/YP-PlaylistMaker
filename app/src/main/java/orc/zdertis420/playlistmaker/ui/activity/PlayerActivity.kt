@@ -9,9 +9,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.dto.TrackDto
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
@@ -60,8 +64,12 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
         viewModel.setTrack(track)
 
-        viewModel.playerStateLiveData.observe(this) { state ->
-            render(state)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.playerStateFlow.collect { state ->
+                    render(state)
+                }
+            }
         }
 
         loadTrack(track)
@@ -82,6 +90,8 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
                 Log.e("ERROR", state.msg)
                 Toast.makeText(this, state.msg, Toast.LENGTH_SHORT).show()
             }
+
+            PlayerState.Preparing -> Toast.makeText(this, R.string.preparing, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -138,13 +148,26 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         views.album.isSelected = true
     }
 
+    private fun toggleLikeView() {
+        if (track.isLiked) {
+            track.isLiked = false
+            views.likeButton.setImageResource(R.drawable.like_button)
+        } else {
+            track.isLiked = true
+            views.likeButton.setImageResource(R.drawable.like_button_active)
+        }
+    }
+
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.back -> finish()
 
             R.id.play_button -> viewModel.playbackControl()
 
-            R.id.like_button -> viewModel.toggleLike(track)
+            R.id.like_button -> {
+                viewModel.toggleLike(track)
+                toggleLikeView()
+            }
         }
     }
 
