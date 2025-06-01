@@ -1,7 +1,6 @@
 package orc.zdertis420.playlistmaker.data.db.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -16,9 +15,9 @@ interface LikedDao {
     @Query("DELETE FROM liked_table WHERE trackId = :trackId")
     suspend fun deleteLikedById(trackId: Long)
 
-    @Query("SELECT * FROM liked_table")
+    @Query("SELECT * FROM liked_table ORDER BY timestampLiked DESC")
     suspend fun getLikedTracks(): List<TrackDBEntity>
 
-    @Query("SELECT trackId FROM liked_table")
+    @Query("SELECT trackId FROM liked_table ORDER BY timestampLiked DESC")
     suspend fun getLikedIds(): List<Long>
 }

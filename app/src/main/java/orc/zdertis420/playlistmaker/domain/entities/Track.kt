@@ -23,5 +23,5 @@ data class Track(
     val country: String,
     @SerializedName("previewUrl")
     val previewUrl: String,
-    var isLiked: Boolean = false
+    var isLiked: Boolean = false,
 )

@@ -34,20 +34,6 @@ fun TrackDto.toTrack() = Track(
 )
 
 
-fun TrackDto.toDBEntity() = TrackDBEntity(
-    trackId = trackId,
-    trackName = trackName,
-    artistName = artistName,
-    trackTimeMillis = trackTimeMillis,
-    artworkUrl100 = artworkUrl100,
-    collectionName = collectionName,
-    releaseDate = releaseDate,
-    primaryGenreName = primaryGenreName,
-    country = country,
-    previewUrl = previewUrl,
-    isLiked = isLiked
-)
-
 fun TrackDBEntity.toTrack() = Track(
     trackId = trackId,
     trackName = trackName,
