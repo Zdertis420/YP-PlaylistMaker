@@ -1,29 +1,36 @@
 package orc.zdertis420.playlistmaker.ui.viewmodel
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.data.dto.TrackDto
 import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
+import orc.zdertis420.playlistmaker.domain.interactor.TrackLikedInteractor
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
 
 class PlayerViewModel(
     private val playerInteractor: PlayerInteractor,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val trackLikedInteractor: TrackLikedInteractor
 ) : ViewModel() {
 
-    private val _playerStateLiveData = MutableLiveData<PlayerState>()
-    val playerStateLiveData: LiveData<PlayerState> get() = _playerStateLiveData
+    private val _playerStateFlow = MutableStateFlow<PlayerState>(PlayerState.Preparing)
+    val playerStateFlow: StateFlow<PlayerState> = _playerStateFlow.asStateFlow()
+
+    private val _likeStateFlow = MutableStateFlow(false)
+    val likeStateFlow: StateFlow<Boolean> = _likeStateFlow
 
     private var updateTimeJob: Job? = null
 
@@ -47,7 +54,7 @@ class PlayerViewModel(
 
     fun prepare() {
         if (track?.previewUrl == "") {
-            _playerStateLiveData.value = PlayerState.Error("No preview provided")
+            _playerStateFlow.value = PlayerState.Error("No preview provided")
             Log.e("ERROR", "no preview")
             return
         }
@@ -55,18 +62,18 @@ class PlayerViewModel(
 
         playerInteractor.prepare(
             track!!.previewUrl,
-            onPrepared = { _playerStateLiveData.postValue(PlayerState.Prepared) },
-            onCompleted = { _playerStateLiveData.postValue(PlayerState.Prepared) }
+            onPrepared = { _playerStateFlow.value = PlayerState.Prepared },
+            onCompleted = { _playerStateFlow.value = PlayerState.Prepared }
         )
 
 
 //        Log.d("PLAYER STATE", playerStateLiveData.value.toString())
     }
 
-    private fun updatePlaybackTime() {
+    fun updatePlaybackTime() {
         val elapsedTime = playerInteractor.getCurrentPosition()
         val remainingTime = MAX_DURATION - elapsedTime
-        _playerStateLiveData.postValue(PlayerState.Play(elapsedTime, remainingTime))
+        _playerStateFlow.value = PlayerState.Play(elapsedTime, remainingTime)
     }
 
     fun playbackControl() {
@@ -78,9 +85,9 @@ class PlayerViewModel(
     }
 
     fun start() {
-        if (playerStateLiveData.value == PlayerState.Prepared || playerStateLiveData.value == PlayerState.Pause) {
+        if (playerStateFlow.value == PlayerState.Prepared || playerStateFlow.value == PlayerState.Pause) {
             playerInteractor.start()
-            _playerStateLiveData.postValue(PlayerState.Play(0, MAX_DURATION))
+            _playerStateFlow.value = PlayerState.Play(0, MAX_DURATION)
 
             updateTimeJob?.cancel()
             updateTimeJob = viewModelScope.launch(Dispatchers.Main) {
@@ -91,16 +98,38 @@ class PlayerViewModel(
             }
         }
 
-        Log.d("PLAYER STATE (VM)", playerStateLiveData.value.toString())
+        Log.d("PLAYER STATE (VM)", playerStateFlow.value.toString())
     }
 
     fun pause() {
         playerInteractor.pause()
-        _playerStateLiveData.postValue(PlayerState.Pause)
+        _playerStateFlow.value = PlayerState.Pause
 
         updateTimeJob?.cancel()
 
-        Log.d("PLAYER STATE (VM)", playerStateLiveData.value.toString())
+        Log.d("PLAYER STATE (VM)", playerStateFlow.value.toString())
+    }
+
+    fun toggleLike(track: Track) {
+        viewModelScope.launch {
+            if (_likeStateFlow.value) {
+                trackLikedInteractor.unlikeTrack(track)
+            } else {
+                trackLikedInteractor.likeTrack(track)
+            }
+        }
+
+        Log.d("TRACK", "Like toggled for ${track.trackName}: ${!track.isLiked}. VM")
+    }
+
+    fun observeLiked() {
+        viewModelScope.launch {
+            trackLikedInteractor.getLikedTracks().collectLatest { liked ->
+                val isLiked = liked.any { it.trackId == track!!.trackId }
+                _likeStateFlow.value = isLiked
+                track!!.isLiked = isLiked
+            }
+        }
     }
 
     override fun onCleared() {
@@ -110,7 +139,7 @@ class PlayerViewModel(
     }
 
     fun onActivityDestroyed() {
-        Log.d("PLAYER", playerStateLiveData.value.toString())
+        Log.d("PLAYER", playerStateFlow.value.toString())
         updateTimeJob?.cancel()
         playerInteractor.release()
     }

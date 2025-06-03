@@ -1,10 +1,11 @@
-package orc.zdertis420.playlistmaker.data.dto
+package orc.zdertis420.playlistmaker.data.db.entity
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-@Parcelize
-data class TrackDto (
+@Entity(tableName = "liked_table")
+data class TrackDBEntity(
+    @PrimaryKey
     val trackId: Long,
     val trackName: String,
     val artistName: String,
@@ -16,4 +17,5 @@ data class TrackDto (
     val country: String,
     val previewUrl: String,
     var isLiked: Boolean,
-) : Parcelable
+    val timestampLiked: Long
+)
