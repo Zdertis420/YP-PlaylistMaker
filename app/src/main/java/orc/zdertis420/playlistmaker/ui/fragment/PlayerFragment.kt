@@ -1,25 +1,25 @@
-package orc.zdertis420.playlistmaker.ui.activity
+package orc.zdertis420.playlistmaker.ui.fragment
 
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.dto.TrackDto
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
-import orc.zdertis420.playlistmaker.databinding.ActivityPlayerBinding
+import orc.zdertis420.playlistmaker.databinding.FragmentPlayerBinding
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlayerViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
@@ -27,26 +27,33 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class PlayerActivity : AppCompatActivity(), View.OnClickListener {
+class PlayerFragment : Fragment(), View.OnClickListener {
 
-    private lateinit var views: ActivityPlayerBinding
-    private val viewModel: PlayerViewModel by viewModel<PlayerViewModel>()
+    private var _views: FragmentPlayerBinding? = null
+    private val views get() = _views!!
+
+    private val viewModel by viewModel<PlayerViewModel>()
 
     private lateinit var track: Track
     private var previewUrl = ""
 
     private val simpleDate by lazy { SimpleDateFormat("mm:ss", Locale.getDefault()) }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        views = ActivityPlayerBinding.inflate(layoutInflater)
-        setContentView(views.root)
-        ViewCompat.setOnApplyWindowInsetsListener(views.playerActivity) { view, windowInsetsCompat ->
-            val insets = windowInsetsCompat.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
-            WindowInsetsCompat.CONSUMED
-        }
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        _views = FragmentPlayerBinding.inflate(inflater, container, false)
+        return views.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        hideBottomNavigation()
+
+        track = requireArguments().getParcelable<TrackDto>("track")!!.toTrack()
 
         views.playButton.isEnabled = false
 
@@ -56,15 +63,9 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
         views.timePlaying.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(0L)
 
-        track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra("track", TrackDto::class.java)
-        } else {
-            intent.getParcelableExtra("track")
-        }!!.toTrack()
-
         viewModel.setTrack(track)
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.playerStateFlow.collect { state ->
                     render(state)
@@ -90,6 +91,11 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
         viewModel.prepare()
     }
 
+    private fun hideBottomNavigation() {
+        requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility = View.GONE
+        requireActivity().findViewById<View>(R.id.delimiter).visibility = View.GONE
+    }
+
     private fun render(state: PlayerState) {
         Log.d("STATE", state.toString())
 
@@ -99,10 +105,10 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
             is PlayerState.Pause -> showPause()
             is PlayerState.Error -> {
                 Log.e("ERROR", state.msg)
-                Toast.makeText(this, state.msg, Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireActivity(), state.msg, Toast.LENGTH_SHORT).show()
             }
 
-            PlayerState.Preparing -> Toast.makeText(this, R.string.preparing, Toast.LENGTH_SHORT).show()
+            PlayerState.Preparing -> Toast.makeText(requireActivity(), R.string.preparing, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -165,7 +171,11 @@ class PlayerActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.back -> finish()
+            R.id.back -> {
+                requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility = View.VISIBLE
+                requireActivity().findViewById<View>(R.id.delimiter).visibility = View.VISIBLE
+                findNavController().navigateUp()
+            }
 
             R.id.play_button -> viewModel.playbackControl()
 

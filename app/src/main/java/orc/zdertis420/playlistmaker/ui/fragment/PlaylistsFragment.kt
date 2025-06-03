@@ -13,13 +13,6 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class PlaylistsFragment : Fragment() {
 
-    companion object {
-        fun newInstance(): PlaylistsFragment {
-            val fragment = PlaylistsFragment()
-            return fragment
-        }
-    }
-
     private var _views: FragmentPlaylistsBinding? = null
     private val views get() = _views!!
 
@@ -45,6 +38,8 @@ class PlaylistsFragment : Fragment() {
             views.noPlaylistsImg.setImageResource(R.drawable.empty_result_light)
         }
     }
+
+
 
     override fun onDestroy() {
         super.onDestroy()
