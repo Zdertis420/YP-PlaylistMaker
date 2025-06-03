@@ -21,7 +21,7 @@ class PlaylistsFragment : Fragment() {
     }
 
     private var _views: FragmentPlaylistsBinding? = null
-    private val views get() = _views
+    private val views get() = _views!!
 
     private val viewModel by viewModel<PlaylistsViewModel>()
 
@@ -31,7 +31,7 @@ class PlaylistsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         _views = FragmentPlaylistsBinding.inflate(inflater, container, false)
-        return views?.root
+        return views.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -40,9 +40,9 @@ class PlaylistsFragment : Fragment() {
         val currentNightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
 
         if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
-            views?.noPlaylists?.setImageResource(R.drawable.empty_result_dark)
+            views.noPlaylistsImg.setImageResource(R.drawable.empty_result_dark)
         } else {
-            views?.noPlaylists?.setImageResource(R.drawable.empty_result_light)
+            views.noPlaylistsImg.setImageResource(R.drawable.empty_result_light)
         }
     }
 

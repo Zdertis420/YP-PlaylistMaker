@@ -46,6 +46,14 @@
     <fragment
         android:id="@+id/playlistsFragment"
         android:name="orc.zdertis420.playlistmaker.ui.fragment.PlaylistsFragment"
-        android:label="PlaylistsFragment" />
+        android:label="PlaylistsFragment" >
+        <action
+            android:id="@+id/action_playlistsFragment_to_createPlaylistFragment"
+            app:destination="@id/createPlaylistFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/createPlaylistFragment"
+        android:name="orc.zdertis420.playlistmaker.ui.fragment.CreatePlaylistFragment"
+        android:label="CreatePlaylistFragment" />
 
 </navigation>

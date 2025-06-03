@@ -60,4 +60,11 @@
         <item name="android:layout_height">15dp</item>
     </style>
 
+    <style name="outlined_box" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/box_stroke</item>
+        <item name="hintTextColor">@color/hint</item>
+        <item name="android:textColor">@color/standard_text_color</item>
+        <item name="android:textColorHint">@color/standard_text_color</item>
+    </style>
+
 </resources>
