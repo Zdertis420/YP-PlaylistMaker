@@ -1,8 +1,8 @@
 package orc.zdertis420.playlistmaker.domain.implementations.interactor
 
 import kotlinx.coroutines.flow.Flow
-import orc.zdertis420.playlistmaker.data.db.entity.PlaylistDBEntity
-import orc.zdertis420.playlistmaker.data.db.entity.TrackDBPlaylistEntity
+import orc.zdertis420.playlistmaker.data.db.entity.PlaylistWithTracks
+import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.interactor.PlaylistInteractor
 import orc.zdertis420.playlistmaker.domain.repository.PlaylistRepository
 
@@ -18,9 +18,9 @@ class PlaylistInteractorImplementation(private val playlistRepository: PlaylistR
 
     override suspend fun addTrackToPlaylist(
         playlistId: Long,
-        track: TrackDBPlaylistEntity
-    ): Boolean {
-        return playlistRepository.addTrackToPlaylist(playlistId, track)
+        track: Track
+    ) {
+        playlistRepository.addTrackToPlaylist(playlistId, track)
     }
 
     override suspend fun removeTrackFromPlaylist(playlistId: Long, trackId: Long) {
@@ -31,7 +31,8 @@ class PlaylistInteractorImplementation(private val playlistRepository: PlaylistR
         playlistRepository.removePlaylist(playlistId)
     }
 
-    override suspend fun getPlaylists(): Flow<List<PlaylistDBEntity>> {
+    override suspend fun getPlaylists(): Flow<List<PlaylistWithTracks>> {
         return playlistRepository.getPlaylists()
     }
+
 }

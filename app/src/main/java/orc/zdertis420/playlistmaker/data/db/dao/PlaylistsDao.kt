@@ -26,18 +26,6 @@ interface PlaylistsDao {
     @Query("SELECT * FROM playlists")
     fun getAllPlaylistsWithTracks(): Flow<List<PlaylistWithTracks>>
 
-    suspend fun addTrackToPlaylist(playlistId: Long, trackId: Long) {
-        val crossRef = PlaylistTrackCrossRef(
-            playlistId = playlistId,
-            trackId = trackId,
-            timeAdded = System.currentTimeMillis()
-        )
-        insertPlaylistTrackCrossRef(crossRef)
-    }
-
-    @Query("DELETE FROM playlist_track_cross_ref WHERE playlistId = :playlistId AND trackId = :trackId")
-    suspend fun deleteTrackFromPlaylist(playlistId: Long, trackId: String)
-
     @Query("SELECT COUNT(trackId) FROM playlist_track_cross_ref WHERE playlistId = :playlistId")
     fun getTrackCountForPlaylist(playlistId: Long): Flow<Int>
 
