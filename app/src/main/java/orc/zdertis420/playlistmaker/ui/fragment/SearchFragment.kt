@@ -19,7 +19,7 @@ import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.databinding.FragmentSearchBinding
 import orc.zdertis420.playlistmaker.domain.entities.Track
-import orc.zdertis420.playlistmaker.ui.adapter.TrackAdapter
+import orc.zdertis420.playlistmaker.ui.adapter.track.TrackAdapter
 import orc.zdertis420.playlistmaker.ui.viewmodel.SearchViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.SearchState
 import orc.zdertis420.playlistmaker.utils.KeyboardUtil

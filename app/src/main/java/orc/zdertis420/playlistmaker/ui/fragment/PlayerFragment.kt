@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -15,6 +16,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.dto.TrackDto
@@ -33,6 +35,18 @@ class PlayerFragment : Fragment(), View.OnClickListener {
     private val views get() = _views!!
 
     private val viewModel by viewModel<PlayerViewModel>()
+
+    private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
+    private val bottomSheetCallback = object : BottomSheetBehavior.BottomSheetCallback() {
+        override fun onStateChanged(bottomSheet: View, newState: Int) {
+            views.overlay.visibility = when (newState) {
+                BottomSheetBehavior.STATE_HIDDEN -> View.GONE
+                else -> View.VISIBLE
+            }
+        }
+
+        override fun onSlide(bottomSheet: View, slideOffset: Float) {}
+    }
 
     private lateinit var track: Track
     private var previewUrl = ""
@@ -94,6 +108,14 @@ class PlayerFragment : Fragment(), View.OnClickListener {
     private fun hideBottomNavigation() {
         requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility = View.GONE
         requireActivity().findViewById<View>(R.id.delimiter).visibility = View.GONE
+    }
+
+    private fun setupBottomSheet() {
+        bottomSheetBehavior = BottomSheetBehavior.from(views.playlistBottomSheet).apply {
+            state = BottomSheetBehavior.STATE_HIDDEN
+            isHideable = true
+            addBottomSheetCallback(bottomSheetCallback)
+        }
     }
 
     private fun render(state: PlayerState) {

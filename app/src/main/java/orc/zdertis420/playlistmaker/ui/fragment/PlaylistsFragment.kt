@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.databinding.FragmentPlaylistsBinding
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlaylistsViewModel
@@ -36,6 +37,10 @@ class PlaylistsFragment : Fragment() {
             views.noPlaylistsImg.setImageResource(R.drawable.empty_result_dark)
         } else {
             views.noPlaylistsImg.setImageResource(R.drawable.empty_result_light)
+        }
+
+        views.createPlaylist.setOnClickListener {
+            findNavController().navigate(R.id.action_mediaLibraryFragment_to_createPlaylistFragment)
         }
     }
 

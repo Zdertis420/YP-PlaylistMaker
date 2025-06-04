@@ -52,7 +52,6 @@
         android:id="@+id/no_playlists"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
         app:constraint_referenced_ids="no_playlists_img, no_playlists_text" />
 
     <androidx.recyclerview.widget.RecyclerView

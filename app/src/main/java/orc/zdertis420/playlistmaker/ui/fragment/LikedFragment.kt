@@ -17,7 +17,7 @@ import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.databinding.FragmentLikedBinding
 import orc.zdertis420.playlistmaker.domain.entities.Track
-import orc.zdertis420.playlistmaker.ui.adapter.TrackAdapter
+import orc.zdertis420.playlistmaker.ui.adapter.track.TrackAdapter
 import orc.zdertis420.playlistmaker.ui.viewmodel.LikedViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.LikedState
 import org.koin.androidx.viewmodel.ext.android.viewModel
