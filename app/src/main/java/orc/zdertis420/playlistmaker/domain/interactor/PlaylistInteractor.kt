@@ -5,8 +5,6 @@ import orc.zdertis420.playlistmaker.data.db.entity.PlaylistWithTracks
 import orc.zdertis420.playlistmaker.domain.entities.Track
 
 interface PlaylistInteractor {
-    suspend fun createPlaylist(name: String, description: String, imagePath: String)
-
     suspend fun addTrackToPlaylist(playlistId: Long, track: Track)
 
     suspend fun removeTrackFromPlaylist(playlistId: Long, trackId: Long)

@@ -4,8 +4,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import orc.zdertis420.playlistmaker.R
-import orc.zdertis420.playlistmaker.data.db.entity.PlaylistDBEntity
 import orc.zdertis420.playlistmaker.databinding.PlaylistPlayerBinding
+import orc.zdertis420.playlistmaker.domain.entities.Playlist
 
 class PlayerPlaylistViewHolder(
     private val views: PlaylistPlayerBinding,
@@ -21,12 +21,11 @@ class PlayerPlaylistViewHolder(
         }
     }
 
-    fun bind(model: PlaylistDBEntity) = with(views) {
+    fun bind(model: Playlist) = with(views) {
         playlistName.text = model.name
         playlistCount.text = views.root.resources.getQuantityString(
             R.plurals.tracks_plurals,
-            model.amount,
-            model.amount
+            model.tracks.size
         )
 
         Glide.with(root)

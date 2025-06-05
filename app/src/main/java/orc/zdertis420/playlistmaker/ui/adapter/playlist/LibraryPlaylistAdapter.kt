@@ -4,11 +4,10 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import orc.zdertis420.playlistmaker.data.db.entity.PlaylistDBEntity
 import orc.zdertis420.playlistmaker.databinding.PlaylistLibraryBinding
-import orc.zdertis420.playlistmaker.databinding.PlaylistPlayerBinding
+import orc.zdertis420.playlistmaker.domain.entities.Playlist
 
-class LibraryPlaylistAdapter(private var playlists: List<PlaylistDBEntity>) :
+class LibraryPlaylistAdapter(private var playlists: List<Playlist>) :
     RecyclerView.Adapter<LibraryPlaylistViewHolder>() {
     private var onItemClickListener: ((position: Int) -> Unit)? = null
 
@@ -35,7 +34,7 @@ class LibraryPlaylistAdapter(private var playlists: List<PlaylistDBEntity>) :
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun updatePlaylists(playlists: List<PlaylistDBEntity>) {
+    fun updatePlaylists(playlists: List<Playlist>) {
         this.playlists = playlists
         notifyDataSetChanged()
     }

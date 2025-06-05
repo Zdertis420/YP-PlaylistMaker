@@ -1,10 +1,12 @@
 package orc.zdertis420.playlistmaker.data.db.dao
 
+import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import orc.zdertis420.playlistmaker.data.db.entity.CachedTrackDBEntity
 
+@Dao
 interface CachedDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCachedTrack(track: CachedTrackDBEntity)

@@ -12,20 +12,6 @@ import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.repository.PlaylistRepository
 
 class PlaylistRepositoryImplementation(private val dataBase: DataBase) : PlaylistRepository {
-    override suspend fun createPlaylist(
-        name: String,
-        description: String,
-        imagePath: String
-    ) {
-        dataBase.getPlaylistDao().insertPlaylist(
-            PlaylistDBEntity(
-                name = name,
-                description = description,
-                coverImagePath = imagePath
-            )
-        )
-    }
-
     override suspend fun addTrackToPlaylist(
         playlistId: Long,
         track: Track

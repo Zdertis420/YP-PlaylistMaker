@@ -8,13 +8,6 @@ import orc.zdertis420.playlistmaker.domain.repository.PlaylistRepository
 
 class PlaylistInteractorImplementation(private val playlistRepository: PlaylistRepository) :
     PlaylistInteractor {
-    override suspend fun createPlaylist(
-        name: String,
-        description: String,
-        imagePath: String
-    ) {
-        playlistRepository.createPlaylist(name, description, imagePath)
-    }
 
     override suspend fun addTrackToPlaylist(
         playlistId: Long,

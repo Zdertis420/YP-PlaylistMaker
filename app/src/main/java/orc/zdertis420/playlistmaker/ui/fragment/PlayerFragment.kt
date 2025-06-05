@@ -66,14 +66,12 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         super.onViewCreated(view, savedInstanceState)
 
         hideBottomNavigation()
+        setupBottomSheet()
+        setupListeners()
 
         track = requireArguments().getParcelable<TrackDto>("track")!!.toTrack()
 
         views.playButton.isEnabled = false
-
-        views.back.setOnClickListener(this)
-        views.playButton.setOnClickListener(this)
-        views.likeButton.setOnClickListener(this)
 
         views.timePlaying.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(0L)
 
@@ -116,6 +114,14 @@ class PlayerFragment : Fragment(), View.OnClickListener {
             isHideable = true
             addBottomSheetCallback(bottomSheetCallback)
         }
+    }
+
+    private fun setupListeners() {
+        views.back.setOnClickListener(this)
+        views.playButton.setOnClickListener(this)
+        views.likeButton.setOnClickListener(this)
+        views.saveToLibrary.setOnClickListener(this)
+        views.newPlaylist.setOnClickListener(this)
     }
 
     private fun render(state: PlayerState) {
@@ -207,6 +213,10 @@ class PlayerFragment : Fragment(), View.OnClickListener {
                 viewModel.toggleLike(track)
                 viewModel.observeLiked()
             }
+
+            R.id.save_to_library -> bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+
+            R.id.new_playlist -> findNavController().navigate(R.id.action_playerFragment_to_createPlaylistFragment)
         }
     }
 

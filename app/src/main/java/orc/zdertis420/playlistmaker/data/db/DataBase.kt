@@ -8,9 +8,11 @@ import orc.zdertis420.playlistmaker.data.db.dao.PlaylistsDao
 import orc.zdertis420.playlistmaker.data.db.entity.PlaylistTrackCrossRef
 import orc.zdertis420.playlistmaker.data.db.entity.TrackDBEntity
 import orc.zdertis420.playlistmaker.data.db.entity.CachedTrackDBEntity
+import orc.zdertis420.playlistmaker.data.db.entity.PlaylistDBEntity
 
-@Database(version = 2, entities = [
+@Database(version = 1, entities = [
     TrackDBEntity::class,
+    PlaylistDBEntity::class,
     CachedTrackDBEntity::class,
     PlaylistTrackCrossRef::class
 ])
