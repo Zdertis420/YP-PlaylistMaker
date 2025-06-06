@@ -10,19 +10,26 @@
         android:label="MediaLibraryFragment" >
         <action
             android:id="@+id/action_mediaLibraryFragment_to_playerFragment"
-            app:destination="@id/playerFragment" />
+            app:destination="@id/playerFragment"
+            app:enterAnim="@anim/slide_up"
+            app:popExitAnim="@anim/slide_down" />
         <action
             android:id="@+id/action_mediaLibraryFragment_to_createPlaylistFragment"
-            app:destination="@id/createPlaylistFragment" />
+            app:destination="@id/createPlaylistFragment"
+            app:enterAnim="@anim/slide_up"
+            app:popExitAnim="@anim/slide_down"/>
     </fragment>
 
     <fragment
         android:id="@+id/searchFragment"
         android:name="orc.zdertis420.playlistmaker.ui.fragment.SearchFragment"
+
         android:label="SearchFragment" >
         <action
             android:id="@+id/action_searchFragment_to_playerFragment"
-            app:destination="@id/playerFragment" />
+            app:destination="@id/playerFragment"
+            app:enterAnim="@anim/slide_up"
+            app:popExitAnim="@anim/slide_down" />
     </fragment>
 
     <fragment
