@@ -37,8 +37,8 @@
     <string name="confirm">Выйти</string>
     <string name="creation_error">Ошибка создания</string>
     <string name="loading_error">Ошибка загрузки</string>
-    <string name="track_added_to_playlist">Трек добавлен в плейлист</string>
-    <string name="track_is_in_playlist">Трек уже добавлен в плейлист</string>
+    <string name="track_added_to_playlist">Трек добавлен в плейлист </string>
+    <string name="track_is_in_playlist">Трек уже добавлен в плейлист </string>
 
     <plurals name="tracks_plurals">
         <item quantity="one">%d трек</item>

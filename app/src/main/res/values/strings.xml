@@ -40,8 +40,8 @@
     <string name="confirm">Confirm</string>
     <string name="creation_error">Creation Error</string>
     <string name="loading_error">Loading Error</string>
-    <string name="track_added_to_playlist">Track added to playlist</string>
-    <string name="track_is_in_playlist">Track is already added to playlist</string>
+    <string name="track_added_to_playlist">Track added to playlist </string>
+    <string name="track_is_in_playlist">Track is already added to playlist </string>
 
     <plurals name="tracks_plurals">
         <item quantity="one">%d track</item>
