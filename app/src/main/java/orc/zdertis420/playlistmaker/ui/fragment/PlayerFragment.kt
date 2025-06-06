@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -22,9 +23,12 @@ import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.dto.TrackDto
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
 import orc.zdertis420.playlistmaker.databinding.FragmentPlayerBinding
+import orc.zdertis420.playlistmaker.domain.entities.Playlist
 import orc.zdertis420.playlistmaker.domain.entities.Track
+import orc.zdertis420.playlistmaker.ui.adapter.playlist.PlayerPlaylistAdapter
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlayerViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
+import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlaylistsState
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -69,6 +73,15 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         setupBottomSheet()
         setupListeners()
 
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    handleBackPressed()
+                }
+            }
+        )
+
         track = requireArguments().getParcelable<TrackDto>("track")!!.toTrack()
 
         views.playButton.isEnabled = false
@@ -94,17 +107,36 @@ class PlayerFragment : Fragment(), View.OnClickListener {
             }
         }
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.playlistStateFlow.collect {
+                    when (it) {
+                        PlaylistsState.Empty -> {}
+                        PlaylistsState.Error -> Toast.makeText(
+                            requireActivity(), getString(R.string.loading_error),
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        is PlaylistsState.Playlists -> showPlaylists(it.playlists)
+                    }
+                }
+            }
+        }
+
         loadTrack(track)
 
         Log.d("THREAD", Thread.currentThread().toString())
 
         viewModel.observeLiked()
 
+        viewModel.loadPlaylists()
+
         viewModel.prepare()
     }
 
     private fun hideBottomNavigation() {
-        requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility = View.GONE
+        requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
+            View.GONE
         requireActivity().findViewById<View>(R.id.delimiter).visibility = View.GONE
     }
 
@@ -114,6 +146,29 @@ class PlayerFragment : Fragment(), View.OnClickListener {
             isHideable = true
             addBottomSheetCallback(bottomSheetCallback)
         }
+
+        views.playlists.adapter = PlayerPlaylistAdapter(emptyList())
+        (views.playlists.adapter as PlayerPlaylistAdapter).setOnItemClickListener { position ->
+            val playlist =
+                (viewModel.playlistStateFlow.value as PlaylistsState.Playlists).playlists[position]
+
+            if (playlist.tracks.contains(track)) {
+                Toast.makeText(
+                    requireActivity(), getString(R.string.track_is_in_playlist) + playlist.name,
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                viewModel.addToPlaylist(playlist.id, track)
+                Toast.makeText(
+                    requireActivity(), getString(R.string.track_added_to_playlist) + playlist.name,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private fun showPlaylists(playlists: List<Playlist>) {
+        (views.playlists.adapter as PlayerPlaylistAdapter).updatePlaylists(playlists)
     }
 
     private fun setupListeners() {
@@ -122,6 +177,7 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         views.likeButton.setOnClickListener(this)
         views.saveToLibrary.setOnClickListener(this)
         views.newPlaylist.setOnClickListener(this)
+        views.overlay.setOnClickListener(this)
     }
 
     private fun render(state: PlayerState) {
@@ -136,7 +192,11 @@ class PlayerFragment : Fragment(), View.OnClickListener {
                 Toast.makeText(requireActivity(), state.msg, Toast.LENGTH_SHORT).show()
             }
 
-            PlayerState.Preparing -> Toast.makeText(requireActivity(), R.string.preparing, Toast.LENGTH_SHORT).show()
+            PlayerState.Preparing -> Toast.makeText(
+                requireActivity(),
+                R.string.preparing,
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -197,13 +257,20 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         }
     }
 
+    private fun handleBackPressed() {
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        } else {
+            requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
+                View.VISIBLE
+            requireActivity().findViewById<View>(R.id.delimiter).visibility = View.VISIBLE
+            findNavController().popBackStack()
+        }
+    }
+
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.back -> {
-                requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility = View.VISIBLE
-                requireActivity().findViewById<View>(R.id.delimiter).visibility = View.VISIBLE
-                findNavController().navigateUp()
-            }
+            R.id.back -> handleBackPressed()
 
             R.id.play_button -> viewModel.playbackControl()
 
@@ -217,6 +284,8 @@ class PlayerFragment : Fragment(), View.OnClickListener {
             R.id.save_to_library -> bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
 
             R.id.new_playlist -> findNavController().navigate(R.id.action_playerFragment_to_createPlaylistFragment)
+
+            R.id.overlay -> bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         }
     }
 

@@ -1,5 +1,6 @@
 package orc.zdertis420.playlistmaker.data.repository
 
+import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import orc.zdertis420.playlistmaker.data.db.DataBase
@@ -16,6 +17,10 @@ class PlaylistRepositoryImplementation(private val dataBase: DataBase) : Playlis
         playlistId: Long,
         track: Track
     ) {
+        Log.d("PLAYLIST", "Adding track ${track.trackName} to playlist with id $playlistId")
+
+        dataBase.getCachedDao().insertCachedTrack(track.toDto().toCachedTrackDBEntity())
+
         dataBase.getPlaylistDao().insertPlaylistTrackCrossRef(
             PlaylistTrackCrossRef(
                 playlistId = playlistId,
@@ -23,8 +28,6 @@ class PlaylistRepositoryImplementation(private val dataBase: DataBase) : Playlis
                 timeAdded = System.currentTimeMillis()
             )
         )
-
-        dataBase.getCachedDao().insertCachedTrack(track.toDto().toCachedTrackDBEntity())
     }
 
     override suspend fun removeTrackFromPlaylist(playlistId: Long, trackId: Long) {

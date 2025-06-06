@@ -34,6 +34,14 @@
     <string name="description">Description</string>
     <string name="create_playlist">Create</string>
     <string name="add_to_playlist">Add to playlist</string>
+    <string name="confirm_exit">Do you really want to exit?</string>
+    <string name="playlist_data_warning">All data will be wiped!</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="creation_error">Creation Error</string>
+    <string name="loading_error">Loading Error</string>
+    <string name="track_added_to_playlist">Track added to playlist</string>
+    <string name="track_is_in_playlist">Track is already added to playlist</string>
 
     <plurals name="tracks_plurals">
         <item quantity="zero">%d tracks</item>

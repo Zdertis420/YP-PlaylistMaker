@@ -5,5 +5,5 @@ import android.net.Uri
 
 
 interface SaveImageRepository {
-    suspend fun saveImage(uri: Uri, context: Context): String
+    suspend fun saveImage(uri: Uri, /*context: Context*/): String
 }

@@ -8,8 +8,8 @@ import orc.zdertis420.playlistmaker.domain.repository.SaveImageRepository
 import java.io.File
 import java.io.FileOutputStream
 
-class SaveImageRepositoryImplementation : SaveImageRepository {
-    override suspend fun saveImage(uri: Uri, context: Context): String {
+class SaveImageRepositoryImplementation(private val context: Context) : SaveImageRepository {
+    override suspend fun saveImage(uri: Uri, /*context: Context*/): String {
         return withContext(Dispatchers.IO) {
             val fileName = "playlist_cover_${System.currentTimeMillis()}.jpg"
             val file = File(context.filesDir, fileName)
