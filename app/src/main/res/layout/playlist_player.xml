@@ -10,6 +10,7 @@
         android:layout_height="45dp"
         android:layout_marginStart="13dp"
         android:layout_marginTop="@dimen/even_smaller_padding"
+        android:importantForAccessibility="no"
         android:src="@drawable/placeholder"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

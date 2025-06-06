@@ -44,7 +44,6 @@
     <string name="track_is_in_playlist">Track is already added to playlist</string>
 
     <plurals name="tracks_plurals">
-        <item quantity="zero">%d tracks</item>
         <item quantity="one">%d track</item>
         <item quantity="few">%d tracks</item>
         <item quantity="many">%d tracks</item>

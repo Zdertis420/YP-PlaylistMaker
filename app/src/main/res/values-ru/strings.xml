@@ -41,7 +41,6 @@
     <string name="track_is_in_playlist">Трек уже добавлен в плейлист</string>
 
     <plurals name="tracks_plurals">
-        <item quantity="zero">%d треков</item>
         <item quantity="one">%d трек</item>
         <item quantity="few">%d трека</item>
         <item quantity="many">%d треков</item>

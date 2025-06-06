@@ -25,6 +25,7 @@ class LibraryPlaylistViewHolder(
         playlistName.text = model.name
         playlistCount.text = views.root.resources.getQuantityString(
             R.plurals.tracks_plurals,
+            model.tracks.size,
             model.tracks.size
         )
 
