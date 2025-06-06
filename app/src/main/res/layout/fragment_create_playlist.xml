@@ -12,11 +12,12 @@
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="@drawable/arrow_back" />
 
-    <ImageView
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/playlist_image"
         android:layout_width="312dp"
         android:layout_height="312dp"
         android:layout_marginTop="26dp"
+        android:adjustViewBounds="true"
         android:background="@drawable/image_rectangle"
         android:importantForAccessibility="no"
         android:scaleType="center"
@@ -34,6 +35,7 @@
         android:layout_marginTop="32dp"
         android:hint="@string/name"
         app:hintEnabled="true"
+        app:cursorColor="@color/cursor_blue"
         app:layout_constraintTop_toBottomOf="@+id/playlist_image">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -50,7 +52,9 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="16dp"
+        app:cursorColor="@color/cursor_blue"
         android:hint="@string/description"
+        android:textCursorDrawable="@drawable/cursor"
         app:hintEnabled="true"
         app:layout_constraintTop_toBottomOf="@+id/name_input_layout">
 
@@ -61,21 +65,21 @@
             android:inputType="textPersonName" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.button.MaterialButton
+    <TextView
         android:id="@+id/create_playlist"
         android:layout_width="0dp"
         android:layout_height="44dp"
         android:layout_marginHorizontal="17dp"
-        android:layout_marginStart="17dp"
-        android:layout_marginEnd="17dp"
-        android:layout_marginBottom="32dp"
-        android:backgroundTint="@color/unfocused_box_color"
+        android:layout_marginTop="170dp"
+        android:background="@drawable/create_playlist"
         android:enabled="false"
         android:text="@string/create_playlist"
+        android:gravity="center"
+        android:textSize="16sp"
         android:textColor="@color/white"
         app:cornerRadius="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/description_input_layout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

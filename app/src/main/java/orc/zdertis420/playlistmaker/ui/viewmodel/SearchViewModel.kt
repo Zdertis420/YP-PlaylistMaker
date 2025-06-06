@@ -22,7 +22,7 @@ class SearchViewModel(
 ) : ViewModel() {
 
     companion object {
-        private const val SEARCH_DELAY = 1000L
+        private const val SEARCH_DELAY = 2000L
     }
 
     private val _searchStateLiveData = MutableLiveData<SearchState>()
@@ -70,6 +70,10 @@ class SearchViewModel(
             delay(SEARCH_DELAY)
             searchTracks(searchQuery)
         }
+    }
+
+    fun cancelSearch() {
+        searchJob?.cancel()
     }
 
     fun getTracksHistory() {

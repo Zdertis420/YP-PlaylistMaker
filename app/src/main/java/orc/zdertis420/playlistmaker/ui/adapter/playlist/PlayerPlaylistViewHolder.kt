@@ -25,13 +25,14 @@ class PlayerPlaylistViewHolder(
         playlistName.text = model.name
         playlistCount.text = views.root.resources.getQuantityString(
             R.plurals.tracks_plurals,
+            model.tracks.size,
             model.tracks.size
         )
 
         Glide.with(root)
             .load(model.imagePath)
             .placeholder(R.drawable.placeholder)
-            .transform(RoundedCorners(2))
+            .transform(RoundedCorners(8))
             .into(playlistImage)
     }
 }

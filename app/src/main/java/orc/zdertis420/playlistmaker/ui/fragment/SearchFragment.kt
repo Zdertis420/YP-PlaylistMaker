@@ -118,7 +118,7 @@ class SearchFragment : Fragment(), View.OnClickListener {
                 views.searchHistory.visibility =
                     if (views.searchLine.hasFocus() && s?.isEmpty() == true && tracksHistoryList.isNotEmpty()) View.VISIBLE else View.GONE
 
-                if (s?.isNotEmpty() == true) {
+                if (s?.isEmpty() != true) {
                     viewModel.searchDebounce(s.toString())
                 }
             }
@@ -128,7 +128,7 @@ class SearchFragment : Fragment(), View.OnClickListener {
 
                 if (s?.isEmpty() == true) {
                     Log.d("SWITCH", "HIDE EVERYTHING, QUERY CLEARED")
-
+                    viewModel.cancelSearch()
                     showNothing()
                 }
             }

@@ -23,13 +23,12 @@
     <fragment
         android:id="@+id/searchFragment"
         android:name="orc.zdertis420.playlistmaker.ui.fragment.SearchFragment"
-
         android:label="SearchFragment" >
         <action
             android:id="@+id/action_searchFragment_to_playerFragment"
             app:destination="@id/playerFragment"
             app:enterAnim="@anim/slide_up"
-            app:popExitAnim="@anim/slide_down" />
+            app:popExitAnim="@anim/slide_down"/>
     </fragment>
 
     <fragment
@@ -62,7 +61,9 @@
         android:label="PlayerFragment" >
         <action
             android:id="@+id/action_playerFragment_to_createPlaylistFragment"
-            app:destination="@id/createPlaylistFragment" />
+            app:destination="@id/createPlaylistFragment"
+            app:enterAnim="@anim/slide_up"
+            app:popExitAnim="@anim/slide_down" />
         <argument
             android:name="track"
             app:argType="orc.zdertis420.playlistmaker.data.dto.TrackDto"
