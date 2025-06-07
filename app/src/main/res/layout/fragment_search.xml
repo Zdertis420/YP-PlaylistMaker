@@ -5,8 +5,8 @@
     android:id="@+id/search_activity"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/background_color"
+    android:orientation="vertical"
     android:paddingStart="@dimen/small_padding"
     android:paddingTop="10dp"
     android:paddingEnd="@dimen/small_padding"
@@ -130,53 +130,61 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="20dp"
-            android:padding="@dimen/even_smaller_padding"
             android:background="@drawable/rounded_button"
             android:backgroundTint="@color/standard_text_color"
+            android:padding="@dimen/even_smaller_padding"
             android:text="@string/update"
             android:textColor="@color/background_color" />
 
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/search_history"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:orientation="vertical"
-        android:visibility="gone">
+        android:layout_height="match_parent">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:fontFamily="@font/ys_display_medium"
-            android:gravity="center"
-            android:text="@string/you_have_searched"
-            android:textColor="@color/standard_text_color"
-            android:textSize="19sp" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/tracks_history"
+        <LinearLayout
+            android:id="@+id/search_history"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/even_smaller_padding"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+            android:layout_marginTop="24dp"
+            android:orientation="vertical"
+            android:visibility="gone">
 
-        <TextView
-            android:id="@+id/clear_history"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_gravity="center"
-            android:layout_marginTop="@dimen/even_smaller_padding"
-            android:background="@drawable/rounded_button"
-            android:fontFamily="@font/ys_display_medium"
-            android:gravity="center"
-            android:padding="@dimen/even_smaller_padding"
-            android:text="@string/clear_history"
-            android:textColor="@color/background_color"
-            android:textSize="14sp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:fontFamily="@font/ys_display_medium"
+                android:gravity="center"
+                android:text="@string/you_have_searched"
+                android:textColor="@color/standard_text_color"
+                android:textSize="19sp" />
 
-    </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/tracks_history"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/even_smaller_padding"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+
+            <TextView
+                android:id="@+id/clear_history"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="@dimen/even_smaller_padding"
+                android:background="@drawable/rounded_button"
+                android:fontFamily="@font/ys_display_medium"
+                android:gravity="center"
+                android:padding="@dimen/even_smaller_padding"
+                android:text="@string/clear_history"
+                android:textColor="@color/background_color"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+    </ScrollView>
 
     <ProgressBar
         android:id="@+id/progress_bar"
@@ -185,6 +193,6 @@
         android:layout_gravity="center"
         android:layout_margin="100dp"
         android:indeterminateTint="@color/unchangeable_background_main"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
 </LinearLayout>

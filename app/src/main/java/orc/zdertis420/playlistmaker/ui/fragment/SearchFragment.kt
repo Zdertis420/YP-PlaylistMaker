@@ -179,7 +179,7 @@ class SearchFragment : Fragment(), View.OnClickListener {
     private fun addToHistory(track: Track) {
         Log.d("HISTORY BEFORE", tracksHistoryList.toString())
 
-        tracksHistoryList.removeAll { it.trackName == track.trackName && it.artistName == track.artistName }
+        tracksHistoryList.removeAll { it.trackId == track.trackId }
 
         tracksHistoryList.add(0, track)
 
