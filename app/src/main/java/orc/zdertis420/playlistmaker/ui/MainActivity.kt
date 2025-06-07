@@ -1,4 +1,4 @@
-package orc.zdertis420.playlistmaker.ui.activity
+package orc.zdertis420.playlistmaker.ui
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge

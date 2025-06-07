@@ -14,16 +14,21 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.data.dto.TrackDto
 import orc.zdertis420.playlistmaker.data.mapper.toDto
+import orc.zdertis420.playlistmaker.data.mapper.toPlaylist
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
+import orc.zdertis420.playlistmaker.domain.entities.Playlist
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
+import orc.zdertis420.playlistmaker.domain.interactor.PlaylistInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.TrackLikedInteractor
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
+import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlaylistsState
 
 class PlayerViewModel(
     private val playerInteractor: PlayerInteractor,
     private val savedStateHandle: SavedStateHandle,
-    private val trackLikedInteractor: TrackLikedInteractor
+    private val trackLikedInteractor: TrackLikedInteractor,
+    private val playlistInteractor: PlaylistInteractor
 ) : ViewModel() {
 
     private val _playerStateFlow = MutableStateFlow<PlayerState>(PlayerState.Preparing)
@@ -31,6 +36,9 @@ class PlayerViewModel(
 
     private val _likeStateFlow = MutableStateFlow(false)
     val likeStateFlow: StateFlow<Boolean> = _likeStateFlow
+
+    private val _playlistStateFlow = MutableStateFlow<PlaylistsState>(PlaylistsState.Empty)
+    val playlistStateFlow: StateFlow<PlaylistsState> = _playlistStateFlow.asStateFlow()
 
     private var updateTimeJob: Job? = null
 
@@ -128,6 +136,32 @@ class PlayerViewModel(
                 val isLiked = liked.any { it.trackId == track!!.trackId }
                 _likeStateFlow.value = isLiked
                 track!!.isLiked = isLiked
+            }
+        }
+    }
+
+    fun loadPlaylists() {
+        viewModelScope.launch {
+            try {
+                playlistInteractor.getPlaylists().collect { playlists ->
+                    if (playlists.isEmpty()) {
+                        _playlistStateFlow.value = PlaylistsState.Empty
+                    } else {
+                        _playlistStateFlow.value = PlaylistsState.Playlists(playlists.map { it.toPlaylist() })
+                    }
+                }
+            } catch (e: Exception) {
+                _playlistStateFlow.value = PlaylistsState.Error
+            }
+        }
+    }
+
+    fun addToPlaylist(playlistId: Long, track: Track) {
+        viewModelScope.launch {
+            try {
+                playlistInteractor.addTrackToPlaylist(playlistId, track)
+            } catch (e: Exception) {
+                Log.d("PLAYLIST", "Error occurred while adding to playlist\n$e")
             }
         }
     }

@@ -1,32 +1,42 @@
 package orc.zdertis420.playlistmaker.di
 
-import orc.zdertis420.playlistmaker.data.repository.PlayerRepositoryImplementation
-import orc.zdertis420.playlistmaker.domain.implementations.interactor.PlayerInteractorImplementation
-import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
-import orc.zdertis420.playlistmaker.domain.repository.PlayerRepository
 import android.media.MediaPlayer
 import androidx.room.Room
 import orc.zdertis420.playlistmaker.data.db.DataBase
 import orc.zdertis420.playlistmaker.data.network.RetrofitNetworkClient
 import orc.zdertis420.playlistmaker.data.repository.ContactSupportRepositoryImplementation
+import orc.zdertis420.playlistmaker.data.repository.CreatePlaylistRepositoryImplementation
+import orc.zdertis420.playlistmaker.data.repository.PlayerRepositoryImplementation
+import orc.zdertis420.playlistmaker.data.repository.PlaylistRepositoryImplementation
+import orc.zdertis420.playlistmaker.data.repository.SaveImageRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.SeeEulaRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.ShareAppRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.ThemeRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackHistoryRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackLikedRepositoryImplementation
 import orc.zdertis420.playlistmaker.data.repository.TrackSearchRepositoryImplementation
+import orc.zdertis420.playlistmaker.domain.implementations.interactor.PlayerInteractorImplementation
+import orc.zdertis420.playlistmaker.domain.implementations.interactor.PlaylistInteractorImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.interactor.ThemeInteractorImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.interactor.TrackHistoryInteractorImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.interactor.TrackInteractorImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.interactor.TrackLikedInteractorImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.usecase.ContactSupportUseCaseImplementation
+import orc.zdertis420.playlistmaker.domain.implementations.usecase.CreatePlaylistUseCaseImplementation
+import orc.zdertis420.playlistmaker.domain.implementations.usecase.SaveImageUseCaseImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.usecase.SeeEulaUseCaseImplementation
 import orc.zdertis420.playlistmaker.domain.implementations.usecase.ShareAppUseCaseImplementation
+import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
+import orc.zdertis420.playlistmaker.domain.interactor.PlaylistInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.ThemeInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.TrackHistoryInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.TrackInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.TrackLikedInteractor
 import orc.zdertis420.playlistmaker.domain.repository.ContactSupportRepository
+import orc.zdertis420.playlistmaker.domain.repository.CreatePlaylistRepository
+import orc.zdertis420.playlistmaker.domain.repository.PlayerRepository
+import orc.zdertis420.playlistmaker.domain.repository.PlaylistRepository
+import orc.zdertis420.playlistmaker.domain.repository.SaveImageRepository
 import orc.zdertis420.playlistmaker.domain.repository.SeeEulaRepository
 import orc.zdertis420.playlistmaker.domain.repository.ShareAppRepository
 import orc.zdertis420.playlistmaker.domain.repository.ThemeRepository
@@ -34,8 +44,11 @@ import orc.zdertis420.playlistmaker.domain.repository.TrackHistoryRepository
 import orc.zdertis420.playlistmaker.domain.repository.TrackLikedRepository
 import orc.zdertis420.playlistmaker.domain.repository.TrackSearchRepository
 import orc.zdertis420.playlistmaker.domain.usecase.ContactSupportUseCase
+import orc.zdertis420.playlistmaker.domain.usecase.CreatePlaylistUseCase
+import orc.zdertis420.playlistmaker.domain.usecase.SaveImageUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.SeeEulaUseCase
 import orc.zdertis420.playlistmaker.domain.usecase.ShareAppUseCase
+import orc.zdertis420.playlistmaker.ui.viewmodel.CreatePlaylistViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.LikedViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlayerViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlaylistsViewModel
@@ -55,8 +68,18 @@ val player = module {
     single<PlayerRepository> { PlayerRepositoryImplementation(get<MediaPlayer>()) }
     single { MediaPlayer() }
 
+    single<PlaylistRepository> { PlaylistRepositoryImplementation(get()) }
+    factory<PlaylistInteractor> { PlaylistInteractorImplementation(get<PlaylistRepository>()) }
+
     //Player VM
-    viewModel<PlayerViewModel> { PlayerViewModel(get<PlayerInteractor>(), get(), get<TrackLikedInteractor>()) }
+    viewModel<PlayerViewModel> {
+        PlayerViewModel(
+            get<PlayerInteractor>(),
+            get(),
+            get<TrackLikedInteractor>(),
+            get<PlaylistInteractor>()
+        )
+    }
 }
 
 val search = module {
@@ -113,7 +136,22 @@ val liked = module {
 }
 
 val playlists = module {
-    viewModel<PlaylistsViewModel> { PlaylistsViewModel() }
+    // Creation
+    single<CreatePlaylistRepository> { CreatePlaylistRepositoryImplementation(get()) }
+    single<SaveImageRepository> { SaveImageRepositoryImplementation(androidContext()) }
+    factory<CreatePlaylistUseCase> { CreatePlaylistUseCaseImplementation(get<CreatePlaylistRepository>()) }
+    factory<SaveImageUseCase> { SaveImageUseCaseImplementation(get<SaveImageRepository>()) }
+    viewModel<CreatePlaylistViewModel> {
+        CreatePlaylistViewModel(
+            get<CreatePlaylistUseCase>(),
+            get<SaveImageUseCase>()
+        )
+    }
+
+    // Operating
+    single<PlaylistRepository> { PlaylistRepositoryImplementation(get()) }
+    factory<PlaylistInteractor> { PlaylistInteractorImplementation(get<PlaylistRepository>()) }
+    viewModel<PlaylistsViewModel> { PlaylistsViewModel(get<PlaylistInteractor>()) }
 }
 
 val database = module {

@@ -30,6 +30,25 @@
     <string name="no_playlists">You haven\'t created any playlist yet</string>
     <string name="new_playlist">New playlist</string>
     <string name="preparing">Preparing</string>
+    <string name="name">Name*</string>
+    <string name="description">Description</string>
+    <string name="create_playlist">Create</string>
+    <string name="add_to_playlist">Add to playlist</string>
+    <string name="confirm_exit">Do you really want to exit?</string>
+    <string name="playlist_data_warning">All data will be wiped!</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="creation_error">Creation Error</string>
+    <string name="loading_error">Loading Error</string>
+    <string name="track_added_to_playlist">Track added to playlist </string>
+    <string name="track_is_in_playlist">Track is already added to playlist </string>
+
+    <plurals name="tracks_plurals">
+        <item quantity="one">%d track</item>
+        <item quantity="few">%d tracks</item>
+        <item quantity="many">%d tracks</item>
+        <item quantity="other">%d tracks</item>
+    </plurals>
 
     <string name="lorem_ipsum" translatable="false">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris

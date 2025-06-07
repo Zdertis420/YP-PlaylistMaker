@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fragment_no_playlists"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_color"
-    android:id="@+id/fragment_no_playlists">
+    android:background="@color/background_color">
 
     <TextView
         android:id="@+id/create_playlist"
@@ -25,26 +24,44 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
-        android:id="@+id/no_playlists"
+        android:id="@+id/no_playlists_img"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@+id/create_playlist"
         android:layout_marginTop="46dp"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/create_playlist"
         tools:ignore="ContentDescription" />
     <!--        ya know what?? fuck you and your warnings-->
 
     <TextView
+        android:id="@+id/no_playlists_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@+id/no_playlists"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="@dimen/medium_padding"
+        android:fontFamily="@font/ys_display_medium"
         android:text="@string/no_playlists"
-        android:textSize="19sp"
         android:textColor="@color/standard_text_color"
-        android:fontFamily="@font/ys_display_medium"/>
+        android:textSize="19sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/no_playlists_img" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/no_playlists"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:constraint_referenced_ids="no_playlists_img, no_playlists_text" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/playlists"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/create_playlist"
+        app:spanCount="2" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

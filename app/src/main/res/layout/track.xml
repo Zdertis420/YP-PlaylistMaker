@@ -14,7 +14,9 @@
         android:layout_marginStart="13dp"
         android:layout_marginTop="@dimen/even_smaller_padding"
         android:layout_marginBottom="@dimen/even_smaller_padding"
+        android:adjustViewBounds="true"
         android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
         android:src="@drawable/placeholder" />
 
     <LinearLayout
