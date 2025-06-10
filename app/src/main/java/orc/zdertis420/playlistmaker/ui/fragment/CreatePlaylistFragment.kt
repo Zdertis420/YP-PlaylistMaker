@@ -23,6 +23,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.collectLatest
@@ -45,6 +46,12 @@ class CreatePlaylistFragment : Fragment() {
             uri?.let {
                 viewModel.onImageSelected(it)
                 views.playlistImage.setScaleType(ImageView.ScaleType.CENTER_CROP)
+                Glide.with(requireContext())
+                    .load(uri)
+                    .apply(RequestOptions().transform(RoundedCorners((8 * resources.displayMetrics.density).toInt())))
+                    .placeholder(R.drawable.placeholder)
+                    .error(R.drawable.placeholder)
+                    .into(views.playlistImage)
             }
         }
 
@@ -70,6 +77,7 @@ class CreatePlaylistFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         hideBottomNavigation()
+
 
         views.playlistImage.setOnClickListener {
             Log.d("PLAYLIST", "Chech and req permission")

@@ -24,6 +24,7 @@
         app:layout_constraintDimensionRatio="H,1:1"
         android:layout_marginStart="@dimen/big_padding"
         android:layout_marginEnd="@dimen/big_padding"
+        style="@style/rounded_image"
         android:src="@drawable/add_playlist_cover"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

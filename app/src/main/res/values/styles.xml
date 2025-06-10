@@ -41,7 +41,7 @@
     
     <style name="rounded_image">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">8dp</item>
+        <item name="cornerSize">80dp</item>
     </style>
 
     <style name="track_artist_name_and_time_style">
