@@ -16,7 +16,6 @@ import orc.zdertis420.playlistmaker.data.dto.TrackDto
 import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.data.mapper.toPlaylist
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
-import orc.zdertis420.playlistmaker.domain.entities.Playlist
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.PlaylistInteractor
@@ -35,7 +34,7 @@ class PlayerViewModel(
     val playerStateFlow: StateFlow<PlayerState> = _playerStateFlow.asStateFlow()
 
     private val _likeStateFlow = MutableStateFlow(false)
-    val likeStateFlow: StateFlow<Boolean> = _likeStateFlow
+    val likeStateFlow: StateFlow<Boolean> = _likeStateFlow.asStateFlow()
 
     private val _playlistStateFlow = MutableStateFlow<PlaylistsState>(PlaylistsState.Empty)
     val playlistStateFlow: StateFlow<PlaylistsState> = _playlistStateFlow.asStateFlow()
@@ -150,7 +149,7 @@ class PlayerViewModel(
                         _playlistStateFlow.value = PlaylistsState.Playlists(playlists.map { it.toPlaylist() })
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _playlistStateFlow.value = PlaylistsState.Error
             }
         }

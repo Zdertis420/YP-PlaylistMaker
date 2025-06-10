@@ -4,7 +4,7 @@
 
     <stroke
         android:width="1dp"
-        android:color="@color/why"
+        android:color="@color/unchangeable_subtext"
         android:dashWidth="30dp"
         android:dashGap="30dp" />
 

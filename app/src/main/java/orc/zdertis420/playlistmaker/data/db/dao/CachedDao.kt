@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 import orc.zdertis420.playlistmaker.data.db.entity.CachedTrackDBEntity
 
 @Dao
@@ -15,7 +16,7 @@ interface CachedDao {
     suspend fun getCachedTrackById(trackId: Long): CachedTrackDBEntity?
 
     @Query("SELECT * FROM cached_tracks WHERE trackId IN (:trackIds)")
-    suspend fun getCachedTracksByIds(trackIds: List<Long>): List<CachedTrackDBEntity>
+    fun getCachedTracksByIds(trackIds: List<Long>): Flow<List<CachedTrackDBEntity>>
 
     @Query("DELETE FROM cached_tracks WHERE trackId = :trackId")
     suspend fun deleteCachedTrackById(trackId: Long)

@@ -255,6 +255,8 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         } else {
             views.likeButton.setImageResource(R.drawable.like_button)
         }
+        views.likeButton.refreshDrawableState()
+        views.likeButton.invalidate()
     }
 
     private fun handleBackPressed() {
@@ -277,6 +279,7 @@ class PlayerFragment : Fragment(), View.OnClickListener {
             R.id.like_button -> {
                 Log.d("TRACK", "Like toggled for ${track.trackName}: ${!track.isLiked}. Activity")
 
+//                toggleLikeView(!track.isLiked)
                 viewModel.toggleLike(track)
                 viewModel.observeLiked()
             }

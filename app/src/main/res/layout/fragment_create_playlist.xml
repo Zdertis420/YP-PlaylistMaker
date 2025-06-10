@@ -14,13 +14,16 @@
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/playlist_image"
-        android:layout_width="312dp"
-        android:layout_height="312dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginTop="26dp"
         android:adjustViewBounds="true"
         android:background="@drawable/image_rectangle"
         android:importantForAccessibility="no"
         android:scaleType="center"
+        app:layout_constraintDimensionRatio="H,1:1"
+        android:layout_marginStart="@dimen/big_padding"
+        android:layout_marginEnd="@dimen/big_padding"
         android:src="@drawable/add_playlist_cover"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
