@@ -1,6 +1,5 @@
 package orc.zdertis420.playlistmaker.ui.fragment
 
-import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.os.Handler
@@ -12,14 +11,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.databinding.FragmentSearchBinding
 import orc.zdertis420.playlistmaker.domain.entities.Track
-import orc.zdertis420.playlistmaker.ui.activity.PlayerActivity
-import orc.zdertis420.playlistmaker.ui.adapter.TrackAdapter
+import orc.zdertis420.playlistmaker.ui.adapter.track.TrackAdapter
 import orc.zdertis420.playlistmaker.ui.viewmodel.SearchViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.SearchState
 import orc.zdertis420.playlistmaker.utils.KeyboardUtil
@@ -118,7 +118,7 @@ class SearchFragment : Fragment(), View.OnClickListener {
                 views.searchHistory.visibility =
                     if (views.searchLine.hasFocus() && s?.isEmpty() == true && tracksHistoryList.isNotEmpty()) View.VISIBLE else View.GONE
 
-                if (s?.isNotEmpty() == true) {
+                if (s?.isEmpty() != true) {
                     viewModel.searchDebounce(s.toString())
                 }
             }
@@ -128,7 +128,7 @@ class SearchFragment : Fragment(), View.OnClickListener {
 
                 if (s?.isEmpty() == true) {
                     Log.d("SWITCH", "HIDE EVERYTHING, QUERY CLEARED")
-
+                    viewModel.cancelSearch()
                     showNothing()
                 }
             }
@@ -149,7 +149,7 @@ class SearchFragment : Fragment(), View.OnClickListener {
 
             addToHistory(track)
 
-            startPlayerActivity(track)
+            startPlayer(track)
         }
 
         (views.tracksHistory.adapter as TrackAdapter).setOnItemClickListener { position: Int ->
@@ -157,7 +157,7 @@ class SearchFragment : Fragment(), View.OnClickListener {
 
             addToHistory(track)
 
-            startPlayerActivity(track)
+            startPlayer(track)
         }
     }
 
@@ -171,18 +171,15 @@ class SearchFragment : Fragment(), View.OnClickListener {
         }
     }
 
-    private fun startPlayerActivity(track: Track) {
-        val startPlayerActivity = Intent(requireActivity(), PlayerActivity::class.java)
-
-        startPlayerActivity.putExtra("track", track.toDto())
-
-        startActivity(startPlayerActivity)
+    private fun startPlayer(track: Track) {
+        val args = bundleOf("track" to track.toDto())
+        findNavController().navigate(R.id.action_searchFragment_to_playerFragment, args)
     }
 
     private fun addToHistory(track: Track) {
         Log.d("HISTORY BEFORE", tracksHistoryList.toString())
 
-        tracksHistoryList.removeAll { it.trackName == track.trackName && it.artistName == track.artistName }
+        tracksHistoryList.removeAll { it.trackId == track.trackId }
 
         tracksHistoryList.add(0, track)
 

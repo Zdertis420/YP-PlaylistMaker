@@ -41,7 +41,7 @@
     
     <style name="rounded_image">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">8dp</item>
+        <item name="cornerSize">80dp</item>
     </style>
 
     <style name="track_artist_name_and_time_style">
@@ -58,6 +58,13 @@
         <item name="fontWeight">400</item>
         <item name="android:layout_width">124dp</item>
         <item name="android:layout_height">15dp</item>
+    </style>
+
+    <style name="outlined_box" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/box_stroke</item>
+        <item name="hintTextColor">@color/hint</item>
+        <item name="android:textColor">@color/standard_text_color</item>
+        <item name="android:textColorHint">@color/standard_text_color</item>
     </style>
 
 </resources>

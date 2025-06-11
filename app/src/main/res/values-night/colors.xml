@@ -10,4 +10,5 @@
     <color name="settings_activity_icon_fill_color">#FFFFFFFF</color>
     <color name="subtext">@color/white</color>
     <color name="why">#1A1B22</color>
+    <color name="drag">@color/white</color>
 </resources>

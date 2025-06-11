@@ -21,4 +21,9 @@
     <color name="why">#AEAFB4</color>
     <color name="player_page_button">#C5C6C7</color>
     <color name="like_red">#F56B6C</color>
+    <color name="unfocused_box_color">#AEAFB4</color>
+    <color name="focused_box_color">#3772E7</color>
+    <color name="unfocused_hint_color">@color/standard_text_color</color>
+    <color name="focused_hint_color">#3772E7</color>
+    <color name="drag">#E6E8EB</color>
 </resources>

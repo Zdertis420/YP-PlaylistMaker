@@ -1,35 +1,28 @@
 package orc.zdertis420.playlistmaker.ui.fragment
 
-import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.databinding.FragmentLikedBinding
 import orc.zdertis420.playlistmaker.domain.entities.Track
-import orc.zdertis420.playlistmaker.ui.activity.PlayerActivity
-import orc.zdertis420.playlistmaker.ui.adapter.TrackAdapter
+import orc.zdertis420.playlistmaker.ui.adapter.track.TrackAdapter
 import orc.zdertis420.playlistmaker.ui.viewmodel.LikedViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.LikedState
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class LikedFragment : Fragment() {
-
-    companion object {
-        fun newInstance(): LikedFragment {
-            val fragment = LikedFragment()
-            return fragment
-        }
-    }
 
     private var _views: FragmentLikedBinding? = null
     private val views get() = _views!!
@@ -53,7 +46,7 @@ class LikedFragment : Fragment() {
 
         (views.likedTracks.adapter as TrackAdapter).setOnItemClickListener { position ->
             val track = (viewModel.screenState.value as LikedState.LikedTracks).tracks[position]
-            startPlayerActivity(track)
+            startPlayer(track)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -71,12 +64,9 @@ class LikedFragment : Fragment() {
         viewModel.observeLikedTracks()
     }
 
-    private fun startPlayerActivity(track: Track) {
-        val startPlayerActivity = Intent(requireActivity(), PlayerActivity::class.java)
-
-        startPlayerActivity.putExtra("track", track.toDto())
-
-        startActivity(startPlayerActivity)
+    private fun startPlayer(track: Track) {
+        val args = bundleOf("track" to track.toDto())
+        findNavController().navigate(R.id.action_mediaLibraryFragment_to_playerFragment, args)
     }
 
     private fun render(state: LikedState) {
