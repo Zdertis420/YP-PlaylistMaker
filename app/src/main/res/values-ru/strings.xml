@@ -39,11 +39,23 @@
     <string name="loading_error">Ошибка загрузки</string>
     <string name="track_added_to_playlist">Трек добавлен в плейлист </string>
     <string name="track_is_in_playlist">Трек уже добавлен в плейлист </string>
+    <string name="edit_info">Редаутировать информацию</string>
+    <string name="delete_playlist">Удалить плейлист</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="delte_track">Хотите удплить трек?</string>
 
     <plurals name="tracks_plurals">
         <item quantity="one">%d трек</item>
         <item quantity="few">%d трека</item>
         <item quantity="many">%d треков</item>
         <item quantity="other">%d треков</item>
+    </plurals>
+
+    <plurals name="minutes_plurals">
+        <item quantity="one">%d минута</item>
+        <item quantity="few">%d минуты</item>
+        <item quantity="many">%d минут</item>
+        <item quantity="other">%d минут</item>
     </plurals>
 </resources>

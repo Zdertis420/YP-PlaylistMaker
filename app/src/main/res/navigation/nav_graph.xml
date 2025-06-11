@@ -18,6 +18,11 @@
             app:destination="@id/createPlaylistFragment"
             app:enterAnim="@anim/slide_up"
             app:popExitAnim="@anim/slide_down"/>
+        <action
+            android:id="@+id/action_mediaLibraryFragment_to_playlistFragment"
+            app:destination="@id/playlistFragment"
+            app:enterAnim="@anim/slide_up"
+            app:popExitAnim="@anim/slide_down"/>
     </fragment>
 
     <fragment
@@ -68,6 +73,21 @@
             android:name="track"
             app:argType="orc.zdertis420.playlistmaker.data.dto.TrackDto"
             app:nullable="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/playlistFragment"
+        android:name="orc.zdertis420.playlistmaker.ui.fragment.PlaylistFragment"
+        android:label="PlaylistFragment">
+        <argument
+            android:name="playlist"
+            app:argType="orc.zdertis420.playlistmaker.data.dto.PlaylistDto"
+            app:nullable="false"/>
+        <action
+            android:id="@+id/action_playlistFragment_to_playerFragment"
+            app:destination="@id/playerFragment"
+            app:enterAnim="@anim/slide_up"
+            app:popExitAnim="@anim/slide_down"/>
     </fragment>
 
 </navigation>

@@ -26,14 +26,20 @@ interface PlaylistsDao {
     @Query("SELECT * FROM playlists")
     fun getAllPlaylistsWithTracks(): Flow<List<PlaylistWithTracks>>
 
-    @Query("SELECT COUNT(trackId) FROM playlist_track_cross_ref WHERE playlistId = :playlistId")
-    fun getTrackCountForPlaylist(playlistId: Long): Flow<Int>
+    @Query("SELECT EXISTS (SELECT 1 FROM playlist_track_cross_ref WHERE trackId = :trackId LIMIT 1)")
+    suspend fun hasReferencesToTrack(trackId: Long): Boolean
 
     @Query("DELETE FROM playlist_track_cross_ref WHERE playlistId = :playlistId AND trackId = :trackId")
     suspend fun deleteTrackFromPlaylistCrossRef(playlistId: Long, trackId: Long)
 
     @Query("DELETE FROM playlists WHERE playlistId = :playlistId")
     suspend fun deletePlaylistById(playlistId: Long)
+
+    @Query("DELETE FROM playlist_track_cross_ref WHERE playlistId = :playlistId")
+    suspend fun deletePlaylistCrossRef(playlistId: Long)
+
+    @Query("SELECT trackId FROM playlist_track_cross_ref WHERE playlistId = :playlistId")
+    suspend fun getTrackIdsForPlaylist(playlistId: Long): List<Long>
 
     @Query("UPDATE playlists SET name = :name, description = :description, coverImagePath = :coverImagePath WHERE playlistId = :playlistId")
     suspend fun updatePlaylistDetails(playlistId: Long, name: String, description: String?, coverImagePath: String?)

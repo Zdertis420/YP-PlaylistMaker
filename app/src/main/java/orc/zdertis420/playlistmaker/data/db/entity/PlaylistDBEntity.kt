@@ -9,5 +9,6 @@ data class PlaylistDBEntity(
     val playlistId: Long = 0,
     val name: String,
     val description: String?,
-    val coverImagePath: String?
+    val coverImagePath: String?,
+    val year: Int
 )

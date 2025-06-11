@@ -1,10 +1,9 @@
 package orc.zdertis420.playlistmaker.data.repository
 
 import android.util.Log
+import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import orc.zdertis420.playlistmaker.data.db.DataBase
-import orc.zdertis420.playlistmaker.data.db.entity.PlaylistDBEntity
 import orc.zdertis420.playlistmaker.data.db.entity.PlaylistTrackCrossRef
 import orc.zdertis420.playlistmaker.data.db.entity.PlaylistWithTracks
 import orc.zdertis420.playlistmaker.data.mapper.toCachedTrackDBEntity
@@ -31,16 +30,38 @@ class PlaylistRepositoryImplementation(private val dataBase: DataBase) : Playlis
     }
 
     override suspend fun removeTrackFromPlaylist(playlistId: Long, trackId: Long) {
-        dataBase.getPlaylistDao().deleteTrackFromPlaylistCrossRef(playlistId, trackId)
-        dataBase.getCachedDao().deleteCachedTrackById(trackId)
+        dataBase.withTransaction {
+            dataBase.getPlaylistDao().deleteTrackFromPlaylistCrossRef(playlistId, trackId)
+
+            val hasRefs = dataBase.getPlaylistDao().hasReferencesToTrack(trackId)
+
+            if (!hasRefs) {
+                dataBase.getCachedDao().deleteCachedTrackById(trackId)
+                Log.d("CLEANUP", "Track $trackId removed from cache as it has no more references")
+            } else {
+                Log.i("CLEANUP", "Track $trackId has other references")
+            }
+        }
     }
 
     override suspend fun removePlaylist(playlistId: Long) {
-        dataBase.getPlaylistDao().deletePlaylistById(playlistId)
+        dataBase.withTransaction {
+            val tracks = dataBase.getPlaylistDao().getTrackIdsForPlaylist(playlistId)
+
+            dataBase.getPlaylistDao().deletePlaylistById(playlistId)
+            dataBase.getPlaylistDao().deletePlaylistCrossRef(playlistId)
+
+            tracks.forEach { trackId ->
+                val hasRefs = dataBase.getPlaylistDao().hasReferencesToTrack(trackId)
+                if (!hasRefs) {
+                    dataBase.getCachedDao().deleteCachedTrackById(trackId)
+                    Log.d("CLEANUP", "Track $trackId removed from cache after playlist $playlistId deletion")
+                }
+            }
+        }
     }
 
     override suspend fun getPlaylists(): Flow<List<PlaylistWithTracks>> {
         return dataBase.getPlaylistDao().getAllPlaylistsWithTracks()
     }
-
 }

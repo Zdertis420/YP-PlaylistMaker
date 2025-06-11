@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -15,9 +16,11 @@ import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.R
+import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.databinding.FragmentPlaylistsBinding
 import orc.zdertis420.playlistmaker.domain.entities.Playlist
 import orc.zdertis420.playlistmaker.ui.adapter.playlist.LibraryPlaylistAdapter
+import orc.zdertis420.playlistmaker.ui.adapter.playlist.PlayerPlaylistAdapter
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlaylistsViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlaylistsState
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -55,6 +58,12 @@ class PlaylistsFragment : Fragment() {
                     render(state)
                 }
             }
+        }
+
+        (views.playlists.adapter as LibraryPlaylistAdapter).setOnItemClickListener { position ->
+            val playlist = (viewModel.playlistStateFlow.value as PlaylistsState.Playlists).playlists[position]
+            val args = bundleOf("playlist" to playlist.toDto())
+            findNavController().navigate(R.id.action_mediaLibraryFragment_to_playlistFragment, args)
         }
     }
 

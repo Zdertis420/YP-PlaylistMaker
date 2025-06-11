@@ -42,12 +42,20 @@
     <string name="loading_error">Loading Error</string>
     <string name="track_added_to_playlist">Track added to playlist </string>
     <string name="track_is_in_playlist">Track is already added to playlist </string>
+    <string name="edit_info">Edit info</string>
+    <string name="delete_playlist">Delete playlist</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="delte_track">Do you want to delete track?</string>
 
     <plurals name="tracks_plurals">
         <item quantity="one">%d track</item>
-        <item quantity="few">%d tracks</item>
-        <item quantity="many">%d tracks</item>
         <item quantity="other">%d tracks</item>
+    </plurals>
+
+    <plurals name="minutes_plurals">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
     </plurals>
 
     <string name="lorem_ipsum" translatable="false">
