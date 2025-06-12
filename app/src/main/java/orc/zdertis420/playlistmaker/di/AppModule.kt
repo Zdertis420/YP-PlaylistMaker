@@ -51,6 +51,7 @@ import orc.zdertis420.playlistmaker.domain.usecase.ShareAppUseCase
 import orc.zdertis420.playlistmaker.ui.viewmodel.CreatePlaylistViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.LikedViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlayerViewModel
+import orc.zdertis420.playlistmaker.ui.viewmodel.PlaylistViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlaylistsViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.SearchViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.SettingsViewModel
@@ -152,6 +153,9 @@ val playlists = module {
     single<PlaylistRepository> { PlaylistRepositoryImplementation(get()) }
     factory<PlaylistInteractor> { PlaylistInteractorImplementation(get<PlaylistRepository>()) }
     viewModel<PlaylistsViewModel> { PlaylistsViewModel(get<PlaylistInteractor>()) }
+
+    // Ah idk
+    viewModel<PlaylistViewModel> { PlaylistViewModel(get<PlaylistInteractor>()) }
 }
 
 val database = module {

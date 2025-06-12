@@ -20,12 +20,16 @@ import orc.zdertis420.playlistmaker.data.mapper.toPlaylist
 import orc.zdertis420.playlistmaker.databinding.FragmentPlaylistBinding
 import orc.zdertis420.playlistmaker.domain.entities.Playlist
 import orc.zdertis420.playlistmaker.ui.adapter.track.TrackAdapter
+import orc.zdertis420.playlistmaker.ui.viewmodel.PlaylistViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.concurrent.TimeUnit
 
 class PlaylistFragment : Fragment() {
 
     private var _views: FragmentPlaylistBinding? = null
     private val views get() = _views!!
+
+    private val viewModel by viewModel<PlaylistViewModel>()
 
     private lateinit var playlist: Playlist
 
@@ -66,6 +70,8 @@ class PlaylistFragment : Fragment() {
 
         playlist = requireArguments().getParcelable<PlaylistDto>("playlist")!!.toPlaylist()
 
+        viewModel.setPlaylist(playlist)
+
         setupBottomSheets()
         setupFields()
         setupListeners()
@@ -76,6 +82,8 @@ class PlaylistFragment : Fragment() {
             handleBackPressed()
         }
 
+
+
         (views.tracks.adapter as TrackAdapter).setOnItemClickListener { position ->
             val track = playlist.tracks[position]
             val args = bundleOf("track" to track.toDto())
@@ -83,14 +91,17 @@ class PlaylistFragment : Fragment() {
         }
 
         (views.tracks.adapter as TrackAdapter).setOnItemHoldListener { position ->
-            val track = playlist.tracks[position]
-
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle(getString(R.string.delte_track))
                 .setNegativeButton(getString(R.string.no)) { dialog, _ ->
                     dialog.dismiss()
                 }
                 .setPositiveButton(getString(R.string.yes)) { dialog, _ ->
+                    val track = playlist.tracks[position]
+                    viewModel.deleteTrackFromPlaylist(track)
+                    playlist = playlist.copy(tracks = playlist.tracks.filter { it.trackId != track.trackId })
+                    setupFields()
+                    (views.tracks.adapter as TrackAdapter).updateTracks(playlist.tracks)
                     dialog.dismiss()
                 }
                 .show()
