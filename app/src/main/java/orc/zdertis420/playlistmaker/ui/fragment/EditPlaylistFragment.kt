@@ -6,16 +6,19 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import android.text.TextWatcher
-import android.util.Log
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -29,29 +32,26 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.R
-import orc.zdertis420.playlistmaker.databinding.FragmentCreatePlaylistBinding
-import orc.zdertis420.playlistmaker.ui.viewmodel.CreatePlaylistViewModel
+import orc.zdertis420.playlistmaker.data.dto.PlaylistDto
+import orc.zdertis420.playlistmaker.data.mapper.toPlaylist
+import orc.zdertis420.playlistmaker.databinding.FragmentEditPlaylistBinding
+import orc.zdertis420.playlistmaker.domain.entities.Playlist
+import orc.zdertis420.playlistmaker.ui.viewmodel.EditPlaylistViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import kotlin.math.log
 
-class CreatePlaylistFragment : Fragment() {
+class EditPlaylistFragment : Fragment() {
 
-    private var _views: FragmentCreatePlaylistBinding? = null
+    private var _views: FragmentEditPlaylistBinding? = null
     private val views get() = _views!!
 
-    private val viewModel by viewModel<CreatePlaylistViewModel>()
+    private val viewModel by viewModel<EditPlaylistViewModel>()
 
     private val imagePickerLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             uri?.let {
+                Log.d("PLAYLIST", "Image uri: $it")
                 viewModel.onImageSelected(it)
                 views.playlistImage.setScaleType(ImageView.ScaleType.CENTER_CROP)
-                Glide.with(requireContext())
-                    .load(uri)
-                    .apply(RequestOptions().transform(RoundedCorners((8 * resources.displayMetrics.density).toInt())))
-                    .placeholder(R.drawable.placeholder)
-                    .error(R.drawable.placeholder)
-                    .into(views.playlistImage)
             }
         }
 
@@ -64,12 +64,15 @@ class CreatePlaylistFragment : Fragment() {
             }
         }
 
+    private var playlist: Playlist? = null
+    private var wasEdited = false
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _views = FragmentCreatePlaylistBinding.inflate(inflater, container, false)
+        _views = FragmentEditPlaylistBinding.inflate(inflater, container, false)
         return views.root
     }
 
@@ -78,9 +81,15 @@ class CreatePlaylistFragment : Fragment() {
 
         hideBottomNavigation()
 
+        playlist = requireArguments().getParcelable<PlaylistDto>("playlist")?.toPlaylist()
+
+        if (playlist != null) {
+            setupFields()
+        }
+
 
         views.playlistImage.setOnClickListener {
-            Log.d("PLAYLIST", "Chech and req permission")
+            Log.d("PLAYLIST", "Check and req permission")
 
             checkAndRequestPermission()
         }
@@ -100,9 +109,20 @@ class CreatePlaylistFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.playlistCreationState.collect { result ->
+                viewModel.playlistEditingState.collect { result ->
                     result?.let {
                         if (it.isSuccess) {
+                            if (wasEdited) {
+                                parentFragmentManager.setFragmentResult(
+                                    "edit_result",
+                                    bundleOf("was_edited" to true)
+                                )
+                            }
+
+                            requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
+                                View.VISIBLE
+                            requireActivity().findViewById<View>(R.id.delimiter).visibility =
+                                View.VISIBLE
                             parentFragmentManager.popBackStack()
                         } else {
                             Toast.makeText(
@@ -116,7 +136,7 @@ class CreatePlaylistFragment : Fragment() {
             }
         }
 
-        views.playlistsName.addTextChangedListener(object : TextWatcher {
+        views.playlistName.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val isNotEmpty = !s.isNullOrBlank()
@@ -127,19 +147,18 @@ class CreatePlaylistFragment : Fragment() {
         })
 
         views.createPlaylist.setOnClickListener {
-            val name = views.playlistsName.text.toString().trim()
+            val name = views.playlistName.text.toString().trim()
             val description =
                 views.playlistDescription.text.toString().trim().takeIf { it.isNotEmpty() }
 
-            if (name.isNotEmpty()) {
+            if (name.isEmpty()) {
+                Toast.makeText(requireActivity(), getString(R.string.name_cant_be_empty), Toast.LENGTH_SHORT).show()
+            } else if (playlist == null) {
                 viewModel.createPlaylist(name, description.toString())
+            } else {
+                wasEdited = true
+                viewModel.updatePlaylist(playlist!!.id, name, description.toString())
             }
-
-            requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
-                View.VISIBLE
-            requireActivity().findViewById<View>(R.id.delimiter).visibility =
-                View.VISIBLE
-
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -151,6 +170,24 @@ class CreatePlaylistFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun setupFields() {
+        with(views) {
+            Glide.with(requireContext())
+                .load(playlist!!.imagePath)
+                .apply(RequestOptions().transform(RoundedCorners((8 * resources.displayMetrics.density).toInt())))
+                .error(R.drawable.placeholder)
+                .placeholder(R.drawable.placeholder)
+                .into(playlistImage)
+
+            playlistName.setText(playlist!!.name)
+            playlistDescription.setText(playlist!!.description)
+            createPlaylist.setText(R.string.save)
+            setCreateButtonState(true)
+        }
+        Log.d("PLAYLIST", "URI: ${playlist!!.imagePath}")
+        viewModel.onImageSelected(playlist!!.imagePath!!.toUri())
     }
 
     private fun setCreateButtonState(enabled: Boolean) {
@@ -204,27 +241,33 @@ class CreatePlaylistFragment : Fragment() {
     }
 
     private fun handleBackPressed() {
-        val isImageEmpty = viewModel.selectedImageUri.value == null
-        val isNameEmpty = views.playlistsName.text.toString().isBlank()
-        val isDescriptionEmpty = views.playlistDescription.text.toString().isBlank()
-
-        if (isImageEmpty && isNameEmpty && isDescriptionEmpty) {
-            requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
-                View.VISIBLE
-            requireActivity().findViewById<View>(R.id.delimiter).visibility = View.VISIBLE
+        if (playlist != null) {
+            Log.d("PLAYLIST", "Just go fucking back")
             findNavController().popBackStack()
         } else {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle(requireActivity().getString(R.string.confirm_exit))
-                .setMessage(requireActivity().getString(R.string.playlist_data_warning))
-                .setNegativeButton(requireActivity().getString(R.string.cancel)) { dialog, _ -> }
-                .setPositiveButton(requireActivity().getString(R.string.confirm)) { _, _ ->
-                    requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
-                        View.VISIBLE
-                    requireActivity().findViewById<View>(R.id.delimiter).visibility = View.VISIBLE
-                    findNavController().popBackStack()
-                }
-                .show()
+            val isImageEmpty = viewModel.selectedImageUri.value == null
+            val isNameEmpty = views.playlistName.text.toString().isBlank()
+            val isDescriptionEmpty = views.playlistDescription.text.toString().isBlank()
+
+            if (isImageEmpty && isNameEmpty && isDescriptionEmpty) {
+                requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
+                    View.VISIBLE
+                requireActivity().findViewById<View>(R.id.delimiter).visibility = View.VISIBLE
+                findNavController().popBackStack()
+            } else {
+                MaterialAlertDialogBuilder(requireContext(), R.style.alertDialogStyle)
+                    .setTitle(requireActivity().getString(R.string.confirm_exit))
+                    .setMessage(requireActivity().getString(R.string.playlist_data_warning))
+                    .setNegativeButton(requireActivity().getString(R.string.cancel)) { dialog, _ -> }
+                    .setPositiveButton(requireActivity().getString(R.string.confirm)) { _, _ ->
+                        requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
+                            View.VISIBLE
+                        requireActivity().findViewById<View>(R.id.delimiter).visibility =
+                            View.VISIBLE
+                        findNavController().popBackStack()
+                    }
+                    .show()
+            }
         }
     }
 

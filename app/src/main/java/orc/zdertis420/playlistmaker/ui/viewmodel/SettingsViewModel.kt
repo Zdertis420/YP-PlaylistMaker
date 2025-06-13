@@ -20,18 +20,11 @@ class SettingsViewModel(
     private val _actionLiveData = MutableLiveData<Intent>()
     val actionLiveData: LiveData<Intent> get() = _actionLiveData
 
-    init {
-
-        Log.v("VIEW MODEL", "CREATED, INIT")
-    }
-
     fun toggleTheme() {
         val newTheme = !themeInteractor.getTheme()
 
         themeInteractor.switchTheme(newTheme)
         themeInteractor.saveTheme(newTheme)
-
-//        Log.d("THEME", newTheme.toString())
     }
 
     fun shareApp() {

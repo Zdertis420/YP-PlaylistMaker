@@ -46,7 +46,11 @@
     <string name="delete_playlist">Delete playlist</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
-    <string name="delte_track">Do you want to delete track?</string>
+    <string name="delete_track">Do you want to delete track?</string>
+    <string name="no_tracks">There is no list of tracks in this playlist that can be shared</string>
+    <string name="delete_playlist_question">Do you want to delete playlist</string>
+    <string name="save">Save changes</string>
+    <string name="name_cant_be_empty">Playlist name cat\'t be empty</string>
 
     <plurals name="tracks_plurals">
         <item quantity="one">%d track</item>

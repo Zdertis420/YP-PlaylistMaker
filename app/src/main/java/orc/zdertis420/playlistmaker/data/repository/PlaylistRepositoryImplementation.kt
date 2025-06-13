@@ -3,6 +3,9 @@ package orc.zdertis420.playlistmaker.data.repository
 import android.util.Log
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import orc.zdertis420.playlistmaker.data.db.DataBase
 import orc.zdertis420.playlistmaker.data.db.entity.PlaylistTrackCrossRef
 import orc.zdertis420.playlistmaker.data.db.entity.PlaylistWithTracks
@@ -27,6 +30,8 @@ class PlaylistRepositoryImplementation(private val dataBase: DataBase) : Playlis
                 timeAdded = System.currentTimeMillis()
             )
         )
+
+        dataBase.getPlaylistDao().updatePlaylist(playlistId, System.currentTimeMillis())
     }
 
     override suspend fun removeTrackFromPlaylist(playlistId: Long, trackId: Long) {
@@ -62,6 +67,23 @@ class PlaylistRepositoryImplementation(private val dataBase: DataBase) : Playlis
     }
 
     override suspend fun getPlaylists(): Flow<List<PlaylistWithTracks>> {
-        return dataBase.getPlaylistDao().getAllPlaylistsWithTracks()
+        return dataBase.getPlaylistDao().getAllPlaylistsInfo().map { playlists ->
+            playlists.map { playlist ->
+                PlaylistWithTracks(
+                    playlist = playlist,
+                    tracks = dataBase.getPlaylistDao().getTracksForPlaylistSorted(playlist.playlistId).first()
+                )
+            }
+        }
+    }
+
+    override suspend fun getPlaylistById(playlistId: Long): Flow<PlaylistWithTracks> {
+        return dataBase.getPlaylistDao().getPlaylistInfo(playlistId)
+            .combine(dataBase.getPlaylistDao().getTracksForPlaylistSorted(playlistId)) { playlist, tracks ->
+                PlaylistWithTracks(
+                    playlist = playlist,
+                    tracks = tracks
+                )
+            }
     }
 }

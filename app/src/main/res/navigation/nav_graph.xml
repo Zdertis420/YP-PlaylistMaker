@@ -7,33 +7,33 @@
     <fragment
         android:id="@+id/mediaLibraryFragment"
         android:name="orc.zdertis420.playlistmaker.ui.fragment.MediaLibraryFragment"
-        android:label="MediaLibraryFragment" >
+        android:label="MediaLibraryFragment">
         <action
             android:id="@+id/action_mediaLibraryFragment_to_playerFragment"
             app:destination="@id/playerFragment"
             app:enterAnim="@anim/slide_up"
             app:popExitAnim="@anim/slide_down" />
         <action
-            android:id="@+id/action_mediaLibraryFragment_to_createPlaylistFragment"
-            app:destination="@id/createPlaylistFragment"
+            android:id="@+id/action_mediaLibraryFragment_to_editPlaylistFragment"
+            app:destination="@id/editPlaylistFragment"
             app:enterAnim="@anim/slide_up"
-            app:popExitAnim="@anim/slide_down"/>
+            app:popExitAnim="@anim/slide_down" />
         <action
             android:id="@+id/action_mediaLibraryFragment_to_playlistFragment"
             app:destination="@id/playlistFragment"
             app:enterAnim="@anim/slide_up"
-            app:popExitAnim="@anim/slide_down"/>
+            app:popExitAnim="@anim/slide_down" />
     </fragment>
 
     <fragment
         android:id="@+id/searchFragment"
         android:name="orc.zdertis420.playlistmaker.ui.fragment.SearchFragment"
-        android:label="SearchFragment" >
+        android:label="SearchFragment">
         <action
             android:id="@+id/action_searchFragment_to_playerFragment"
             app:destination="@id/playerFragment"
             app:enterAnim="@anim/slide_up"
-            app:popExitAnim="@anim/slide_down"/>
+            app:popExitAnim="@anim/slide_down" />
     </fragment>
 
     <fragment
@@ -56,17 +56,14 @@
         android:id="@+id/playlistsFragment"
         android:name="orc.zdertis420.playlistmaker.ui.fragment.PlaylistsFragment"
         android:label="PlaylistsFragment" />
-    <fragment
-        android:id="@+id/createPlaylistFragment"
-        android:name="orc.zdertis420.playlistmaker.ui.fragment.CreatePlaylistFragment"
-        android:label="CreatePlaylistFragment" />
+
     <fragment
         android:id="@+id/playerFragment"
         android:name="orc.zdertis420.playlistmaker.ui.fragment.PlayerFragment"
-        android:label="PlayerFragment" >
+        android:label="PlayerFragment">
         <action
-            android:id="@+id/action_playerFragment_to_createPlaylistFragment"
-            app:destination="@id/createPlaylistFragment"
+            android:id="@+id/action_playerFragment_to_editPlaylistFragment"
+            app:destination="@id/editPlaylistFragment"
             app:enterAnim="@anim/slide_up"
             app:popExitAnim="@anim/slide_down" />
         <argument
@@ -82,12 +79,25 @@
         <argument
             android:name="playlist"
             app:argType="orc.zdertis420.playlistmaker.data.dto.PlaylistDto"
-            app:nullable="false"/>
+            app:nullable="false" />
         <action
             android:id="@+id/action_playlistFragment_to_playerFragment"
             app:destination="@id/playerFragment"
             app:enterAnim="@anim/slide_up"
-            app:popExitAnim="@anim/slide_down"/>
+            app:popExitAnim="@anim/slide_down" />
+        <action
+            android:id="@+id/action_playlistFragment_to_editPlaylistFragment"
+            app:destination="@id/editPlaylistFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/editPlaylistFragment"
+        android:name="orc.zdertis420.playlistmaker.ui.fragment.EditPlaylistFragment"
+        android:label="EditPlaylistFragment">
+        <argument
+            android:name="playlist"
+            app:argType="orc.zdertis420.playlistmaker.data.dto.PlaylistDto"
+            app:nullable="true" />
     </fragment>
 
 </navigation>

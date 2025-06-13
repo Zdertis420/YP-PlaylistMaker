@@ -4,11 +4,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
+import orc.zdertis420.playlistmaker.data.db.entity.CachedTrackDBEntity
 import orc.zdertis420.playlistmaker.data.db.entity.PlaylistDBEntity
 import orc.zdertis420.playlistmaker.data.db.entity.PlaylistTrackCrossRef
-import orc.zdertis420.playlistmaker.data.db.entity.PlaylistWithTracks
 
 @Dao
 interface PlaylistsDao {
@@ -18,13 +17,22 @@ interface PlaylistsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPlaylistTrackCrossRef(crossRef: PlaylistTrackCrossRef)
 
-    @Transaction
     @Query("SELECT * FROM playlists WHERE playlistId = :playlistId")
-    fun getPlaylistWithTracks(playlistId: Long): Flow<PlaylistWithTracks?>
+    fun getPlaylistInfo(playlistId: Long): Flow<PlaylistDBEntity>
 
-    @Transaction
     @Query("SELECT * FROM playlists")
-    fun getAllPlaylistsWithTracks(): Flow<List<PlaylistWithTracks>>
+    fun getAllPlaylistsInfo(): Flow<List<PlaylistDBEntity>>
+
+    @Query(
+        """
+            SELECT cached_track.* 
+            FROM cached_tracks AS cached_track 
+            INNER JOIN playlist_track_cross_ref AS cross_ref ON cached_track.trackId = cross_ref.trackId
+            WHERE cross_ref.playlistId = :playlistId
+            ORDER BY cross_ref.timeAdded DESC
+        """
+    )
+    fun getTracksForPlaylistSorted(playlistId: Long): Flow<List<CachedTrackDBEntity>>
 
     @Query("SELECT EXISTS (SELECT 1 FROM playlist_track_cross_ref WHERE trackId = :trackId LIMIT 1)")
     suspend fun hasReferencesToTrack(trackId: Long): Boolean
@@ -41,6 +49,15 @@ interface PlaylistsDao {
     @Query("SELECT trackId FROM playlist_track_cross_ref WHERE playlistId = :playlistId")
     suspend fun getTrackIdsForPlaylist(playlistId: Long): List<Long>
 
-    @Query("UPDATE playlists SET name = :name, description = :description, coverImagePath = :coverImagePath WHERE playlistId = :playlistId")
-    suspend fun updatePlaylistDetails(playlistId: Long, name: String, description: String?, coverImagePath: String?)
+    @Query("UPDATE playlists SET name = :name, description = :description, coverImagePath = :coverImagePath, lastModified = :lastModified WHERE playlistId = :playlistId")
+    suspend fun updatePlaylistDetails(
+        playlistId: Long,
+        name: String,
+        description: String?,
+        coverImagePath: String?,
+        lastModified: Long
+    )
+
+    @Query("UPDATE playlists SET lastModified = :lastModified WHERE playlistId = :playlistId")
+    suspend fun updatePlaylist(playlistId: Long, lastModified: Long)
 }

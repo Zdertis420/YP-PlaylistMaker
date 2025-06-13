@@ -47,7 +47,7 @@ class PlaylistsFragment : Fragment() {
         configureDark()
 
         views.createPlaylist.setOnClickListener {
-            findNavController().navigate(R.id.action_mediaLibraryFragment_to_createPlaylistFragment)
+            findNavController().navigate(R.id.action_mediaLibraryFragment_to_editPlaylistFragment)
         }
 
         views.playlists.adapter = LibraryPlaylistAdapter(emptyList())

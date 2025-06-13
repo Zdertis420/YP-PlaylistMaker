@@ -1,18 +1,24 @@
 package orc.zdertis420.playlistmaker.ui.fragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.dto.PlaylistDto
 import orc.zdertis420.playlistmaker.data.mapper.toDto
@@ -33,17 +39,8 @@ class PlaylistFragment : Fragment() {
 
     private lateinit var playlist: Playlist
 
-    private lateinit var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>
-    private val bottomSheetCallback = object : BottomSheetBehavior.BottomSheetCallback() {
-        override fun onStateChanged(bottomSheet: View, newState: Int) {
-            views.overlay.visibility = when (newState) {
-                BottomSheetBehavior.STATE_HIDDEN -> View.GONE
-                else -> View.VISIBLE
-            }
-        }
-
-        override fun onSlide(bottomSheet: View, slideOffset: Float) {}
-    }
+    private lateinit var tracksBottomSheet: BottomSheetBehavior<LinearLayout>
+    private lateinit var playlistMenuBottomSheet: BottomSheetBehavior<LinearLayout>
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -75,6 +72,35 @@ class PlaylistFragment : Fragment() {
         setupBottomSheets()
         setupFields()
         setupListeners()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.shareStateFlow.collect { intent ->
+                    if (intent != null) {
+                        startActivity(intent)
+                    }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.playlistStateFlow.collect { playlist ->
+                    if (playlist != null) {
+                        this@PlaylistFragment.playlist = playlist
+                        setupFields()
+                    }
+                }
+            }
+        }
+
+        parentFragmentManager.setFragmentResultListener("edit_result", viewLifecycleOwner) { requestKey, bundle ->
+            val wasPlaylistChanged = bundle.getBoolean("was_edited", true)
+
+            if (wasPlaylistChanged) {
+                viewModel.updateUI()
+            }
+        }
     }
 
     private fun setupListeners() {
@@ -82,7 +108,49 @@ class PlaylistFragment : Fragment() {
             handleBackPressed()
         }
 
+        views.share.setOnClickListener {
+            Log.d("PLAYLIST", "Sharing playlist")
+            if (playlist.tracks.isEmpty()) {
+                Toast.makeText(requireActivity(), getString(R.string.no_tracks), Toast.LENGTH_SHORT).show()
+            } else {
+                viewModel.sharePlaylist()
+            }
+        }
 
+        views.more.setOnClickListener {
+            Log.d("PLAYLIST", "Playlist menu opened")
+            playlistMenuBottomSheet.state = BottomSheetBehavior.STATE_COLLAPSED
+        }
+
+        views.sharePlaylist.setOnClickListener {
+            if (playlist.tracks.isEmpty()) {
+                Toast.makeText(requireActivity(), getString(R.string.no_tracks), Toast.LENGTH_SHORT).show()
+            } else {
+                viewModel.sharePlaylist()
+            }
+        }
+
+        views.editPlaylist.setOnClickListener {
+            val args = bundleOf("playlist" to playlist.toDto())
+            findNavController().navigate(R.id.action_playlistFragment_to_editPlaylistFragment, args)
+        }
+
+        views.deletePlaylist.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext(), R.style.alertDialogStyle)
+                .setTitle("${getString(R.string.delete_playlist_question)} ${playlist.name}?")
+                .setNegativeButton(getString(R.string.no)) { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .setPositiveButton(getString(R.string.yes)) { dialog, _ ->
+                    viewModel.deletePlaylist()
+                    requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
+                        View.VISIBLE
+                    requireActivity().findViewById<View>(R.id.delimiter).visibility = View.VISIBLE
+                    findNavController().navigateUp()
+                    dialog.dismiss()
+                }
+                .show()
+        }
 
         (views.tracks.adapter as TrackAdapter).setOnItemClickListener { position ->
             val track = playlist.tracks[position]
@@ -91,8 +159,8 @@ class PlaylistFragment : Fragment() {
         }
 
         (views.tracks.adapter as TrackAdapter).setOnItemHoldListener { position ->
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle(getString(R.string.delte_track))
+            MaterialAlertDialogBuilder(requireContext(), R.style.alertDialogStyle)
+                .setTitle(getString(R.string.delete_track))
                 .setNegativeButton(getString(R.string.no)) { dialog, _ ->
                     dialog.dismiss()
                 }
@@ -111,16 +179,12 @@ class PlaylistFragment : Fragment() {
     }
 
     private fun setupBottomSheets() {
-        bottomSheetBehavior = BottomSheetBehavior.from(views.tracksBottomSheet).apply {
+        tracksBottomSheet = BottomSheetBehavior.from(views.tracksBottomSheet).apply {
             state = BottomSheetBehavior.STATE_COLLAPSED
-            isHideable = false
-            addBottomSheetCallback(bottomSheetCallback)
         }
 
-        bottomSheetBehavior = BottomSheetBehavior.from(views.playlistMenuBottomSheet).apply {
-            state = BottomSheetBehavior.STATE_COLLAPSED
-            isHideable = true
-            addBottomSheetCallback(bottomSheetCallback)
+        playlistMenuBottomSheet = BottomSheetBehavior.from(views.playlistMenuBottomSheet).apply {
+            state = BottomSheetBehavior.STATE_HIDDEN
         }
 
         views.tracks.adapter = TrackAdapter(playlist.tracks)
@@ -132,8 +196,12 @@ class PlaylistFragment : Fragment() {
     }
 
     private fun handleBackPressed() {
-        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        if (playlistMenuBottomSheet.state == BottomSheetBehavior.STATE_EXPANDED) {
+            playlistMenuBottomSheet.state = BottomSheetBehavior.STATE_COLLAPSED
+        } else if (playlistMenuBottomSheet.state == BottomSheetBehavior.STATE_COLLAPSED) {
+            playlistMenuBottomSheet.state = BottomSheetBehavior.STATE_HIDDEN
+        } else if (tracksBottomSheet.state == BottomSheetBehavior.STATE_EXPANDED) {
+            tracksBottomSheet.state = BottomSheetBehavior.STATE_COLLAPSED
         } else {
             requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
                 View.VISIBLE
@@ -183,5 +251,10 @@ class PlaylistFragment : Fragment() {
                 playlist.tracks.size
             )
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _views = null
     }
 }

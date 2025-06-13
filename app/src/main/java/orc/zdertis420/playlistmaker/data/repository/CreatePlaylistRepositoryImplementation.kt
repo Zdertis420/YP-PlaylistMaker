@@ -25,4 +25,19 @@ class CreatePlaylistRepositoryImplementation(private val dataBase: DataBase) : C
             )
         )
     }
+
+    override suspend fun updatePlaylist(
+        playlistId: Long,
+        name: String,
+        description: String?,
+        coverImagePath: String?
+    ) {
+        dataBase.getPlaylistDao().updatePlaylistDetails(
+            playlistId = playlistId,
+            name = name,
+            description = description,
+            coverImagePath = coverImagePath,
+            lastModified = System.currentTimeMillis()
+        )
+    }
 }

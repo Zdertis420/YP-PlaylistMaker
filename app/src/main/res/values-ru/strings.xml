@@ -43,7 +43,11 @@
     <string name="delete_playlist">Удалить плейлист</string>
     <string name="yes">Да</string>
     <string name="no">Нет</string>
-    <string name="delte_track">Хотите удплить трек?</string>
+    <string name="delete_track">Хотите удплить трек?</string>
+    <string name="no_tracks">В этом плейлисте нет списка треков, которым можно поделиться</string>
+    <string name="delete_playlist_question">Хотите удалить плейлист</string>
+    <string name="save">Сохранить</string>
+    <string name="name_cant_be_empty">Имя плейлиста не может быть пустам</string>
 
     <plurals name="tracks_plurals">
         <item quantity="one">%d трек</item>
