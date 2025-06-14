@@ -87,7 +87,9 @@
             app:popExitAnim="@anim/slide_down" />
         <action
             android:id="@+id/action_playlistFragment_to_editPlaylistFragment"
-            app:destination="@id/editPlaylistFragment" />
+            app:destination="@id/editPlaylistFragment"
+            app:enterAnim="@anim/slide_up"
+            app:popExitAnim="@anim/slide_down"/>
     </fragment>
 
     <fragment

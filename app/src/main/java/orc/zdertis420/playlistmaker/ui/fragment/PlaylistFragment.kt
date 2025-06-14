@@ -76,9 +76,9 @@ class PlaylistFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 viewModel.shareStateFlow.collect { intent ->
-                    if (intent != null) {
-                        startActivity(intent)
-                    }
+                    Log.d("PLAYLIST", "Starting new activity to share")
+                    intent?.let { startActivity(it) }
+                    viewModel.playlistShared()
                 }
             }
         }
@@ -94,7 +94,10 @@ class PlaylistFragment : Fragment() {
             }
         }
 
-        parentFragmentManager.setFragmentResultListener("edit_result", viewLifecycleOwner) { requestKey, bundle ->
+        parentFragmentManager.setFragmentResultListener(
+            "edit_result",
+            viewLifecycleOwner
+        ) { requestKey, bundle ->
             val wasPlaylistChanged = bundle.getBoolean("was_edited", true)
 
             if (wasPlaylistChanged) {
@@ -111,7 +114,8 @@ class PlaylistFragment : Fragment() {
         views.share.setOnClickListener {
             Log.d("PLAYLIST", "Sharing playlist")
             if (playlist.tracks.isEmpty()) {
-                Toast.makeText(requireActivity(), getString(R.string.no_tracks), Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireActivity(), getString(R.string.no_tracks), Toast.LENGTH_SHORT)
+                    .show()
             } else {
                 viewModel.sharePlaylist()
             }
@@ -124,7 +128,8 @@ class PlaylistFragment : Fragment() {
 
         views.sharePlaylist.setOnClickListener {
             if (playlist.tracks.isEmpty()) {
-                Toast.makeText(requireActivity(), getString(R.string.no_tracks), Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireActivity(), getString(R.string.no_tracks), Toast.LENGTH_SHORT)
+                    .show()
             } else {
                 viewModel.sharePlaylist()
             }
@@ -167,7 +172,8 @@ class PlaylistFragment : Fragment() {
                 .setPositiveButton(getString(R.string.yes)) { dialog, _ ->
                     val track = playlist.tracks[position]
                     viewModel.deleteTrackFromPlaylist(track)
-                    playlist = playlist.copy(tracks = playlist.tracks.filter { it.trackId != track.trackId })
+                    playlist =
+                        playlist.copy(tracks = playlist.tracks.filter { it.trackId != track.trackId })
                     setupFields()
                     (views.tracks.adapter as TrackAdapter).updateTracks(playlist.tracks)
                     dialog.dismiss()

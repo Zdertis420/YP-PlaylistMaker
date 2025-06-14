@@ -16,7 +16,7 @@ class SharePlaylistRepositoryImplementation(private val context: Context) :
 
         stringBuilder.appendLine(playlist.name)
 
-        if (!playlist.description.isNullOrBlank()) {
+        if (!playlist.description.isNullOrBlank() && playlist.description != "null") {
             stringBuilder.appendLine(playlist.description)
         }
 

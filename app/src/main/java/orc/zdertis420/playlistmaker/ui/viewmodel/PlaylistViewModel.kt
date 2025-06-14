@@ -42,6 +42,10 @@ class PlaylistViewModel(
         _shareStateFlow.value = sharePlaylistUseCase.sharePlaylist(playlist)
     }
 
+    fun playlistShared() {
+        _shareStateFlow.value = null
+    }
+
     fun deletePlaylist() {
         viewModelScope.launch {
             playlistInteractor.removePlaylist(playlist.id)
