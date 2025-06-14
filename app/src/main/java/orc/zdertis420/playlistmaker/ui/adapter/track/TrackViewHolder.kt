@@ -13,7 +13,8 @@ import java.util.Locale
 
 class TrackViewHolder(
     itemView: View,
-    private val onItemClickListener: ((position: Int) -> Unit)?
+    private val onItemClickListener: ((position: Int) -> Unit)?,
+    private val onItemClickLongListener: ((position: Int) -> Boolean)?
 ) :
     RecyclerView.ViewHolder(itemView) {
 
@@ -48,6 +49,15 @@ class TrackViewHolder(
             val position = adapterPosition
             if (position != RecyclerView.NO_POSITION) {
                 onItemClickListener?.invoke(position)
+            }
+        }
+
+        itemView.setOnLongClickListener {
+            val position = adapterPosition
+            if (position != RecyclerView.NO_POSITION) {
+                onItemClickLongListener?.invoke(position) ?: false
+            } else {
+                false
             }
         }
     }

@@ -261,6 +261,8 @@ class PlayerFragment : Fragment(), View.OnClickListener {
 
     private fun handleBackPressed() {
         if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        } else if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         } else {
             requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
@@ -286,7 +288,7 @@ class PlayerFragment : Fragment(), View.OnClickListener {
 
             R.id.save_to_library -> bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
 
-            R.id.new_playlist -> findNavController().navigate(R.id.action_playerFragment_to_createPlaylistFragment)
+            R.id.new_playlist -> findNavController().navigate(R.id.action_playerFragment_to_editPlaylistFragment)
 
             R.id.overlay -> bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         }

@@ -17,7 +17,7 @@
     <style name="settings_activity_button_style">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">@dimen/standard_size</item>
-<!--        <item name="android:gravity">start</item>-->
+        <!--        <item name="android:gravity">start</item>-->
         <item name="android:backgroundTint">@color/transparent</item>
         <item name="android:textColor">@color/standard_text_color</item>
         <item name="android:textSize">@dimen/standard_text_size</item>
@@ -38,7 +38,7 @@
         <item name="android:textSize">22sp</item>
         <item name="android:textFontWeight">500</item>
     </style>
-    
+
     <style name="rounded_image">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">80dp</item>
@@ -65,6 +65,19 @@
         <item name="hintTextColor">@color/hint</item>
         <item name="android:textColor">@color/standard_text_color</item>
         <item name="android:textColorHint">@color/standard_text_color</item>
+    </style>
+
+    <style name="alertDialogStyle" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="buttonBarPositiveButtonStyle">@style/positiveButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/negativeButton</item>
+    </style>
+
+    <style name="positiveButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/unchangeable_background_main</item>
+    </style>
+
+    <style name="negativeButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/unchangeable_background_main</item>
     </style>
 
 </resources>
