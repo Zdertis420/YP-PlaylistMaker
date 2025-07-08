@@ -90,12 +90,14 @@
                 tools:ignore="ContentDescription" />
             <!--        ya know what?? fuck you and your warnings-->
 
-            <ImageView
+            <orc.zdertis420.playlistmaker.views.PlayButtonView
                 android:id="@+id/play_button"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:layout_marginTop="30dp"
-                android:src="@drawable/play_button"
+                android:background="@null"
+                app:image_pause="@drawable/pause_button"
+                app:image_play="@drawable/play_button"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/track_author"
