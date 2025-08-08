@@ -4,9 +4,7 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,8 +18,10 @@ import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.PlaylistInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.TrackLikedInteractor
+import orc.zdertis420.playlistmaker.service.PlayerController
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlaylistsState
+
 
 class PlayerViewModel(
     private val playerInteractor: PlayerInteractor,
@@ -30,7 +30,7 @@ class PlayerViewModel(
     private val playlistInteractor: PlaylistInteractor
 ) : ViewModel() {
 
-    private val _playerStateFlow = MutableStateFlow<PlayerState>(PlayerState.Preparing)
+    private val _playerStateFlow = MutableStateFlow<PlayerState>(PlayerState.Idle)
     val playerStateFlow: StateFlow<PlayerState> = _playerStateFlow.asStateFlow()
 
     private val _likeStateFlow = MutableStateFlow(false)
@@ -39,12 +39,9 @@ class PlayerViewModel(
     private val _playlistStateFlow = MutableStateFlow<PlaylistsState>(PlaylistsState.Empty)
     val playlistStateFlow: StateFlow<PlaylistsState> = _playlistStateFlow.asStateFlow()
 
-    private var updateTimeJob: Job? = null
+    private var playerStateJob: Job? = null
 
-    companion object {
-        private const val DELAY = 300L
-        private const val MAX_DURATION = 30000L
-    }
+    private var playerController: PlayerController? = null
 
     private var track: Track? = null
 
@@ -59,62 +56,48 @@ class PlayerViewModel(
         savedStateHandle["TRACK"] = track.toDto()
     }
 
-    fun prepare() {
-        if (track?.previewUrl == "") {
-            _playerStateFlow.value = PlayerState.Error("No preview provided")
-            Log.e("ERROR", "no preview")
+    fun setAudioPlayerControl(playerController: PlayerController) {
+        if (this.playerController == playerController) {
+            playerController.notificationOff()
             return
         }
 
+        this.playerController = playerController
 
-        playerInteractor.prepare(
-            track!!.previewUrl,
-            onPrepared = { _playerStateFlow.value = PlayerState.Prepared },
-            onCompleted = { _playerStateFlow.value = PlayerState.Prepared }
-        )
+        Log.d("VM", "Service bound, control interface received.\n${this.playerController}")
 
-
-//        Log.d("PLAYER STATE", playerStateLiveData.value.toString())
+        playerStateJob?.cancel()
+        playerStateJob = viewModelScope.launch {
+            playerController.getPlayerState().collect {
+                _playerStateFlow.value = it
+            }
+        }
     }
 
-    fun updatePlaybackTime() {
-        val elapsedTime = playerInteractor.getCurrentPosition()
-        val remainingTime = MAX_DURATION - elapsedTime
-        _playerStateFlow.value = PlayerState.Play(elapsedTime, remainingTime)
+    fun removeAudioPlayerControl() {
+        playerController?.delete()
+        playerController = null
+        playerStateJob?.cancel()
+        playerStateJob = null
+    }
+
+    fun preparePlayer() {
+        Log.d("VM", "Call service to prepare player.\nPlayer controller instance ${this.playerController}")
+
+        playerController?.preparePlayer()
     }
 
     fun playbackControl() {
-        if (playerInteractor.isPlaying()) {
-            pause()
+        playerController?.updateNotification()
+        if (playerController?.isPlaying() == true) {
+            playerController?.pausePlayer()
         } else {
-            start()
+            playerController?.startPlayer()
         }
     }
 
-    fun start() {
-        if (playerStateFlow.value == PlayerState.Prepared || playerStateFlow.value == PlayerState.Pause) {
-            playerInteractor.start()
-            _playerStateFlow.value = PlayerState.Play(0, MAX_DURATION)
-
-            updateTimeJob?.cancel()
-            updateTimeJob = viewModelScope.launch(Dispatchers.Main) {
-                while (true) {
-                    updatePlaybackTime()
-                    delay(DELAY)
-                }
-            }
-        }
-
-        Log.d("PLAYER STATE (VM)", playerStateFlow.value.toString())
-    }
-
-    fun pause() {
-        playerInteractor.pause()
-        _playerStateFlow.value = PlayerState.Pause
-
-        updateTimeJob?.cancel()
-
-        Log.d("PLAYER STATE (VM)", playerStateFlow.value.toString())
+    fun stop() {
+        playerController?.delete()
     }
 
     fun toggleLike(track: Track) {
@@ -165,15 +148,8 @@ class PlayerViewModel(
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        updateTimeJob?.cancel()
-        playerInteractor.release()
-    }
-
     fun onActivityDestroyed() {
         Log.d("PLAYER", playerStateFlow.value.toString())
-        updateTimeJob?.cancel()
-        playerInteractor.release()
+        playerController?.updateNotification()
     }
 }

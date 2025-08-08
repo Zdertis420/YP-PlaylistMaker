@@ -2,7 +2,9 @@ package orc.zdertis420.playlistmaker.data.dto
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Parcelize
 data class TrackDto (
     val trackId: Long,
