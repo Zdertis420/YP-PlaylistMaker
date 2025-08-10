@@ -72,22 +72,15 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as PlayerService.PlayerServiceBinder
             viewModel.setAudioPlayerControl(binder.getService())
+            viewModel.preparePlayer()
             isBound = true
-
-            Log.d("FRAGMENT", "Current player state is ${viewModel.playerStateFlow.value}")
-            if (viewModel.playerStateFlow.value is PlayerState.Idle) {
-                viewModel.preparePlayer()
-                Log.d("FRAGMENT", "Preparing Player")
-            } else {
-                Log.d("FRAGMENT", "Skip preparing")
-            }
 
             Log.d("FRAGMENT", "Service bound, control interface provided")
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             isBound = false
-            viewModel.removeAudioPlayerControl()
+//            viewModel.removeAudioPlayerControl()
         }
     }
 
@@ -97,7 +90,7 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (!isGranted) {
-            Toast.makeText(context, "Can\'t start service!", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Can't start service!", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -133,7 +126,7 @@ class PlayerFragment : Fragment(), View.OnClickListener {
 
         track = requireArguments().getParcelable<TrackDto>("track")!!.toTrack()
 
-        views.playButton.isClickable = false
+        views.playButton.isEnabled = false
 
         views.timePlaying.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(0L)
 
@@ -187,17 +180,7 @@ class PlayerFragment : Fragment(), View.OnClickListener {
             requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
 
-        if (::track.isInitialized) {
-            val serviceIntent = Intent(requireContext(), PlayerService::class.java).apply {
-                putExtra(PlayerService.TRACK_DTO_JSON, Json.encodeToString(track.toDto()))
-            }
-            ContextCompat.startForegroundService(requireContext(), serviceIntent) // Сервис сам покажет уведомление
-
-            requireContext().bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
-            Log.d("PlayerFragment", "onStart: Called startForegroundService and bindService.")
-        } else {
-            Log.w("PlayerFragment", "onStart: Track not initialized, service not started or bound.")
-        }
+        bindService()
     }
 
     private fun hideBottomNavigation() {
@@ -247,8 +230,10 @@ class PlayerFragment : Fragment(), View.OnClickListener {
     }
 
     private fun render(state: PlayerState) {
+//        Log.d("STATE", state.toString())
+
         when (state) {
-            is PlayerState.Idle, PlayerState.None -> {}
+            is PlayerState.Idle -> {}
             is PlayerState.Prepared -> showPrepared()
             is PlayerState.Play -> showPlaying(state.remainingMillis)
             is PlayerState.Pause -> showPause()
@@ -266,7 +251,7 @@ class PlayerFragment : Fragment(), View.OnClickListener {
     }
 
     private fun showPrepared() {
-        views.playButton.isClickable = true
+        views.playButton.isEnabled = true
         views.timePlaying.text = "00:00"
     }
 
@@ -328,15 +313,7 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         } else if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         } else {
-            Log.d("PlayerFragment", "handleBackPressed: User is leaving Player screen.")
             viewModel.stop()
-            isBound = false
-
-            unbindService()
-
-            val serviceIntent = Intent(requireContext(), PlayerService::class.java)
-            requireContext().stopService(serviceIntent)
-            Log.d("PlayerFragment", "handleBackPressed: stopService() called.")
 
             requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
                 View.VISIBLE
@@ -345,10 +322,20 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         }
     }
 
-    private fun unbindService() {
-        if (isBound) {
-             requireContext().unbindService(serviceConnection)
+    private fun bindService() {
+        val intent = Intent(requireContext(), PlayerService::class.java).apply {
+            putExtra(PlayerService.TRACK_DTO_JSON, Json.encodeToString(track.toDto()))
         }
+        requireContext().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+    }
+
+    private fun unbindService() {
+        requireContext().unbindService(serviceConnection)
+    }
+
+    private fun startForegroundService(){
+        val intent = Intent(requireContext(), PlayerService::class.java)
+        ContextCompat.startForegroundService(requireContext(), intent)
     }
 
     override fun onResume() {
@@ -360,11 +347,19 @@ class PlayerFragment : Fragment(), View.OnClickListener {
 
     override fun onStop() {
         super.onStop()
-        if (isBound && !requireActivity().isChangingConfigurations) {
+
+        if (isBound) {
             unbindService()
-            Log.d("PlayerFragment", "onStop: Service unbound (not due to configuration change).")
-        } else if (isBound && requireActivity().isChangingConfigurations) {
-            Log.d("PlayerFragment", "onStop: Configuration change, service remains bound if it was bound.")
+            isBound = false
+        }
+
+        if (::track.isInitialized && viewModel.playerStateFlow.value !is PlayerState.Idle && viewModel.playerStateFlow.value !is PlayerState.Prepared ) { // Only start foreground if playing or paused
+            val intent = Intent(requireContext(), PlayerService::class.java).apply {
+                putExtra(PlayerService.TRACK_DTO_JSON, Json.encodeToString(track.toDto()))
+            }
+            ContextCompat.startForegroundService(requireContext(), intent)
+        } else {
+            Log.d("PlayerFragment", "Player not active or track not initialized, not starting service in foreground from onStop.")
         }
     }
 
@@ -377,6 +372,7 @@ class PlayerFragment : Fragment(), View.OnClickListener {
             R.id.like_button -> {
                 Log.d("TRACK", "Like toggled for ${track.trackName}: ${!track.isLiked}. Activity")
 
+//                toggleLikeView(!track.isLiked)
                 viewModel.toggleLike(track)
                 viewModel.observeLiked()
             }
@@ -392,11 +388,5 @@ class PlayerFragment : Fragment(), View.OnClickListener {
     override fun onDestroy() {
         super.onDestroy()
         viewModel.onActivityDestroyed()
-
-        if (isBound) {
-
-            Log.w("PlayerFragment", "onDestroy: Service was still bound. Unbinding now to prevent leak.")
-            unbindService()
-        }
     }
 }
