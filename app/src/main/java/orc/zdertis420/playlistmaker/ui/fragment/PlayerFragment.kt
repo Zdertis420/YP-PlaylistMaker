@@ -206,13 +206,11 @@ class PlayerFragment : Fragment(), View.OnClickListener {
     }
 
     private fun showPlaying(remainingMillis: Long) {
-        views.playButton.setImageResource(R.drawable.pause_button)
 
         views.timePlaying.text = simpleDate.format(remainingMillis)
     }
 
     private fun showPause() {
-        views.playButton.setImageResource(R.drawable.play_button)
     }
 
     private fun loadTrack(track: Track) {
