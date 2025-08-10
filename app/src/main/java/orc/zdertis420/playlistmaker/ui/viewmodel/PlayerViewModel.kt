@@ -30,7 +30,7 @@ class PlayerViewModel(
     private val playlistInteractor: PlaylistInteractor
 ) : ViewModel() {
 
-    private val _playerStateFlow = MutableStateFlow<PlayerState>(PlayerState.None)
+    private val _playerStateFlow = MutableStateFlow<PlayerState>(PlayerState.Idle)
     val playerStateFlow: StateFlow<PlayerState> = _playerStateFlow.asStateFlow()
 
     private val _likeStateFlow = MutableStateFlow(false)
@@ -75,7 +75,9 @@ class PlayerViewModel(
     }
 
     fun removeAudioPlayerControl() {
+        playerController?.delete()
         playerController = null
+        playerStateJob?.cancel()
         playerStateJob = null
     }
 
