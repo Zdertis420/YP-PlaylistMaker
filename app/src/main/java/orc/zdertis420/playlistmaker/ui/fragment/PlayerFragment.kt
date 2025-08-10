@@ -1,14 +1,6 @@
 package orc.zdertis420.playlistmaker.ui.fragment
 
-import android.Manifest
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.ServiceConnection
-import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,8 +8,6 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -29,20 +19,16 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.dto.TrackDto
-import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
 import orc.zdertis420.playlistmaker.databinding.FragmentPlayerBinding
 import orc.zdertis420.playlistmaker.domain.entities.Playlist
 import orc.zdertis420.playlistmaker.domain.entities.Track
-import orc.zdertis420.playlistmaker.service.PlayerService
 import orc.zdertis420.playlistmaker.ui.adapter.playlist.PlayerPlaylistAdapter
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlayerViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlaylistsState
-import orc.zdertis420.playlistmaker.utils.InternetConnectionReceiver
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -64,34 +50,6 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         }
 
         override fun onSlide(bottomSheet: View, slideOffset: Float) {}
-    }
-
-    private var isBound = false
-
-    private val serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            val binder = service as PlayerService.PlayerServiceBinder
-            viewModel.setAudioPlayerControl(binder.getService())
-            viewModel.preparePlayer()
-            isBound = true
-
-            Log.d("FRAGMENT", "Service bound, control interface provided")
-        }
-
-        override fun onServiceDisconnected(name: ComponentName?) {
-            isBound = false
-//            viewModel.removeAudioPlayerControl()
-        }
-    }
-
-    private val receiver = InternetConnectionReceiver()
-
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (!isGranted) {
-            Toast.makeText(context, "Can't start service!", Toast.LENGTH_LONG).show()
-        }
     }
 
     private lateinit var track: Track
@@ -172,15 +130,8 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         viewModel.observeLiked()
 
         viewModel.loadPlaylists()
-    }
 
-    override fun onStart() {
-        super.onStart()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
-
-        bindService()
+        viewModel.prepare()
     }
 
     private fun hideBottomNavigation() {
@@ -230,10 +181,9 @@ class PlayerFragment : Fragment(), View.OnClickListener {
     }
 
     private fun render(state: PlayerState) {
-//        Log.d("STATE", state.toString())
+        Log.d("STATE", state.toString())
 
         when (state) {
-            is PlayerState.Idle -> {}
             is PlayerState.Prepared -> showPrepared()
             is PlayerState.Play -> showPlaying(state.remainingMillis)
             is PlayerState.Pause -> showPause()
@@ -313,53 +263,10 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         } else if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         } else {
-            viewModel.stop()
-
             requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
                 View.VISIBLE
             requireActivity().findViewById<View>(R.id.delimiter).visibility = View.VISIBLE
             findNavController().popBackStack()
-        }
-    }
-
-    private fun bindService() {
-        val intent = Intent(requireContext(), PlayerService::class.java).apply {
-            putExtra(PlayerService.TRACK_DTO_JSON, Json.encodeToString(track.toDto()))
-        }
-        requireContext().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-    }
-
-    private fun unbindService() {
-        requireContext().unbindService(serviceConnection)
-    }
-
-    private fun startForegroundService(){
-        val intent = Intent(requireContext(), PlayerService::class.java)
-        ContextCompat.startForegroundService(requireContext(), intent)
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        val filter = IntentFilter("android.net.conn.CONNECTIVITY_CHANGE")
-        requireContext().registerReceiver(receiver, filter)
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        if (isBound) {
-            unbindService()
-            isBound = false
-        }
-
-        if (::track.isInitialized && viewModel.playerStateFlow.value !is PlayerState.Idle && viewModel.playerStateFlow.value !is PlayerState.Prepared ) { // Only start foreground if playing or paused
-            val intent = Intent(requireContext(), PlayerService::class.java).apply {
-                putExtra(PlayerService.TRACK_DTO_JSON, Json.encodeToString(track.toDto()))
-            }
-            ContextCompat.startForegroundService(requireContext(), intent)
-        } else {
-            Log.d("PlayerFragment", "Player not active or track not initialized, not starting service in foreground from onStop.")
         }
     }
 
@@ -383,6 +290,11 @@ class PlayerFragment : Fragment(), View.OnClickListener {
 
             R.id.overlay -> bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.pause()
     }
 
     override fun onDestroy() {
