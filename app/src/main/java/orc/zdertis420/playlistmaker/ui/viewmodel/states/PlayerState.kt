@@ -1,7 +1,6 @@
 package orc.zdertis420.playlistmaker.ui.viewmodel.states
 
 sealed class PlayerState {
-    object None : PlayerState()
     object Idle : PlayerState()
     object Preparing : PlayerState()
     object Prepared : PlayerState()
