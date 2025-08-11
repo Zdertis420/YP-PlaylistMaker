@@ -42,18 +42,17 @@ class PlayerService : Service(), PlayerController {
         private const val NOTIFICATION_CHANNEL_ID = "music_service_channel"
 
         const val TRACK_DTO_JSON = "TRACK_DTO_JSON"
-        const val EXTRA_STARTED_BY_UI_FOR_BINDING = "EXTRA_STARTED_BY_UI_FOR_BINDING"
 
         private const val DELAY = 300L
         private const val MAX_DURATION = 30000L
     }
 
-    private var isBound = false
+    var isBound = false
 
     override fun onCreate() {
         super.onCreate()
 
-        Log.e("SERVICE", "OnCreate called!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        Log.e("PlayerService", "OnCreate called!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
         mediaPlayer = MediaPlayer()
 
@@ -62,10 +61,17 @@ class PlayerService : Service(), PlayerController {
             "Music service",
             NotificationManager.IMPORTANCE_DEFAULT
         )
-        channel.description = "Service for playing music"
+        channel.apply {
+            description = "Service for playing music"
+//            setSound(null, null)
+//            enableVibration(false)
+//            enableLights(false)
+        }
 
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
+
+        sendNotification(createServiceNotification(true))
     }
 
     inner class PlayerServiceBinder : Binder() {
@@ -73,6 +79,11 @@ class PlayerService : Service(), PlayerController {
     }
 
     override fun onBind(intent: Intent?): IBinder? {
+        notificationOff()
+        isBound = true
+
+        Log.d("PlayerService", "ДОЛБАЁБ")
+
         val trackDtoJson = intent?.getStringExtra(TRACK_DTO_JSON)
         if (trackDtoJson != null) {
             val trackDto = Json.decodeFromString<TrackDto>(trackDtoJson)
@@ -82,28 +93,32 @@ class PlayerService : Service(), PlayerController {
             artistName = trackDto.artistName
         }
 
-        isBound = true
-        notificationOff()
-        Log.d(
-            "PlayerService",
-            "onBind called. MediaPlayer is null: ${mediaPlayer == null}, isPlaying: ${mediaPlayer?.isPlaying}, playerState: ${_playerState.value}"
-        )
         return binder
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        isBound = false
-        if (mediaPlayer?.isPlaying == true || _playerState.value is PlayerState.Pause || _playerState.value is PlayerState.Prepared) {
-            updateNotification()
+        if (_playerState.value is PlayerState.Play) {
+            sendNotification(createServiceNotification(false))
+            isBound = false
         }
+        Log.d("PlayerService", "ДОЛБАЁБ")
+//        else {
+//            delete()
+//        }
+
         return super.onUnbind(intent)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        delete()
     }
 
     override fun preparePlayer() {
         Log.d("SERVICE", "Track name: $trackName\nArtist name: $artistName\nTrack url: $trackUrl")
 
-        if (mediaPlayer == null) { // Если MediaPlayer был освобожден (null)
-            Log.d("SERVICE", "preparePlayer: MediaPlayer was null, creating a new instance.")
+        if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer()
         }
 
@@ -122,12 +137,8 @@ class PlayerService : Service(), PlayerController {
         }
         mediaPlayer?.setOnCompletionListener {
             timerJob?.cancel()
-            _playerState.value = PlayerState.Prepared
-            if (!isBound) {
-                updateNotification()
-            } else {
-                notificationOff()
-            }
+            _playerState.value = PlayerState.Completed
+            Log.d("PlayerService", "isBound: $isBound")
         }
         mediaPlayer?.setOnErrorListener { _, what, extra ->
             Log.e("PlayerService", "MediaPlayer Error: What - $what, Extra - $extra")
@@ -148,50 +159,12 @@ class PlayerService : Service(), PlayerController {
         }
     }
 
-    override fun updateNotification() {
-//        Log.d(
-//            "PlayerService",
-//            "updateNotification called. isBound: $isBound, playerState: ${_playerState.value}, isPlaying: ${mediaPlayer?.isPlaying}"
-//        )
-
-        Log.e("PlayerService", "Service is bound: $isBound")
-
-        if (isBound) {
-            Log.d(
-                "PlayerService",
-                "updateNotification: Service is BOUND, calling notificationOff()"
-            )
-            notificationOff()
-        } else {
-            if (mediaPlayer?.isPlaying == true || _playerState.value is PlayerState.Pause || _playerState.value is PlayerState.Prepared) {
-                Log.d(
-                    "PlayerService",
-                    "updateNotification: Service NOT bound, player ACTIVE (playing/paused/prepared). Starting/Keeping foreground."
-                )
-                val notification = createServiceNotification()
-                ServiceCompat.startForeground(
-                    this,
-                    SERVICE_NOTIFICATION_ID,
-                    notification,
-                    getForegroundServiceTypeConstant()
-                )
-            } else {
-                Log.d(
-                    "PlayerService",
-                    "updateNotification: Service NOT bound, player NOT active. Calling notificationOff()"
-                )
-                notificationOff()
-            }
-        }
-    }
-
     private fun startTimer() {
         timerJob?.cancel()
         timerJob = CoroutineScope(Dispatchers.Default).launch {
             while (mediaPlayer?.isPlaying == true) {
-                delay(DELAY)
                 updatePlaybackTime()
-//                updateNotification()
+                delay(DELAY)
             }
         }
     }
@@ -211,7 +184,6 @@ class PlayerService : Service(), PlayerController {
             MAX_DURATION - (mediaPlayer?.currentPosition?.toLong() ?: 0L)
         )
         startTimer()
-        updateNotification()
     }
 
     override fun pausePlayer() {
@@ -220,7 +192,6 @@ class PlayerService : Service(), PlayerController {
         mediaPlayer?.pause()
         timerJob?.cancel()
         _playerState.value = PlayerState.Pause
-        updateNotification()
     }
 
     override fun notificationOff() {
@@ -250,10 +221,6 @@ class PlayerService : Service(), PlayerController {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("PlayerService", "onStartCommand received. Intent action: ${intent?.action}")
-        val startedByUiForBinding =
-            intent?.getBooleanExtra(EXTRA_STARTED_BY_UI_FOR_BINDING, false) == true
-
         if (intent?.hasExtra(TRACK_DTO_JSON) == true) {
             val trackDtoJson = intent.getStringExtra(TRACK_DTO_JSON)
             if (trackDtoJson != null) {
@@ -262,7 +229,6 @@ class PlayerService : Service(), PlayerController {
                     trackUrl = trackDto.previewUrl
                     trackName = trackDto.trackName
                     artistName = trackDto.artistName
-                    Log.d("PlayerService", "onStartCommand: New track data initialized: $trackName")
                 } else {
                     Log.d(
                         "PlayerService",
@@ -270,48 +236,9 @@ class PlayerService : Service(), PlayerController {
                     )
                 }
             }
-        } else {
-            Log.d(
-                "PlayerService",
-                "onStartCommand: Intent did NOT contain TRACK_DTO_JSON. Using existing track data if available. trackName: ${if (::trackName.isInitialized) trackName else "not initialized"}"
-            )
         }
 
-        if (!::trackName.isInitialized && !::artistName.isInitialized) {
-            Log.w(
-                "PlayerService",
-                "Track details not available for notification in onStartCommand (or for foreground check)"
-            )
-        }
-
-        if (::trackUrl.isInitialized) {
-            if (!isBound && !startedByUiForBinding) {
-                ServiceCompat.startForeground(
-                    this,
-                    SERVICE_NOTIFICATION_ID,
-                    createServiceNotification(),
-                    getForegroundServiceTypeConstant()
-                )
-                Log.d(
-                    "PlayerService",
-                    "onStartCommand: Service started in foreground (not bound AND not started by UI for binding)."
-                )
-            } else if (startedByUiForBinding) {
-                Log.d(
-                    "PlayerService",
-                    "onStartCommand: Started by UI for binding. Foreground status will be managed by binding state and player actions."
-                )
-            } else if (isBound) {
-                Log.d(
-                    "PlayerService",
-                    "onStartCommand: Service is already bound. Foreground status is managed by binding state."
-                )
-            }
-        } else {
-            Log.w(
-                "PlayerService",
-                "onStartCommand: No track URL available, cannot start foreground or prepare player. Stopping service."
-            )
+        if (!::trackUrl.isInitialized) {
             stopSelf()
             return START_NOT_STICKY
         }
@@ -319,7 +246,7 @@ class PlayerService : Service(), PlayerController {
         return START_STICKY
     }
 
-    private fun createServiceNotification(): Notification {
+    private fun createServiceNotification(isSilent: Boolean): Notification {
         Log.d(
             "PlayerService",
             "createServiceNotification called. Track: ${if (::artistName.isInitialized) artistName else "Unknown Artist"} - ${if (::trackName.isInitialized) trackName else "Unknown Track"}"
@@ -331,7 +258,17 @@ class PlayerService : Service(), PlayerController {
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setOngoing(false)
+            .setSilent(isSilent)
             .build()
+    }
+
+    private fun sendNotification(notification: Notification) {
+        ServiceCompat.startForeground(
+            this,
+            SERVICE_NOTIFICATION_ID,
+            notification,
+            getForegroundServiceTypeConstant()
+        )
     }
 
     private fun getForegroundServiceTypeConstant(): Int =

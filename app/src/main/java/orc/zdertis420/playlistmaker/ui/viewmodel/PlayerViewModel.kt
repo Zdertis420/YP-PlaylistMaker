@@ -24,7 +24,6 @@ import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlaylistsState
 
 
 class PlayerViewModel(
-    private val playerInteractor: PlayerInteractor,
     private val savedStateHandle: SavedStateHandle,
     private val trackLikedInteractor: TrackLikedInteractor,
     private val playlistInteractor: PlaylistInteractor
@@ -64,8 +63,6 @@ class PlayerViewModel(
 
         this.playerController = playerController
 
-        Log.d("VM", "Service bound, control interface received.\n${this.playerController}")
-
         playerStateJob?.cancel()
         playerStateJob = viewModelScope.launch {
             playerController.getPlayerState().collect {
@@ -80,13 +77,10 @@ class PlayerViewModel(
     }
 
     fun preparePlayer() {
-        Log.d("VM", "Call service to prepare player.\nPlayer controller instance ${this.playerController}")
-
         playerController?.preparePlayer()
     }
 
     fun playbackControl() {
-        playerController?.updateNotification()
         if (playerController?.isPlaying() == true) {
             playerController?.pausePlayer()
         } else {
@@ -148,6 +142,5 @@ class PlayerViewModel(
 
     fun onActivityDestroyed() {
         Log.d("PLAYER", playerStateFlow.value.toString())
-        playerController?.updateNotification()
     }
 }

@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.StateFlow
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
 
 interface PlayerController {
+
     fun preparePlayer()
 
     fun getPlayerState(): StateFlow<PlayerState>
@@ -19,6 +20,4 @@ interface PlayerController {
     fun notificationOff()
 
     fun delete()
-
-    fun updateNotification()
 }

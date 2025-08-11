@@ -79,7 +79,6 @@ val player = module {
     //Player VM
     viewModel<PlayerViewModel> {
         PlayerViewModel(
-            get<PlayerInteractor>(),
             get(),
             get<TrackLikedInteractor>(),
             get<PlaylistInteractor>()

@@ -74,20 +74,18 @@ class PlayerFragment : Fragment(), View.OnClickListener {
             viewModel.setAudioPlayerControl(binder.getService())
             isBound = true
 
-            Log.d("FRAGMENT", "Current player state is ${viewModel.playerStateFlow.value}")
             if (viewModel.playerStateFlow.value is PlayerState.Idle) {
                 viewModel.preparePlayer()
-                Log.d("FRAGMENT", "Preparing Player")
-            } else {
-                Log.d("FRAGMENT", "Skip preparing")
             }
 
-            Log.d("FRAGMENT", "Service bound, control interface provided")
+            Log.w("PlayerFragment", "Service bound, control interface provided")
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             isBound = false
             viewModel.removeAudioPlayerControl()
+
+            Log.w("PlayerFragment", "Service is unbound")
         }
     }
 
@@ -186,18 +184,6 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
-
-        if (::track.isInitialized) {
-            val serviceIntent = Intent(requireContext(), PlayerService::class.java).apply {
-                putExtra(PlayerService.TRACK_DTO_JSON, Json.encodeToString(track.toDto()))
-            }
-            ContextCompat.startForegroundService(requireContext(), serviceIntent) // Сервис сам покажет уведомление
-
-            requireContext().bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
-            Log.d("PlayerFragment", "onStart: Called startForegroundService and bindService.")
-        } else {
-            Log.w("PlayerFragment", "onStart: Track not initialized, service not started or bound.")
-        }
     }
 
     private fun hideBottomNavigation() {
@@ -257,11 +243,13 @@ class PlayerFragment : Fragment(), View.OnClickListener {
                 Toast.makeText(requireActivity(), state.msg, Toast.LENGTH_SHORT).show()
             }
 
-            PlayerState.Preparing -> Toast.makeText(
+            is PlayerState.Preparing -> Toast.makeText(
                 requireActivity(),
                 R.string.preparing,
                 Toast.LENGTH_SHORT
             ).show()
+
+            is PlayerState.Completed -> views.playButton.isPlaying = false
         }
     }
 
@@ -347,7 +335,7 @@ class PlayerFragment : Fragment(), View.OnClickListener {
 
     private fun unbindService() {
         if (isBound) {
-             requireContext().unbindService(serviceConnection)
+            requireContext().unbindService(serviceConnection)
         }
     }
 
@@ -356,16 +344,24 @@ class PlayerFragment : Fragment(), View.OnClickListener {
 
         val filter = IntentFilter("android.net.conn.CONNECTIVITY_CHANGE")
         requireContext().registerReceiver(receiver, filter)
+
+        if (::track.isInitialized) {
+            val serviceIntent = Intent(requireContext(), PlayerService::class.java).apply {
+                putExtra(PlayerService.TRACK_DTO_JSON, Json.encodeToString(track.toDto()))
+            }
+            ContextCompat.startForegroundService(requireContext(), serviceIntent)
+
+            requireContext().bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
+            Log.d("PlayerFragment", "onStart: Called startForegroundService and bindService.")
+        } else {
+            Log.w("PlayerFragment", "onStart: Track not initialized, service not started or bound.")
+        }
     }
 
-    override fun onStop() {
-        super.onStop()
-        if (isBound && !requireActivity().isChangingConfigurations) {
-            unbindService()
-            Log.d("PlayerFragment", "onStop: Service unbound (not due to configuration change).")
-        } else if (isBound && requireActivity().isChangingConfigurations) {
-            Log.d("PlayerFragment", "onStop: Configuration change, service remains bound if it was bound.")
-        }
+    override fun onPause() {
+        super.onPause()
+
+        unbindService()
     }
 
     override fun onClick(v: View?) {
@@ -395,7 +391,10 @@ class PlayerFragment : Fragment(), View.OnClickListener {
 
         if (isBound) {
 
-            Log.w("PlayerFragment", "onDestroy: Service was still bound. Unbinding now to prevent leak.")
+            Log.w(
+                "PlayerFragment",
+                "onDestroy: Service was still bound. Unbinding now to prevent leak."
+            )
             unbindService()
         }
     }
