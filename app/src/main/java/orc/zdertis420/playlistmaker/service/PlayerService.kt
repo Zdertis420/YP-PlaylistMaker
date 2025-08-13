@@ -132,7 +132,6 @@ class PlayerService : Service(), PlayerController {
     }
 
     override fun preparePlayer() {
-        Log.d("SERVICE", "Track name: $trackName\nArtist name: $artistName\nTrack url: $trackUrl")
 
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer()
@@ -154,7 +153,11 @@ class PlayerService : Service(), PlayerController {
         mediaPlayer?.setOnCompletionListener {
             timerJob?.cancel()
             _playerState.value = PlayerState.Completed
-            Log.d("PlayerService", "isBound: $isBound")
+            if (!isBound) {
+//                delete()
+//                sendNotification(createServiceNotification(true))
+                stopSelf()
+            }
         }
         mediaPlayer?.setOnErrorListener { _, what, extra ->
             Log.e("PlayerService", "MediaPlayer Error: What - $what, Extra - $extra")
@@ -165,13 +168,12 @@ class PlayerService : Service(), PlayerController {
         }
     }
 
-    fun updatePlaybackTime() {
+    private fun updatePlaybackTime() {
         mediaPlayer?.let {
-            if (it.isPlaying) {
-                val elapsedTime = it.currentPosition
-                val remainingTime = MAX_DURATION - elapsedTime
-                _playerState.value = PlayerState.Play(elapsedTime.toLong(), remainingTime)
-            }
+            val elapsedTime = it.currentPosition
+            val remainingTime = MAX_DURATION - elapsedTime
+            _playerState.value = PlayerState.Play(elapsedTime.toLong(), remainingTime)
+
         }
     }
 
@@ -180,6 +182,7 @@ class PlayerService : Service(), PlayerController {
         timerJob = CoroutineScope(Dispatchers.Default).launch {
             while (mediaPlayer?.isPlaying == true) {
                 updatePlaybackTime()
+//                Log.d("PlayerService", "Timer work")
                 delay(DELAY)
             }
         }
@@ -230,7 +233,7 @@ class PlayerService : Service(), PlayerController {
         mediaPlayer?.release()
         mediaPlayer = null
         notificationOff()
-        Log.e(
+        Log.d(
             "PlayerService",
             "releasePlayer() called. Current _playerState: ${_playerState.value}"
         )

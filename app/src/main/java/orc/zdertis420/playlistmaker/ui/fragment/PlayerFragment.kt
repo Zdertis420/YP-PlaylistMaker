@@ -134,6 +134,9 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         views.playButton.isClickable = false
 
         views.timePlaying.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(0L)
+//        if (viewModel.playerStateFlow.value is PlayerState.Completed) {
+//            views.timePlaying.setText("00:00")
+//        }
 
         viewModel.setTrack(track)
 
@@ -178,7 +181,6 @@ class PlayerFragment : Fragment(), View.OnClickListener {
 
         viewModel.loadPlaylists()
     }
-
 
 
     private fun hideBottomNavigation() {
@@ -230,6 +232,12 @@ class PlayerFragment : Fragment(), View.OnClickListener {
     private fun render(state: PlayerState) {
         when (state) {
             is PlayerState.Idle, PlayerState.None -> {}
+            is PlayerState.Preparing -> Toast.makeText(
+                requireActivity(),
+                R.string.preparing,
+                Toast.LENGTH_SHORT
+            ).show()
+
             is PlayerState.Prepared -> showPrepared()
             is PlayerState.Play -> showPlaying(state.remainingMillis)
             is PlayerState.Pause -> showPause()
@@ -238,14 +246,13 @@ class PlayerFragment : Fragment(), View.OnClickListener {
                 Toast.makeText(requireActivity(), state.msg, Toast.LENGTH_SHORT).show()
             }
 
-            is PlayerState.Preparing -> Toast.makeText(
-                requireActivity(),
-                R.string.preparing,
-                Toast.LENGTH_SHORT
-            ).show()
-
-            is PlayerState.Completed -> views.playButton.isPlaying = false
+            is PlayerState.Completed -> showCompleted()
         }
+    }
+
+    private fun showCompleted() {
+        views.playButton.isPlaying = false
+        views.timePlaying.text = "00:00"
     }
 
     private fun showPrepared() {
@@ -254,7 +261,6 @@ class PlayerFragment : Fragment(), View.OnClickListener {
     }
 
     private fun showPlaying(remainingMillis: Long) {
-
         views.timePlaying.text = simpleDate.format(remainingMillis)
     }
 
@@ -339,6 +345,7 @@ class PlayerFragment : Fragment(), View.OnClickListener {
 
     override fun onStart() {
         super.onStart()
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
@@ -346,16 +353,16 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         val filter = IntentFilter("android.net.conn.CONNECTIVITY_CHANGE")
         requireContext().registerReceiver(receiver, filter)
 
-        val serviceIntent = Intent(requireContext(), PlayerService::class.java).apply {
-            putExtra(PlayerService.TRACK_DTO_JSON, Json.encodeToString(track.toDto()))
-        }
         if (::track.isInitialized) {
+            val serviceIntent = Intent(requireContext(), PlayerService::class.java).apply {
+                putExtra(PlayerService.TRACK_DTO_JSON, Json.encodeToString(track.toDto()))
+            }
             ContextCompat.startForegroundService(requireContext(), serviceIntent)
             Log.d("PlayerFragment", "onStart: Called startForegroundService and bindService.")
+            requireContext().bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
         } else {
             Log.w("PlayerFragment", "onStart: Track not initialized, service not started or bound.")
         }
-        requireContext().bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
     override fun onStop() {
