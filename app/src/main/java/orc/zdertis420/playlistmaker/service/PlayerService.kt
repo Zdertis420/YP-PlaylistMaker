@@ -82,36 +82,52 @@ class PlayerService : Service(), PlayerController {
         notificationOff()
         isBound = true
 
-        Log.d("PlayerService", "ДОЛБАЁБ")
 
         val trackDtoJson = intent?.getStringExtra(TRACK_DTO_JSON)
         if (trackDtoJson != null) {
             val trackDto = Json.decodeFromString<TrackDto>(trackDtoJson)
-
             trackUrl = trackDto.previewUrl
             trackName = trackDto.trackName
             artistName = trackDto.artistName
         }
 
+        Log.w("PlayerService", "Service is bound")
+
         return binder
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
+        isBound = false
+
+        Log.w("PlayerService", "Service is unbound")
+
         if (_playerState.value is PlayerState.Play) {
             sendNotification(createServiceNotification(false))
-            isBound = false
+        } else if (_playerState.value is PlayerState.Idle || _playerState.value is PlayerState.Completed) {
+            // No need to keep service alive if not playing
+            delete()
         }
-        Log.d("PlayerService", "ДОЛБАЁБ")
-//        else {
-//            delete()
-//        }
+        return true
+    }
 
-        return super.onUnbind(intent)
+    override fun onRebind(intent: Intent?) {
+        super.onRebind(intent)
+        notificationOff()
+        isBound = true
+
+        val trackDtoJson = intent?.getStringExtra(TRACK_DTO_JSON)
+        if (trackDtoJson != null) {
+            val trackDto = Json.decodeFromString<TrackDto>(trackDtoJson)
+            trackUrl = trackDto.previewUrl
+            trackName = trackDto.trackName
+            artistName = trackDto.artistName
+        }
+
+        Log.w("PlayerService", "Service is rebound")
     }
 
     override fun onDestroy() {
         super.onDestroy()
-
         delete()
     }
 

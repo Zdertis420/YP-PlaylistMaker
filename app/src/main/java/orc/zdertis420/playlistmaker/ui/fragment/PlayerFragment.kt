@@ -179,12 +179,7 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         viewModel.loadPlaylists()
     }
 
-    override fun onStart() {
-        super.onStart()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
-    }
+
 
     private fun hideBottomNavigation() {
         requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
@@ -318,8 +313,6 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         } else {
             Log.d("PlayerFragment", "handleBackPressed: User is leaving Player screen.")
             viewModel.stop()
-            isBound = false
-
             unbindService()
 
             val serviceIntent = Intent(requireContext(), PlayerService::class.java)
@@ -334,34 +327,45 @@ class PlayerFragment : Fragment(), View.OnClickListener {
     }
 
     private fun unbindService() {
-        if (isBound) {
+        try {
             requireContext().unbindService(serviceConnection)
+        } catch (_: IllegalArgumentException) {
+            // Not bound or already unbound
+        } finally {
+            isBound = false
+            viewModel.removeAudioPlayerControl()
         }
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onStart() {
+        super.onStart()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
 
         val filter = IntentFilter("android.net.conn.CONNECTIVITY_CHANGE")
         requireContext().registerReceiver(receiver, filter)
 
+        val serviceIntent = Intent(requireContext(), PlayerService::class.java).apply {
+            putExtra(PlayerService.TRACK_DTO_JSON, Json.encodeToString(track.toDto()))
+        }
         if (::track.isInitialized) {
-            val serviceIntent = Intent(requireContext(), PlayerService::class.java).apply {
-                putExtra(PlayerService.TRACK_DTO_JSON, Json.encodeToString(track.toDto()))
-            }
             ContextCompat.startForegroundService(requireContext(), serviceIntent)
-
-            requireContext().bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
             Log.d("PlayerFragment", "onStart: Called startForegroundService and bindService.")
         } else {
             Log.w("PlayerFragment", "onStart: Track not initialized, service not started or bound.")
         }
+        requireContext().bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
-    override fun onPause() {
-        super.onPause()
-
+    override fun onStop() {
+        super.onStop()
         unbindService()
+        try {
+            requireContext().unregisterReceiver(receiver)
+        } catch (_: IllegalArgumentException) {
+            // receiver not registered
+        }
     }
 
     override fun onClick(v: View?) {

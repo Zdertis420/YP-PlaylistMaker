@@ -15,7 +15,6 @@ import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.data.mapper.toPlaylist
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
 import orc.zdertis420.playlistmaker.domain.entities.Track
-import orc.zdertis420.playlistmaker.domain.interactor.PlayerInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.PlaylistInteractor
 import orc.zdertis420.playlistmaker.domain.interactor.TrackLikedInteractor
 import orc.zdertis420.playlistmaker.service.PlayerController
@@ -56,11 +55,6 @@ class PlayerViewModel(
     }
 
     fun setAudioPlayerControl(playerController: PlayerController) {
-        if (this.playerController == playerController) {
-            playerController.notificationOff()
-            return
-        }
-
         this.playerController = playerController
 
         playerStateJob?.cancel()
@@ -72,8 +66,9 @@ class PlayerViewModel(
     }
 
     fun removeAudioPlayerControl() {
-        playerController = null
+        playerStateJob?.cancel()
         playerStateJob = null
+        playerController = null
     }
 
     fun preparePlayer() {
