@@ -76,6 +76,8 @@ class PlayerFragment : Fragment(), View.OnClickListener {
 
             if (viewModel.playerStateFlow.value is PlayerState.Idle) {
                 viewModel.preparePlayer()
+                views.playButton.isPlaying = false
+                views.timePlaying.setText("00:00")
             }
 
             Log.w("PlayerFragment", "Service bound, control interface provided")

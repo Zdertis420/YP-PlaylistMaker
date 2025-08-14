@@ -151,8 +151,8 @@ class PlayerService : Service(), PlayerController {
             _playerState.value = PlayerState.Prepared
         }
         mediaPlayer?.setOnCompletionListener {
-            timerJob?.cancel()
             _playerState.value = PlayerState.Completed
+            timerJob?.cancel()
             if (!isBound) {
 //                delete()
 //                sendNotification(createServiceNotification(true))
