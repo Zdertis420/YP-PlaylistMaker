@@ -1,6 +1,14 @@
 package orc.zdertis420.playlistmaker.ui.fragment
 
+import android.Manifest
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.ServiceConnection
+import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +16,8 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -19,16 +29,20 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.data.dto.TrackDto
+import orc.zdertis420.playlistmaker.data.mapper.toDto
 import orc.zdertis420.playlistmaker.data.mapper.toTrack
 import orc.zdertis420.playlistmaker.databinding.FragmentPlayerBinding
 import orc.zdertis420.playlistmaker.domain.entities.Playlist
 import orc.zdertis420.playlistmaker.domain.entities.Track
+import orc.zdertis420.playlistmaker.service.PlayerService
 import orc.zdertis420.playlistmaker.ui.adapter.playlist.PlayerPlaylistAdapter
 import orc.zdertis420.playlistmaker.ui.viewmodel.PlayerViewModel
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlayerState
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlaylistsState
+import orc.zdertis420.playlistmaker.utils.InternetConnectionReceiver
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -50,6 +64,41 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         }
 
         override fun onSlide(bottomSheet: View, slideOffset: Float) {}
+    }
+
+    private var isBound = false
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as PlayerService.PlayerServiceBinder
+            viewModel.setAudioPlayerControl(binder.getService())
+            isBound = true
+
+            if (viewModel.playerStateFlow.value is PlayerState.Idle) {
+                viewModel.preparePlayer()
+                views.playButton.isPlaying = false
+                views.timePlaying.setText("00:00")
+            }
+
+            Log.w("PlayerFragment", "Service bound, control interface provided")
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            isBound = false
+            viewModel.removeAudioPlayerControl()
+
+            Log.w("PlayerFragment", "Service is unbound")
+        }
+    }
+
+    private val receiver = InternetConnectionReceiver()
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (!isGranted) {
+            Toast.makeText(context, "Can\'t start service!", Toast.LENGTH_LONG).show()
+        }
     }
 
     private lateinit var track: Track
@@ -84,9 +133,12 @@ class PlayerFragment : Fragment(), View.OnClickListener {
 
         track = requireArguments().getParcelable<TrackDto>("track")!!.toTrack()
 
-        views.playButton.isEnabled = false
+        views.playButton.isClickable = false
 
         views.timePlaying.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(0L)
+//        if (viewModel.playerStateFlow.value is PlayerState.Completed) {
+//            views.timePlaying.setText("00:00")
+//        }
 
         viewModel.setTrack(track)
 
@@ -130,9 +182,8 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         viewModel.observeLiked()
 
         viewModel.loadPlaylists()
-
-        viewModel.prepare()
     }
+
 
     private fun hideBottomNavigation() {
         requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
@@ -181,9 +232,14 @@ class PlayerFragment : Fragment(), View.OnClickListener {
     }
 
     private fun render(state: PlayerState) {
-        Log.d("STATE", state.toString())
-
         when (state) {
+            is PlayerState.Idle, PlayerState.None -> {}
+            is PlayerState.Preparing -> Toast.makeText(
+                requireActivity(),
+                R.string.preparing,
+                Toast.LENGTH_SHORT
+            ).show()
+
             is PlayerState.Prepared -> showPrepared()
             is PlayerState.Play -> showPlaying(state.remainingMillis)
             is PlayerState.Pause -> showPause()
@@ -192,21 +248,21 @@ class PlayerFragment : Fragment(), View.OnClickListener {
                 Toast.makeText(requireActivity(), state.msg, Toast.LENGTH_SHORT).show()
             }
 
-            PlayerState.Preparing -> Toast.makeText(
-                requireActivity(),
-                R.string.preparing,
-                Toast.LENGTH_SHORT
-            ).show()
+            is PlayerState.Completed -> showCompleted()
         }
     }
 
+    private fun showCompleted() {
+        views.playButton.isPlaying = false
+        views.timePlaying.text = "00:00"
+    }
+
     private fun showPrepared() {
-        views.playButton.isEnabled = true
+        views.playButton.isClickable = true
         views.timePlaying.text = "00:00"
     }
 
     private fun showPlaying(remainingMillis: Long) {
-
         views.timePlaying.text = simpleDate.format(remainingMillis)
     }
 
@@ -263,10 +319,61 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         } else if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_COLLAPSED) {
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         } else {
+            Log.d("PlayerFragment", "handleBackPressed: User is leaving Player screen.")
+            viewModel.stop()
+            unbindService()
+
+            val serviceIntent = Intent(requireContext(), PlayerService::class.java)
+            requireContext().stopService(serviceIntent)
+            Log.d("PlayerFragment", "handleBackPressed: stopService() called.")
+
             requireActivity().findViewById<BottomNavigationView>(R.id.bottom_navigation_view).visibility =
                 View.VISIBLE
             requireActivity().findViewById<View>(R.id.delimiter).visibility = View.VISIBLE
             findNavController().popBackStack()
+        }
+    }
+
+    private fun unbindService() {
+        try {
+            requireContext().unbindService(serviceConnection)
+        } catch (_: IllegalArgumentException) {
+            // Not bound or already unbound
+        } finally {
+            isBound = false
+            viewModel.removeAudioPlayerControl()
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        val filter = IntentFilter("android.net.conn.CONNECTIVITY_CHANGE")
+        requireContext().registerReceiver(receiver, filter)
+
+        if (::track.isInitialized) {
+            val serviceIntent = Intent(requireContext(), PlayerService::class.java).apply {
+                putExtra(PlayerService.TRACK_DTO_JSON, Json.encodeToString(track.toDto()))
+            }
+            ContextCompat.startForegroundService(requireContext(), serviceIntent)
+            Log.d("PlayerFragment", "onStart: Called startForegroundService and bindService.")
+            requireContext().bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
+        } else {
+            Log.w("PlayerFragment", "onStart: Track not initialized, service not started or bound.")
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unbindService()
+        try {
+            requireContext().unregisterReceiver(receiver)
+        } catch (_: IllegalArgumentException) {
+            // receiver not registered
         }
     }
 
@@ -279,7 +386,6 @@ class PlayerFragment : Fragment(), View.OnClickListener {
             R.id.like_button -> {
                 Log.d("TRACK", "Like toggled for ${track.trackName}: ${!track.isLiked}. Activity")
 
-//                toggleLikeView(!track.isLiked)
                 viewModel.toggleLike(track)
                 viewModel.observeLiked()
             }
@@ -292,13 +398,17 @@ class PlayerFragment : Fragment(), View.OnClickListener {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        viewModel.pause()
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         viewModel.onActivityDestroyed()
+
+        if (isBound) {
+
+            Log.w(
+                "PlayerFragment",
+                "onDestroy: Service was still bound. Unbinding now to prevent leak."
+            )
+            unbindService()
+        }
     }
 }

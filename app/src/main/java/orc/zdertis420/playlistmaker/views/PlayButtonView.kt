@@ -60,7 +60,7 @@ class PlayButtonView @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (event.action == MotionEvent.ACTION_UP) {
+        if (event.action == MotionEvent.ACTION_UP && isClickable) {
             val x = event.x
             val y = event.y
             if (x in 0f..width.toFloat() && y in 0f..height.toFloat()) {
