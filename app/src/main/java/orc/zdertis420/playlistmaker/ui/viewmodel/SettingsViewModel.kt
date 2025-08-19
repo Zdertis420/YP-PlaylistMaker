@@ -17,14 +17,18 @@ class SettingsViewModel(
     private val seeEulaUseCase: SeeEulaUseCase
 ) : ViewModel() {
 
-    private val _actionLiveData = MutableLiveData<Intent>()
-    val actionLiveData: LiveData<Intent> get() = _actionLiveData
+    private val _actionLiveData = MutableLiveData<Intent?>()
+    val actionLiveData: LiveData<Intent?> get() = _actionLiveData
 
     fun toggleTheme() {
         val newTheme = !themeInteractor.getTheme()
 
         themeInteractor.switchTheme(newTheme)
         themeInteractor.saveTheme(newTheme)
+    }
+
+    fun resetAction() {
+        _actionLiveData.value = null
     }
 
     fun shareApp() {
