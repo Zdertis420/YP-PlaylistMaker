@@ -1,6 +1,5 @@
 package orc.zdertis420.playlistmaker.ui.compose
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -25,9 +24,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.domain.entities.Track
@@ -36,6 +37,7 @@ import orc.zdertis420.playlistmaker.ui.theme.DarkBackground
 import orc.zdertis420.playlistmaker.ui.theme.StandardTextColor
 import orc.zdertis420.playlistmaker.ui.theme.Subtext
 import orc.zdertis420.playlistmaker.ui.theme.White
+import orc.zdertis420.playlistmaker.ui.theme.YSDisplay
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -72,7 +74,10 @@ fun TrackListItem(
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
                 color = if (isSystemInDarkTheme()) White else StandardTextColor,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                fontFamily = YSDisplay,
+                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp
             )
             Spacer(modifier = Modifier.height(1.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -82,14 +87,21 @@ fun TrackListItem(
                     color = if (isSystemInDarkTheme()) White else Subtext,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
+                    modifier = Modifier.weight(1f, fill = false),
+                    fontFamily = YSDisplay,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
                 )
                 Text(
                     text = " • ${SimpleDateFormat("mm:ss", Locale.getDefault()).format(track.trackTimeMillis)}",
                     style = MaterialTheme.typography.labelMedium,
                     color = if (isSystemInDarkTheme()) White else Subtext,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    fontFamily = YSDisplay,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                    
                 )
             }
         }

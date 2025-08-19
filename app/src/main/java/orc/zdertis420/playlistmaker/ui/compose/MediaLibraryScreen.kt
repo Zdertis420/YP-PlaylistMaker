@@ -1,36 +1,31 @@
 package orc.zdertis420.playlistmaker.ui.compose
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabIndicatorScope
-import androidx.compose.material3.TabPosition
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
@@ -44,8 +39,10 @@ import orc.zdertis420.playlistmaker.ui.theme.DarkBackground
 import orc.zdertis420.playlistmaker.ui.theme.StandardTextColor
 import orc.zdertis420.playlistmaker.ui.theme.Transparent
 import orc.zdertis420.playlistmaker.ui.theme.White
+import orc.zdertis420.playlistmaker.ui.theme.YSDisplay
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.LikedState
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlaylistsState
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -73,6 +70,9 @@ fun MediaLibraryScreen(
                 .background(if (isSystemInDarkTheme()) DarkBackground else BackgroundColor)
                 .padding(16.dp),
             color = if (isSystemInDarkTheme()) White else StandardTextColor,
+            fontSize = 22.sp,
+            fontFamily = YSDisplay,
+            fontWeight = FontWeight.Medium
         )
 
         PrimaryTabRow(
@@ -80,17 +80,37 @@ fun MediaLibraryScreen(
             containerColor = if (isSystemInDarkTheme()) StandardTextColor else White,
             contentColor = if (isSystemInDarkTheme()) White else StandardTextColor,
             indicator = {
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxWidth(0.5f)
-//                        .height(2.dp)
-//                        .background(if (isSystemInDarkTheme()) White else StandardTextColor)
-//                )
-                SideEffect {
-                    Log.d("MEDIA", "Indicator recompose")
-                }
+                val isDark = isSystemInDarkTheme()
+                val indicatorColor = if (isDark) White else StandardTextColor
+                val tabCount = tabTitles.size
 
-                TabRowDefaults.PrimaryIndicator()
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                ) {
+                    val tabWidth = maxWidth
+                    val indicatorWidth = tabWidth * 0.8f
+
+                    val animatedIndex = (pagerState.currentPage + pagerState.currentPageOffsetFraction)
+                        .coerceIn(0f, (tabCount - 1).toFloat())
+
+                    val left = tabWidth * animatedIndex + (tabWidth - indicatorWidth) / 2
+
+                    val density = LocalDensity.current
+                    Box(
+                        modifier = Modifier
+                            .offset {
+                                IntOffset(
+                                    x = with(density) { left.toPx().roundToInt() },
+                                    y = 0
+                                )
+                            }
+                            .width(indicatorWidth)
+                            .height(2.dp)
+                            .background(indicatorColor)
+                    )
+                }
             }
         ) {
             tabTitles.forEachIndexed { index, title ->
@@ -104,7 +124,8 @@ fun MediaLibraryScreen(
                     text = {
                         Text(
                             text = title,
-                            fontSize = 14.sp,
+                            fontSize = 16.sp,
+                            fontFamily = YSDisplay,
                             fontWeight = FontWeight.Medium,
                             color = if (isSystemInDarkTheme()) White else StandardTextColor
                         )

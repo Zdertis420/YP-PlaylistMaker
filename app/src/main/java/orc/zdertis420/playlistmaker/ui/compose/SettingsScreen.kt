@@ -19,8 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import orc.zdertis420.playlistmaker.R
 import orc.zdertis420.playlistmaker.ui.theme.BackgroundColor
 import orc.zdertis420.playlistmaker.ui.theme.DarkBackground
@@ -32,6 +34,7 @@ import orc.zdertis420.playlistmaker.ui.theme.SwitchTrackActiveColor
 import orc.zdertis420.playlistmaker.ui.theme.SwitchTrackInactiveColor
 import orc.zdertis420.playlistmaker.ui.theme.Transparent
 import orc.zdertis420.playlistmaker.ui.theme.White
+import orc.zdertis420.playlistmaker.ui.theme.YSDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +55,9 @@ fun SettingsScreen(
                     .background(if (isDarkTheme) DarkBackground else BackgroundColor)
                     .padding(16.dp), // Пример отступов
                 color = if (isDarkTheme) White else StandardTextColor,
+                fontSize = 22.sp,
+                fontFamily = YSDisplay,
+                fontWeight = FontWeight.Medium
             )
         },
         modifier = modifier
@@ -72,7 +78,10 @@ fun SettingsScreen(
                     text = stringResource(id = R.string.dark_theme),
                     style = MaterialTheme.typography.bodyLarge,
                     color = if (isDarkTheme) White else StandardTextColor,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    fontFamily = YSDisplay,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp
                 )
                 Switch(
                     checked = isDarkTheme,
@@ -131,7 +140,10 @@ fun SettingsItem(
             text = text,
             style = MaterialTheme.typography.bodyLarge, // Apply appropriate text style
             color = if (isDarkTheme) White else StandardTextColor,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            fontFamily = YSDisplay,
+            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp
         )
         Icon(
             painter = iconPainter,

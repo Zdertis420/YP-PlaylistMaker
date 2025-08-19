@@ -46,6 +46,7 @@ import orc.zdertis420.playlistmaker.domain.entities.Playlist
 import orc.zdertis420.playlistmaker.domain.entities.Track
 import orc.zdertis420.playlistmaker.ui.theme.StandardTextColor
 import orc.zdertis420.playlistmaker.ui.theme.White
+import orc.zdertis420.playlistmaker.ui.theme.YSDisplay
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.PlaylistsState
 
 @Composable
@@ -71,7 +72,12 @@ fun PlaylistsPage(
             modifier = Modifier
                 .padding(bottom = 24.dp)
         ) {
-            Text(stringResource(R.string.new_playlist))
+            Text(
+                stringResource(R.string.new_playlist),
+                fontFamily = YSDisplay,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp
+            )
         }
 
         Box(
@@ -83,6 +89,7 @@ fun PlaylistsPage(
                 is PlaylistsState.Empty -> {
                     EmptyStatePlaylists(modifier = Modifier.fillMaxSize())
                 }
+
                 is PlaylistsState.Playlists -> {
                     PlaylistsGrid(
                         playlists = state.playlists,
@@ -90,6 +97,7 @@ fun PlaylistsPage(
                         modifier = Modifier.fillMaxSize()
                     )
                 }
+
                 is PlaylistsState.Error -> Toast.makeText(
                     LocalContext.current, stringResource(R.string.loading_error),
                     Toast.LENGTH_SHORT
@@ -121,7 +129,9 @@ fun EmptyStatePlaylists(modifier: Modifier = Modifier) {
             fontSize = 19.sp,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleMedium,
-            color = if (isSystemInDarkTheme()) White else StandardTextColor
+            color = if (isSystemInDarkTheme()) White else StandardTextColor,
+            fontFamily = YSDisplay,
+            fontWeight = FontWeight.Medium
         )
     }
 }
@@ -189,12 +199,12 @@ fun PlaylistItem(
             modifier = Modifier
                 .width(160.dp)
                 .height(18.dp),
-//            fontFamily = ysDisplayRegular,
-            fontWeight = FontWeight.Normal,
             fontSize = 12.sp,
             color = if (isSystemInDarkTheme()) White else StandardTextColor,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            fontFamily = YSDisplay,
+            fontWeight = FontWeight.Medium
         )
 
         Text(
@@ -202,12 +212,12 @@ fun PlaylistItem(
             modifier = Modifier
                 .width(160.dp)
                 .height(18.dp),
-//            fontFamily = ysDisplayRegular,
-            fontWeight = FontWeight.Normal,
             fontSize = 12.sp,
             color = if (isSystemInDarkTheme()) White else StandardTextColor,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            fontFamily = YSDisplay,
+            fontWeight = FontWeight.Medium
         )
     }
 }
@@ -235,7 +245,20 @@ fun PlaylistsPageContentPreview() {
             id = 1L,
             name = "Мой рок",
             imagePath = null,
-            tracks = List(12) { Track(it.toLong(), "", "", it.toLong(), it.toString(), "", "", "", "", "") },
+            tracks = List(12) {
+                Track(
+                    it.toLong(),
+                    "",
+                    "",
+                    it.toLong(),
+                    it.toString(),
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                )
+            },
             year = 2020,
             description = ""
         ),
@@ -243,7 +266,20 @@ fun PlaylistsPageContentPreview() {
             id = 2L,
             name = "Для тренировок",
             imagePath = null,
-            tracks = List(12) { Track(it.toLong(), "", "", it.toLong(), it.toString(), "", "", "", "", "") },
+            tracks = List(12) {
+                Track(
+                    it.toLong(),
+                    "",
+                    "",
+                    it.toLong(),
+                    it.toString(),
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                )
+            },
             year = 2021,
             description = ""
         ),
@@ -251,7 +287,20 @@ fun PlaylistsPageContentPreview() {
             id = 3L,
             name = "В дорогу с очень длинным названием в несколько строк для проверки как это будет выглядеть на экране",
             imagePath = null,
-            tracks = List(12) { Track(it.toLong(), "", "", it.toLong(), it.toString(), "", "", "", "", "") },
+            tracks = List(12) {
+                Track(
+                    it.toLong(),
+                    "",
+                    "",
+                    it.toLong(),
+                    it.toString(),
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                )
+            },
             year = 2022,
             description = ""
         ),
@@ -259,7 +308,20 @@ fun PlaylistsPageContentPreview() {
             id = 4L,
             name = "Любимое",
             imagePath = null,
-            tracks = List(12) { Track(it.toLong(), "", "", it.toLong(), it.toString(), "", "", "", "", "") },
+            tracks = List(12) {
+                Track(
+                    it.toLong(),
+                    "",
+                    "",
+                    it.toLong(),
+                    it.toString(),
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                )
+            },
             year = 2023,
             description = ""
         )

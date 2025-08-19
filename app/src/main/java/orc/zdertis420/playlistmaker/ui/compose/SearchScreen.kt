@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -34,9 +36,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +48,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -63,6 +67,7 @@ import orc.zdertis420.playlistmaker.ui.theme.DarkBackground
 import orc.zdertis420.playlistmaker.ui.theme.Gray
 import orc.zdertis420.playlistmaker.ui.theme.StandardTextColor
 import orc.zdertis420.playlistmaker.ui.theme.White
+import orc.zdertis420.playlistmaker.ui.theme.YSDisplay
 import orc.zdertis420.playlistmaker.ui.viewmodel.states.SearchState
 
 
@@ -78,72 +83,78 @@ fun SearchScreen(
     onClearHistoryClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Scaffold(
-        topBar = {
-            Text(
-                text = stringResource(id = R.string.search),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(if (isSystemInDarkTheme()) DarkBackground else BackgroundColor)
-                    .padding(16.dp),
-                color = if (isSystemInDarkTheme()) White else StandardTextColor,
-            )
-        },
-        modifier = modifier
-    ) { paddingValues ->
-        Column(
+    Column(
+        modifier = Modifier
+            .navigationBarsPadding()
+            .fillMaxSize()
+            .background(if (isSystemInDarkTheme()) DarkBackground else BackgroundColor)
+    ) {
+        Text(
+            text = stringResource(id = R.string.search),
             modifier = Modifier
-                .padding(paddingValues)
+                .fillMaxWidth()
                 .background(if (isSystemInDarkTheme()) DarkBackground else BackgroundColor)
-                .navigationBarsPadding()
-                .fillMaxSize()
-        ) {
-            SearchInputField(
-                onQueryChanged = { onSearchQueryChanged(it) },
-                onClearClicked = { onClearSearchClicked() },
-                onTextFieldFocused = {},
-                onImeActionSearch = { onSearchClicked(it) }
-            )
+                .padding(16.dp),
+            color = if (isSystemInDarkTheme()) White else StandardTextColor,
+            fontSize = 22.sp,
+            fontFamily = YSDisplay,
+            fontWeight = FontWeight.Medium
+        )
 
-            Log.d("SEARCH UI STATE", state.toString())
-            when (state) {
-                is SearchState.Loading -> {
-                    Spacer(modifier.padding(top = 24.dp))
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+        SearchInputField(
+            onQueryChanged = { onSearchQueryChanged(it) },
+            onClearClicked = { onClearSearchClicked() },
+            onTextFieldFocused = {},
+            onImeActionSearch = { onSearchClicked(it) }
+        )
+
+        Log.d("SEARCH UI STATE", state.toString())
+        when (state) {
+            is SearchState.Loading -> {
+                Column(
+                    modifier = modifier
+                        .padding(top = 48.dp)
+                        .fillMaxSize()
+                        .weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator(color = CursorBlue)
                 }
-
-                is SearchState.Success -> {
-                    TrackList(
-                        tracks = state.tracks,
-                        onTrackClicked = onTrackClicked,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                is SearchState.Error -> {
-                    ErrorPlaceholder(
-                        onRefreshClicked,
-                    )
-                }
-
-                is SearchState.Empty -> {
-                    EmptySearchPlaceholder()
-                }
-
-                is SearchState.History -> {
-                    if (state.tracksHistory.isNotEmpty()) {
-                        SearchHistoryView(
-                            historyTracks = state.tracksHistory,
-                            onHistoryTrackClicked = onTrackClicked,
-                            onClearHistoryClicked = onClearHistoryClicked,
-                            modifier = modifier.weight(1f)
-
-                        )
-                    }
-                }
-
-                is SearchState.None -> {}
             }
+
+            is SearchState.Success -> {
+                TrackList(
+                    tracks = state.tracks,
+                    onTrackClicked = onTrackClicked,
+                    modifier = modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                )
+            }
+
+            is SearchState.Error -> {
+                ErrorPlaceholder(
+                    onRefreshClicked,
+                )
+            }
+
+            is SearchState.Empty -> {
+                EmptySearchPlaceholder()
+            }
+
+            is SearchState.History -> {
+                if (state.tracksHistory.isNotEmpty()) {
+                    SearchHistoryView(
+                        historyTracks = state.tracksHistory,
+                        onHistoryTrackClicked = onTrackClicked,
+                        onClearHistoryClicked = onClearHistoryClicked,
+                        modifier = modifier.weight(1f)
+
+                    )
+                }
+            }
+
+            is SearchState.None -> {}
         }
     }
 }
@@ -169,7 +180,10 @@ fun SearchHistoryView(
                     .padding(horizontal = 16.dp)
                     .padding(bottom = 8.dp),
                 textAlign = TextAlign.Center,
-                color = if (isSystemInDarkTheme()) White else StandardTextColor
+                color = if (isSystemInDarkTheme()) White else StandardTextColor,
+                fontFamily = YSDisplay,
+                fontWeight = FontWeight.Medium,
+                fontSize = 19.sp
             )
         }
 
@@ -200,7 +214,12 @@ fun SearchHistoryView(
                         contentColor = if (isSystemInDarkTheme()) StandardTextColor else White
                     )
                 ) {
-                    Text(stringResource(R.string.clear_history))
+                    Text(
+                        stringResource(R.string.clear_history),
+                        fontFamily = YSDisplay,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp
+                    )
                 }
             }
         }
@@ -229,7 +248,9 @@ fun ErrorPlaceholder(
             text = stringResource(R.string.no_connection),
             fontSize = 22.sp,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontFamily = YSDisplay,
+            fontWeight = FontWeight.Medium
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(
@@ -239,7 +260,12 @@ fun ErrorPlaceholder(
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
-            Text(stringResource(R.string.update), fontSize = 8.sp)
+            Text(
+                stringResource(R.string.update),
+                fontSize = 14.sp,
+                fontFamily = YSDisplay,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }
@@ -265,7 +291,9 @@ fun EmptySearchPlaceholder(modifier: Modifier = Modifier) {
             text = stringResource(R.string.empty_result),
             fontSize = 22.sp,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontFamily = YSDisplay,
+            fontWeight = FontWeight.Medium
         )
     }
 }
@@ -279,7 +307,14 @@ fun SearchInputField(
     modifier: Modifier = Modifier
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
     val interactionSource = remember { MutableInteractionSource() }
+    val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    LaunchedEffect(imeVisible) {
+        if (!imeVisible) {
+            focusManager.clearFocus()
+        }
+    }
 
     var text by remember { mutableStateOf("") }
 
@@ -319,7 +354,7 @@ fun SearchInputField(
                     value = text,
                     onValueChange = { newText ->
                         text = newText
-                        onQueryChanged
+                        onQueryChanged(text)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -337,6 +372,7 @@ fun SearchInputField(
                     keyboardActions = KeyboardActions(onSearch = {
                         onImeActionSearch(text)
                         keyboardController?.hide()
+                        focusManager.clearFocus()
                     }),
                     cursorBrush = SolidColor(CursorBlue),
                     interactionSource = interactionSource
@@ -347,6 +383,8 @@ fun SearchInputField(
                         text = stringResource(id = R.string.search),
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        fontFamily = YSDisplay,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
@@ -355,7 +393,7 @@ fun SearchInputField(
                 Spacer(Modifier.width(8.dp))
                 IconButton(
                     onClick = {
-                        onClearClicked
+                        onClearClicked()
                         text = ""
                     },
                     modifier = Modifier.size(24.dp)
