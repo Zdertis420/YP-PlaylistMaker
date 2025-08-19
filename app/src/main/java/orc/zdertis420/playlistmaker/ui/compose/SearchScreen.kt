@@ -371,26 +371,6 @@ fun SearchInputField(
     }
 }
 
-@Composable
-fun TrackList(
-    tracks: List<Track>,
-    onTrackClicked: (Track) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(modifier = modifier.padding(8.dp)) {
-        items(
-            items = tracks,
-            key = { track -> track.trackId }
-        ) { track ->
-            TrackListItem(
-                track = track,
-                onTrackClicked = onTrackClicked
-            )
-        }
-    }
-}
-
-
 // --- Preview функции ---
 
 @Preview(showBackground = true, name = "SearchScreen - Loading")
