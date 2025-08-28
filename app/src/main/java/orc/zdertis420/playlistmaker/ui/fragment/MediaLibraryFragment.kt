@@ -4,49 +4,59 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import com.google.android.material.tabs.TabLayoutMediator
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.launch
 import orc.zdertis420.playlistmaker.R
-import orc.zdertis420.playlistmaker.databinding.FragmentMediaLibraryBinding
-import orc.zdertis420.playlistmaker.ui.adapter.PagerAdapter
+import orc.zdertis420.playlistmaker.data.mapper.toDto
+import orc.zdertis420.playlistmaker.ui.compose.MediaLibraryScreen
+import orc.zdertis420.playlistmaker.ui.viewmodel.LikedViewModel
+import orc.zdertis420.playlistmaker.ui.viewmodel.PlaylistsViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MediaLibraryFragment : Fragment() {
 
-    private var _views: FragmentMediaLibraryBinding? = null
-    private val views get() = _views!!
-
-    private var tabLayoutMediator: TabLayoutMediator? = null
+    private val likedViewModel: LikedViewModel by viewModel()
+    private val playlistsViewModel: PlaylistsViewModel by viewModel()
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        _views = FragmentMediaLibraryBinding.inflate(inflater, container, false)
+    ): View {
+        viewLifecycleOwner.lifecycleScope.launch {
+            likedViewModel.observeLikedTracks()
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            playlistsViewModel.loadPlaylists()
+        }
 
-        return views.root
-    }
+        return ComposeView(requireContext()).apply {
+            setContent {
+                val likedState by likedViewModel.screenState.collectAsState()
+                val playlistsState by playlistsViewModel.playlistStateFlow.collectAsState()
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        views.mediaViewPager.adapter = PagerAdapter(childFragmentManager, lifecycle)
-        setupTabLayout()
-    }
-
-    private fun setupTabLayout() {
-        tabLayoutMediator = TabLayoutMediator(views.mediaTabLayout, views.mediaViewPager) { tab, position ->
-            when (position) {
-                0 -> tab.text = getString(R.string.liked_tracks)
-                1 -> tab.text = getString(R.string.playlists)
+                MediaLibraryScreen(
+                    likedState = likedState,
+                    playlistsState = playlistsState,
+                    onTrackClicked = { track ->
+                        val args = bundleOf("track" to track.toDto())
+                        findNavController().navigate(R.id.action_mediaLibraryFragment_to_playerFragment, args)
+                    },
+                    onPlaylistClicked = { playlist ->
+                        val args = bundleOf("playlist" to playlist.toDto())
+                        findNavController().navigate(R.id.action_mediaLibraryFragment_to_playlistFragment, args)
+                    },
+                    onNewPlaylistClicked = {
+                        findNavController().navigate(R.id.action_mediaLibraryFragment_to_editPlaylistFragment)
+                    }
+                )
             }
-        }.also { it.attach() }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        tabLayoutMediator?.detach()
-        tabLayoutMediator = null
-        _views = null
+        }
     }
 }

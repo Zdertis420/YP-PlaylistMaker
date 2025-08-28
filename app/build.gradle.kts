@@ -4,11 +4,12 @@ plugins {
     id("kotlin-kapt")
     id("kotlin-parcelize")
     kotlin("plugin.serialization") version "2.2.0"
+    alias(libs.plugins.compose.compiler) apply true
 }
 
 android {
     namespace = "orc.zdertis420.playlistmaker"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "orc.zdertis420.playlistmaker"
@@ -22,6 +23,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose = true
     }
 
     buildTypes {
@@ -40,9 +42,22 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.1"
+    }
 }
 
 dependencies {
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.foundation)
+    implementation(libs.ui)
+    implementation(libs.androidx.material3)
+    implementation(libs.ui.tooling.preview)
+    debugImplementation(libs.androidx.ui.tooling)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.coil.compose)
     implementation(libs.androidx.room.runtime)
     kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
